@@ -1,4 +1,4 @@
-<x-app-layout title="Edit Store | Inventory System">
+<x-app-layout title="Edit Store | Store Setting">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
@@ -16,7 +16,7 @@
             list-style: none;
             padding: 0;
             margin-top: 2px;
-            display: none; /* Hidden by default */
+            display: none;
         }
         #suggestion-list li {
             padding: 10px;
@@ -26,7 +26,7 @@
         }
         #suggestion-list li:hover {
             background-color: #f0f0f0;
-            color: #4CAF50; /* Theme Green */
+            color: #4CAF50;
         }
     </style>
 
@@ -39,7 +39,7 @@
             </a>
         </div>
 
-        <form action="{{ route('store.update', $store->id) }}" method="POST">
+        <form action="{{ route('store.update', $store->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -48,6 +48,26 @@
                     <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title mb-3">General Information</h5>
+
+                            <div class="row mb-4 align-items-center">
+                                <div class="col-md-3 text-center">
+                                    @if($store->profile)
+                                        <img src="{{ asset('storage/' . $store->profile) }}" alt="Store Profile" 
+                                             class="img-fluid rounded-circle border shadow-sm" 
+                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                    @else
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border mx-auto" 
+                                             style="width: 80px; height: 80px;">
+                                            <i class="mdi mdi-store fs-1 text-muted"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="form-label">Store Profile Image</label>
+                                    <input type="file" name="profile" class="form-control" accept="image/*">
+                                    <small class="text-muted">Allowed: jpg, png, webp. Max: 2MB</small>
+                                </div>
+                            </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -177,7 +197,6 @@
         marker.on('dragend', function(e) {
             var pos = marker.getLatLng();
             updateCoordinates(pos.lat, pos.lng);
-            // Optional: You could reverse-geocode here to fill address on drag too
         });
 
         // Update inputs on map click
@@ -233,7 +252,6 @@
         }
 
         function selectAddress(item) {
-            // 1. Update Map & Marker
             const newLat = parseFloat(item.lat);
             const newLon = parseFloat(item.lon);
             
@@ -241,36 +259,24 @@
             marker.setLatLng([newLat, newLon]);
             updateCoordinates(newLat, newLon);
 
-            // 2. Populate Address Fields
             const addr = item.address;
-
-            // Street Address
             addressInput.value = (addr.road || addr.house_number) ? 
                                  `${addr.house_number ? addr.house_number + ', ' : ''}${addr.road || ''}` : 
                                  item.display_name.split(',')[0]; 
             
-            // City (Multiple fallbacks)
             document.getElementById('addr_city').value = addr.city || addr.town || addr.village || addr.city_district || addr.county || '';
             
-            // --- STATE LOGIC (Updated for your JSON) ---
             let state = addr.state || addr.state_district || addr.region || '';
-
-            // Special Fix for Delhi (Agar state missing hai par city Delhi hai)
             if (!state && (addr.city === 'Delhi' || addr.city === 'New Delhi')) {
                 state = 'Delhi';
             }
-
             document.getElementById('addr_state').value = state;
-
-            // Country & Pincode
             document.getElementById('addr_country').value = addr.country || '';
             document.getElementById('addr_pincode').value = addr.postcode || '';
 
-            // Hide List
             suggestionList.style.display = 'none';
         }
 
-        // Hide suggestions if clicked outside
         document.addEventListener('click', function(e) {
             if (e.target !== addressInput && e.target !== suggestionList) {
                 suggestionList.style.display = 'none';

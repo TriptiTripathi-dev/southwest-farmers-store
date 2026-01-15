@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\StoreDetail;
 use App\Models\StoreUser;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class StoreProfileController extends Controller
 {
@@ -14,7 +15,6 @@ class StoreProfileController extends Controller
      */
     public function index(Request $request)
     {
-        // Get the logged-in user
         $user = StoreUser::where('id', auth()->user()->id)->first();
         $query = StoreDetail::query();
 
@@ -23,21 +23,22 @@ class StoreProfileController extends Controller
                 ->orWhere('store_code', 'like', '%' . $request->search . '%');
         }
 
-
-
         $stores = $query->latest()->paginate(10);
 
         return view('store.index', compact('stores'));
     }
+
     public function edit(StoreDetail $store)
     {
         return view('store.edit', compact('store'));
     }
+
     public function update(Request $request, StoreDetail $store)
     {
         if (!$store) {
             return back()->with('error', 'Store not found.');
         }
+
         $request->validate([
             'store_name' => 'required|string|max:255',
             'phone'      => 'nullable|string|max:20',
@@ -46,8 +47,10 @@ class StoreProfileController extends Controller
             'pincode'    => 'nullable|string',
             'latitude'   => 'nullable|numeric',
             'longitude'  => 'nullable|numeric',
+            'profile'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validate Image
         ]);
-        $store->update([
+
+        $data = [
             'store_name' => $request->store_name,
             'phone'      => $request->phone,
             'address'    => $request->address,
@@ -57,13 +60,30 @@ class StoreProfileController extends Controller
             'pincode'    => $request->pincode,
             'latitude'   => $request->latitude,
             'longitude'  => $request->longitude,
-        ]);
+        ];
+
+        // Handle Profile Image Upload
+        if ($request->hasFile('profile')) {
+            // Delete old image if it exists
+            if ($store->profile && Storage::disk('public')->exists($store->profile)) {
+                Storage::disk('public')->delete($store->profile);
+            }
+
+            // Store new image
+            $path = $request->file('profile')->store('store-profiles', 'public');
+            $data['profile'] = $path;
+        }
+
+        $store->update($data);
+
         return back()->with('success', 'Store profile updated successfully!');
     }
+
     public function updateStatus(Request $request)
     {
         $warehouse = StoreUser::findOrFail($request->id);
         $warehouse->update(['is_active' => $request->status]);
+
         return response()->json([
             'status'  => true,
             'message' => 'Store status updated successfully.',
