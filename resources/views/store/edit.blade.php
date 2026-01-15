@@ -52,7 +52,7 @@
                             <div class="row mb-4 align-items-center">
                                 <div class="col-md-3 text-center">
                                     @if($store->profile)
-                                        <img src="{{ asset('storage/' . $store->profile) }}" alt="Store Profile" 
+                                        <img src="{{ asset('storage/' . $stores->profile) }}" alt="Store Profile" 
                                              class="img-fluid rounded-circle border shadow-sm" 
                                              style="width: 80px; height: 80px; object-fit: cover;">
                                     @else

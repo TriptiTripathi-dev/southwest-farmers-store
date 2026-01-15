@@ -30,7 +30,8 @@ class StoreProfileController extends Controller
 
     public function edit(StoreDetail $store)
     {
-        return view('store.edit', compact('store'));
+        $stores = StoreUser::where('id',$store->store_user_id)->first();
+        return view('store.edit', compact('store','stores'));
     }
 
    public function update(Request $request, StoreDetail $store)
