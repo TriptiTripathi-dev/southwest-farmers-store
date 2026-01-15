@@ -33,13 +33,12 @@ class StoreProfileController extends Controller
         return view('store.edit', compact('store'));
     }
 
-    public function update(Request $request, StoreDetail $store)
+   public function update(Request $request, StoreDetail $store)
     {
-        dd($store);
-        if (!$store) {
-            return back()->with('error', 'Store not found.');
-        }
-
+        // 1. Remove dd() to allow code to run. 
+        // If $store is null here, ensure your Route is using {store} and not {id}
+        
+        // 2. Validation
         $request->validate([
             'store_name' => 'required|string|max:255',
             'phone'      => 'nullable|string|max:20',
@@ -48,9 +47,10 @@ class StoreProfileController extends Controller
             'pincode'    => 'nullable|string',
             'latitude'   => 'nullable|numeric',
             'longitude'  => 'nullable|numeric',
-            'profile'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validate Image
+            'profile'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        // 3. Prepare data for StoreDetail
         $data = [
             'store_name' => $request->store_name,
             'phone'      => $request->phone,
@@ -63,8 +63,9 @@ class StoreProfileController extends Controller
             'longitude'  => $request->longitude,
         ];
 
-        // Handle Profile Image Upload
+        // 4. Handle Profile Image Upload
         if ($request->hasFile('profile')) {
+            
             // Delete old image if it exists
             if ($store->profile && Storage::disk('public')->exists($store->profile)) {
                 Storage::disk('public')->delete($store->profile);
@@ -72,9 +73,25 @@ class StoreProfileController extends Controller
 
             // Store new image
             $path = $request->file('profile')->store('store-profiles', 'public');
+            
+            // Add path to StoreDetail data array
             $data['profile'] = $path;
+
+            // 5. Update the associated StoreUser (if exists)
+            // Ensure 'store_user_id' is the correct Foreign Key in your store_details table
+            if ($store->store_user_id) {
+                $storeUser = StoreUser::find($store->store_user_id);
+                
+                if ($storeUser) {
+                    // FIX: update() requires an array ['column_name' => 'value']
+                    $storeUser->update([
+                        'profile' => $path
+                    ]);
+                }
+            }
         }
 
+        // 6. Update StoreDetail
         $store->update($data);
 
         return back()->with('success', 'Store profile updated successfully!');
