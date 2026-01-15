@@ -35,6 +35,7 @@ class StoreProfileController extends Controller
 
     public function update(Request $request, StoreDetail $store)
     {
+        dd($store);
         if (!$store) {
             return back()->with('error', 'Store not found.');
         }
