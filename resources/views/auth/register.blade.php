@@ -1,4 +1,4 @@
-<x-guest-layout title="Register | Warehouse POS">
+<x-guest-layout title="Register | Store POS">
     <div class="account-page">
         <div class="container-fluid p-0">
             <div class="row align-items-center justify-content-center vh-100">
@@ -6,8 +6,8 @@
                 <div class="col-xl-4 col-md-6">
 
                     <div class="auth-title-section text-center mb-3">
-                        <h3 class="text-dark">Create Warehouse Account</h3>
-                        <p class="text-muted fs-14">Register new warehouse user</p>
+                        <h3 class="text-dark">Create Store Account</h3>
+                        <p class="text-muted fs-14">Register new Store user</p>
                     </div>
 
                     <form method="POST" action="{{ route('register') }}">

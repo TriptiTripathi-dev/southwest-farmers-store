@@ -22,7 +22,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-muted">App Name</label>
                                 <input type="text" name="app_name" class="form-control form-control-lg bg-light border-0" 
-                                       value="{{ old('app_name', $settings->app_name) }}" placeholder="e.g. Warehouse POS">
+                                       value="{{ old('app_name', $settings->app_name) }}" placeholder="e.g. Store POS">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-muted">App Phone</label>

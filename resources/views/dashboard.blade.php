@@ -1,11 +1,11 @@
-<x-app-layout title="Dashboard | Warehouse POS">
+<x-app-layout title="Dashboard | Store POS">
 
     <div class="container-fluid">
 
         <!-- PAGE HEADER -->
         <div class="py-3 d-flex align-items-center justify-content-between">
-            <h4 class="fs-18 fw-semibold m-0">Warehouse Dashboard</h4>
-            <span class="text-muted fs-14">Live warehouse overview</span>
+            <h4 class="fs-18 fw-semibold m-0">Store Dashboard</h4>
+            <span class="text-muted fs-14">Live Store overview</span>
         </div>
 
         <!-- ================= KPI CARDS ================= -->
@@ -16,7 +16,7 @@
                     <div class="card-body">
                         <p class="text-muted mb-1">Total Stock Value</p>
                         <h3 class="fw-semibold text-success">₹ 12,45,000</h3>
-                        <small class="text-muted">All warehouses</small>
+                        <small class="text-muted">All Stores</small>
                     </div>
                 </div>
             </div>

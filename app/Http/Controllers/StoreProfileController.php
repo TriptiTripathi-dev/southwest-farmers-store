@@ -67,7 +67,7 @@ public function edit(StoreDetail $store)
 
         return response()->json([
             'status'  => true,
-            'message' => 'Warehouse status updated successfully.',
+            'message' => 'Store status updated successfully.',
         ]);
     }
 }

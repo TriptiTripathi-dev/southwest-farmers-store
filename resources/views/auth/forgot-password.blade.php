@@ -1,4 +1,4 @@
-<x-guest-layout title="Forgot Password | Warehouse POS">
+<x-guest-layout title="Forgot Password | Store POS">
     <div class="account-page">
         <div class="container-fluid p-0">
             <div class="row align-items-center justify-content-center g-0 min-vh-100">
@@ -14,7 +14,7 @@
                                 <div class="auth-brand mb-4">
                                     <a href="{{ url('/') }}" class="logo">
                                         <img src="{{ asset('assets/images/logo.jpg') }}"
-                                             alt="Warehouse POS"
+                                             alt="Store POS"
                                              height="40"
                                              class="d-inline-block">
                                     </a>
@@ -35,7 +35,7 @@
                                 <div class="text-center text-lg-start">
                                     <h2 class="fw-bold text-dark mb-3">Password Recovery</h2>
                                     <p class="text-muted fs-15 mb-4 lh-base">
-                                        Don't worry! It happens to the best of us. Enter your email address associated with your Warehouse POS account, and we'll send you a secure link to reset your password.
+                                        Don't worry! It happens to the best of us. Enter your email address associated with your Store POS account, and we'll send you a secure link to reset your password.
                                     </p>
                                     
                                     <div class="info-box p-4 bg-light rounded-3 d-none d-lg-block">
@@ -69,7 +69,7 @@
                                         Forgot Your Password?
                                     </h3>
                                     <p class="text-muted fs-14 mb-0">
-                                        Enter your warehouse email to receive a reset link
+                                        Enter your Store email to receive a reset link
                                     </p>
                                 </div>
 
@@ -155,8 +155,8 @@
                                 <div class="text-center text-muted mt-4">
                                     <small>
                                         Need help? Contact 
-                                        <a href="mailto:support@warehousepos.com" class="text-primary text-decoration-none">
-                                            support@warehousepos.com
+                                        <a href="mailto:support@Storepos.com" class="text-primary text-decoration-none">
+                                            support@Storepos.com
                                         </a>
                                     </small>
                                 </div>

@@ -1,4 +1,4 @@
-<x-guest-layout title="Confirm Password | Warehouse POS">
+<x-guest-layout title="Confirm Password | Store POS">
     <div class="container vh-100 d-flex align-items-center justify-content-center">
 
         <div class="col-md-4">

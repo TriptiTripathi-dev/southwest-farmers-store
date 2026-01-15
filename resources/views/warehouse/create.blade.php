@@ -1,15 +1,15 @@
-<x-app-layout title="Create Warehouse">
+<x-app-layout title="Create Store">
 
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
 
-                <form method="POST" action="{{ route('warehouse.store') }}" class="needs-validation" novalidate>
+                <form method="POST" action="{{ route('Store.store') }}" class="needs-validation" novalidate>
                     @csrf
 
                     <div class="mb-3">
-                        <label class="form-label">Warehouse Name <span class="text-danger">*</span></label>
-                        <input type="text" name="warehouse_name" class="form-control" required>
+                        <label class="form-label">Store Name <span class="text-danger">*</span></label>
+                        <input type="text" name="Store_name" class="form-control" required>
                     </div>
 
                     <div class="mb-3">

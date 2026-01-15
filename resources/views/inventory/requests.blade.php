@@ -5,7 +5,7 @@
             <div class="py-4 d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="h4 fw-bold m-0 text-dark">Stock Requests</h4>
-                    <p class="text-muted small mb-0 mt-1">Track and manage your warehouse requisitions</p>
+                    <p class="text-muted small mb-0 mt-1">Track and manage your Store requisitions</p>
                 </div>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal">
                     <i class="mdi mdi-plus me-2"></i> New Request
@@ -128,7 +128,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-info small mb-3">
-                            <i class="mdi mdi-information-outline me-1"></i> Request items from the Central Warehouse.
+                            <i class="mdi mdi-information-outline me-1"></i> Request items from the Central Store.
                         </div>
                         
                         <div class="mb-3">

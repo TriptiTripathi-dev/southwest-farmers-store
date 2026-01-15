@@ -49,7 +49,7 @@ class StoreInventoryController extends Controller
             'status'             => 'pending',
         ]);
 
-        return back()->with('success', 'Stock requisition sent to Warehouse successfully!');
+        return back()->with('success', 'Stock requisition sent to Store successfully!');
     }
 
     // Section 2: Stock Requests (CRUD with Search & Select)

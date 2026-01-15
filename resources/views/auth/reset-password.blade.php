@@ -1,4 +1,4 @@
-<x-guest-layout title="Reset Password | Warehouse POS">
+<x-guest-layout title="Reset Password | Store POS">
     <div class="account-page">
         <div class="container-fluid">
             <div class="row justify-content-center vh-100 align-items-center">
