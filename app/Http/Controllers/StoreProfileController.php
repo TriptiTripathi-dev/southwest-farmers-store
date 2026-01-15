@@ -15,21 +15,21 @@ class StoreProfileController extends Controller
     public function index(Request $request)
     {
         // Get the logged-in user
-        $user = StoreUser::where('id',auth()->user()->id)->first();
-$query = StoreDetail::query();
+        $user = StoreUser::where('id', auth()->user()->id)->first();
+        $query = StoreDetail::query();
 
         if ($request->search) {
             $query->where('store_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('store_code', 'like', '%' . $request->search . '%');
+                ->orWhere('store_code', 'like', '%' . $request->search . '%');
         }
 
-       
+
 
         $stores = $query->latest()->paginate(10);
 
         return view('store.index', compact('stores'));
     }
-public function edit(StoreDetail $store)
+    public function edit(StoreDetail $store)
     {
         return view('store.edit', compact('store'));
     }
@@ -62,9 +62,8 @@ public function edit(StoreDetail $store)
     }
     public function updateStatus(Request $request)
     {
-        $warehouse = Warehouse::findOrFail($request->id);
+        $warehouse = StoreUser::findOrFail($request->id);
         $warehouse->update(['is_active' => $request->status]);
-
         return response()->json([
             'status'  => true,
             'message' => 'Store status updated successfully.',

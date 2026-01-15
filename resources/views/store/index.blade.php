@@ -1,4 +1,4 @@
-<x-app-layout title="Stores | Inventory System">
+<x-app-layout title="Stores | Store Setting">
 
     <div class="container-fluid">
 
