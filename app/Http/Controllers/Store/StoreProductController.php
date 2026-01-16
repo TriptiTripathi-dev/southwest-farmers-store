@@ -58,7 +58,7 @@ class StoreProductController extends Controller
         // Fetch categories for Local Product creation
         $categories = \App\Models\ProductCategory::where('is_active', true)->get();
 
-        return view('store.inventory.create', compact('globalProducts', 'categories'));
+        return view('inventory.create', compact('globalProducts', 'categories'));
     }
 
     /**
@@ -83,7 +83,7 @@ class StoreProductController extends Controller
                 'selling_price' => $request->selling_price
             ]);
 
-            return redirect()->route('store.inventory.index')->with('success', 'Global product added to inventory.');
+            return redirect()->route('inventory.index')->with('success', 'Global product added to inventory.');
 
         } else {
             // --- TAB B: CREATE LOCAL ---
@@ -115,7 +115,7 @@ class StoreProductController extends Controller
                 'selling_price' => $request->selling_price
             ]);
 
-            return redirect()->route('store.inventory.index')->with('success', 'Local product created and added.');
+            return redirect()->route('inventory.index')->with('success', 'Local product created and added.');
         }
     }
 
@@ -130,7 +130,7 @@ class StoreProductController extends Controller
             ->with('product')
             ->firstOrFail();
             
-        return view('store.inventory.edit', compact('stock'));
+        return view('inventory.edit', compact('stock'));
     }
 
     /**
@@ -171,6 +171,6 @@ class StoreProductController extends Controller
             $msg = "Local product details updated.";
         }
 
-        return redirect()->route('store.inventory.index')->with('success', $msg);
+        return redirect()->route('inventory.index')->with('success', $msg);
     }
 }
