@@ -13,6 +13,7 @@ use App\Http\Controllers\Store\StoreCustomerController;
 use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
+use App\Http\Controllers\Store\StoreProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/general', [GeneralSettingController::class, 'update'])->name('settings.update');
-
+    Route::resource('my-products', StoreProductController::class);
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');

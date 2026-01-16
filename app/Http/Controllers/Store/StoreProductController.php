@@ -36,7 +36,7 @@ class StoreProductController extends Controller
 
         $stocks = $query->orderBy('products.product_name', 'asc')->paginate(10);
 
-        return view('inventory.index', compact('stocks'));
+        return view('my_products.index', compact('stocks'));
     }
 
     /**
@@ -58,7 +58,7 @@ class StoreProductController extends Controller
         // Fetch categories for Local Product creation
         $categories = \App\Models\ProductCategory::where('is_active', true)->get();
 
-        return view('inventory.create', compact('globalProducts', 'categories'));
+        return view('my_products.create', compact('globalProducts', 'categories'));
     }
 
     /**
@@ -83,7 +83,7 @@ class StoreProductController extends Controller
                 'selling_price' => $request->selling_price
             ]);
 
-            return redirect()->route('inventory.index')->with('success', 'Global product added to inventory.');
+            return redirect()->route('my-products.index')->with('success', 'Global product added to inventory.');
 
         } else {
             // --- TAB B: CREATE LOCAL ---
@@ -115,7 +115,7 @@ class StoreProductController extends Controller
                 'selling_price' => $request->selling_price
             ]);
 
-            return redirect()->route('inventory.index')->with('success', 'Local product created and added.');
+            return redirect()->route('my-products.index')->with('success', 'Local product created and added.');
         }
     }
 
@@ -130,7 +130,7 @@ class StoreProductController extends Controller
             ->with('product')
             ->firstOrFail();
             
-        return view('inventory.edit', compact('stock'));
+        return view('my_products.edit', compact('stock'));
     }
 
     /**
@@ -171,6 +171,6 @@ class StoreProductController extends Controller
             $msg = "Local product details updated.";
         }
 
-        return redirect()->route('inventory.index')->with('success', $msg);
+        return redirect()->route('my-products.index')->with('success', $msg);
     }
 }
