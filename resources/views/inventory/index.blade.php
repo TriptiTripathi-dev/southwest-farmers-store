@@ -2,7 +2,7 @@
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4>Store Inventory</h4>
-            <a href="{{ route('store.inventory.create') }}" class="btn btn-primary">
+            <a href="{{ route('inventory.create') }}" class="btn btn-primary">
                 <i class="mdi mdi-plus"></i> Add / Import Product
             </a>
         </div>
@@ -48,7 +48,7 @@
                             </td>
                             <td>${{ number_format($stock->selling_price, 2) }}</td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('store.inventory.edit', $stock->id) }}" class="btn btn-sm btn-light border">
+                                <a href="{{ route('inventory.edit', $stock->id) }}" class="btn btn-sm btn-light border">
                                     Edit
                                 </a>
                             </td>
