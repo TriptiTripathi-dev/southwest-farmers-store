@@ -8,12 +8,15 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Store\StoreRoleController;
 use App\Http\Controllers\Store\StorePermissionController;
 use App\Http\Controllers\Store\GeneralSettingController;
+use App\Http\Controllers\Store\ProductCategoryController;
 use App\Http\Controllers\Store\ProductController;
+use App\Http\Controllers\Store\ProductSubcategoryController;
 use App\Http\Controllers\Store\StoreCustomerController;
 use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
 use App\Http\Controllers\Store\StoreProductController;
+use App\Http\Controllers\Warehouse\ProductController as WarehouseProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,4 +89,35 @@ Route::middleware('auth')->group(function () {
     Route::delete('/inventory/requests/{id}', [StoreInventoryController::class, 'cancelRequest'])->name('inventory.requests.destroy');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
+   
+            // ================= CATEGORIES =================
+        Route::resource('categories', ProductCategoryController::class)
+            ->names('warehouse.categories')->except(['show']);
+
+        Route::post('categories/status', [ProductCategoryController::class, 'changeStatus'])
+            ->name('warehouse.categories.status');
+
+        Route::post('categories/import', [ProductCategoryController::class, 'import'])
+            ->name('warehouse.categories.import');
+
+        Route::get('categories/export', [ProductCategoryController::class, 'export'])
+            ->name('warehouse.categories.export');
+
+        Route::get('categories/sample', [ProductCategoryController::class, 'sample'])
+            ->name('warehouse.categories.sample');
+                // ================= SUBCATEGORIES =================
+        Route::resource('subcategories', ProductSubcategoryController::class)
+            ->names('warehouse.subcategories')->except(['show']);
+
+        Route::post('subcategories/status', [ProductSubcategoryController::class, 'changeStatus'])
+            ->name('warehouse.subcategories.status');
+
+        Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])
+            ->name('warehouse.subcategories.import');
+
+        Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])
+            ->name('warehouse.subcategories.export');
+
+        Route::get('subcategories/sample', [ProductSubcategoryController::class, 'sample'])
+            ->name('warehouse.subcategories.sample');
 });
