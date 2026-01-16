@@ -21,7 +21,7 @@
                         <div class="tab-content" id="myTabContent">
                             
                             <div class="tab-pane fade show active" id="import" role="tabpanel">
-                                <form action="{{ route('store.inventory.store') }}" method="POST">
+                                <form action="#" method="POST">
                                     @csrf
                                     <input type="hidden" name="type" value="import">
                                     
@@ -46,7 +46,7 @@
                             </div>
 
                             <div class="tab-pane fade" id="create" role="tabpanel">
-                                <form action="{{ route('store.inventory.store') }}" method="POST" enctype="multipart/form-data">
+                                <form action="" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <input type="hidden" name="type" value="create">
 
