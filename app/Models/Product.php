@@ -3,30 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    protected $table = 'products';
-    protected $guarded = [];
+    use SoftDeletes;
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'price' => 'decimal:2',
-        'tax_percent' => 'decimal:2',
+    protected $fillable = [
+        'store_id', 'category_id', 'subcategory_id', 
+        'product_name', 'sku', 'image', 'description', 
+        'base_price', 'is_active'
     ];
 
-    public function category()
+    // Helper to check if Global
+    public function getIsGlobalAttribute()
     {
-        return $this->belongsTo(ProductCategory::class, 'category_id');
+        return is_null($this->store_id);
     }
 
-    public function subcategory()
+    // Scopes
+    public function scopeGlobal($query)
     {
-        return $this->belongsTo(ProductSubcategory::class, 'subcategory_id');
+        return $query->whereNull('store_id');
     }
 
-    public function option()
+    public function scopeLocal($query)
     {
-        return $this->belongsTo(ProductOption::class, 'product_option_id');
+        return $query->whereNotNull('store_id');
     }
 }
