@@ -31,4 +31,15 @@ class Product extends Model
     {
         return $query->whereNotNull('store_id');
     }
+
+    // --- ADDED THIS RELATIONSHIP ---
+    public function storeStocks()
+    {
+        return $this->hasMany(StoreStock::class);
+    }
+    
+    public function category()
+    {
+        return $this->belongsTo(ProductCategory::class);
+    }
 }
