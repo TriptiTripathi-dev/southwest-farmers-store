@@ -15,22 +15,22 @@ class StoreProductController extends Controller
      * 1. Product Listing Page (Inventory)
      * Source of Truth: StoreStocks Table
      */
-    public function index(Request $request)
+public function index(Request $request)
     {
         $user = Auth::user();
-        $storeId = $user->store_id ?? $user->id; // Adjust based on your Auth logic
+        $storeId = $user->store_id ?? $user->id;
 
-        $query = StoreStock::where('store_id', $storeId)
-            ->with('product') // Eager load product details
-            ->join('products', 'store_stocks.product_id', '=', 'products.id') // Join for sorting/searching
-            ->select('store_stocks.*'); // Select stock fields primarily
+        // FIX: Use 'store_stocks.store_id' to avoid ambiguity with 'products.store_id'
+        $query = StoreStock::where('store_stocks.store_id', $storeId)
+            ->with('product')
+            ->join('products', 'store_stocks.product_id', '=', 'products.id')
+            ->select('store_stocks.*');
 
-        // Search Logic
         if ($request->has('search')) {
             $search = $request->search;
             $query->whereHas('product', function($q) use ($search) {
-                $q->where('product_name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                $q->where('product_name', 'ilike', "%{$search}%") // Use ilike for Postgres
+                  ->orWhere('sku', 'ilike', "%{$search}%");
             });
         }
 
