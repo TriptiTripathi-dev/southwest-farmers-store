@@ -3,38 +3,56 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductSubcategory;
 use App\Models\ProductCategory;
-use App\Imports\ProductSubcategoryImport;
-use App\Exports\ProductSubcategoryExport;
+use App\Models\ProductSubcategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
+use App\Exports\StoreProductSubcategoryExport;
+use App\Imports\StoreProductSubcategoryImport;
 
 class ProductSubcategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $subcategories = ProductSubcategory::with('category')
-            ->when($request->search, function ($q) use ($request) {
-                $s = $request->search;
-                $q->where('name', 'ilike', "%$s%")
-                    ->orWhere('code', 'ilike', "%$s%")
-                    ->orWhereHas('category', fn($c) => $c->where('name', 'ilike', "%$s%"));
-            })
-            ->when($request->status !== null, fn($q) => $q->where('is_active', $request->status))
-            ->latest()
-            ->paginate(10);
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
 
-        $categories = ProductCategory::active()->orderBy('name')->get();
+        $query = ProductSubcategory::with('category')->where(function($q) use ($storeId) {
+            $q->whereNull('store_id') // Global
+              ->orWhere('store_id', $storeId); // Local
+        });
 
-        return view('warehouse.subcategories.index', compact('subcategories', 'categories'));
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('category_id') && $request->category_id != '') {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $subcategories = $query->latest()->paginate(10);
+        
+        // Fetch categories for filter dropdown
+        $categories = ProductCategory::whereNull('store_id')
+            ->orWhere('store_id', $storeId)
+            ->orderBy('name')
+            ->get();
+
+        return view('store.subcategories.index', compact('subcategories', 'categories'));
     }
 
     public function create()
     {
-        $categories = ProductCategory::active()->get();
-        return view('warehouse.subcategories.create', compact('categories'));
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+
+        // Fetch Categories to attach Subcategory to
+        $categories = ProductCategory::where(function($q) use ($storeId) {
+            $q->whereNull('store_id')->orWhere('store_id', $storeId);
+        })->where('is_active', true)->orderBy('name')->get();
+
+        return view('store.subcategories.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -42,87 +60,98 @@ class ProductSubcategoryController extends Controller
         $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:product_subcategories,code',
-            'icon' => 'nullable|image|max:2048',
+            'code' => 'required|string|unique:product_subcategories,code',
         ]);
 
-        $data = $request->all();
-        if ($request->hasFile('icon')) {
-            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
-        }
+        $user = Auth::user();
+        
+        ProductSubcategory::create([
+            'store_id' => $user->store_id ?? $user->id,
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'code' => $request->code,
+            'is_active' => true
+        ]);
 
-        ProductSubcategory::create($data);
-        return redirect()->route('warehouse.subcategories.index')->with('success', 'Subcategory created successfully');
+        return redirect()->route('store.subcategories.index')->with('success', 'Subcategory created successfully.');
     }
 
-    public function edit(ProductSubcategory $subcategory)
+    public function edit($id)
     {
-        $categories = ProductCategory::active()->get();
-        return view('warehouse.subcategories.edit', compact('subcategory', 'categories'));
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+
+        $subcategory = ProductSubcategory::where('id', $id)
+            ->where('store_id', $storeId)
+            ->firstOrFail();
+
+        $categories = ProductCategory::where(function($q) use ($storeId) {
+            $q->whereNull('store_id')->orWhere('store_id', $storeId);
+        })->where('is_active', true)->orderBy('name')->get();
+
+        return view('store.subcategories.edit', compact('subcategory', 'categories'));
     }
 
-    public function update(Request $request, ProductSubcategory $subcategory)
+    public function update(Request $request, $id)
     {
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+
+        $subcategory = ProductSubcategory::where('id', $id)
+            ->where('store_id', $storeId)
+            ->firstOrFail();
+
         $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:product_subcategories,code,' . $subcategory->id,
-            'icon' => 'nullable|image|max:2048',
+            'code' => 'required|string|unique:product_subcategories,code,' . $id,
         ]);
 
-        $data = $request->all();
-        if ($request->hasFile('icon')) {
-            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
-            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
-        }
+        $subcategory->update([
+            'category_id' => $request->category_id,
+            'name' => $request->name,
+            'code' => $request->code,
+        ]);
 
-        $subcategory->update($data);
-        return back()->with('success', 'Subcategory updated successfully');
+        return redirect()->route('store.subcategories.index')->with('success', 'Subcategory updated successfully.');
     }
 
-    public function destroy(ProductSubcategory $subcategory)
+    public function destroy($id)
     {
-        try {
-            if ($subcategory->productOptions()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Product Options.');
-            if ($subcategory->products()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Products.');
+        $subcategory = ProductSubcategory::where('id', $id)
+            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
+            ->firstOrFail();
 
-            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
-
-            $subcategory->delete();
-            return back()->with('success', 'Subcategory deleted successfully');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed');
-        }
-    }
-    public function changeStatus(Request $request)
-    {
-        try {
-            ProductSubcategory::findOrFail($request->id)->update(['is_active' => $request->status]);
-            return response()->json(['message' => 'Status updated successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Error'], 500);
-        }
+        $subcategory->delete();
+        return back()->with('success', 'Subcategory deleted successfully.');
     }
 
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,csv',
-            'category_id' => 'required|exists:product_categories,id'
-        ]);
-
-        Excel::import(new ProductSubcategoryImport($request->category_id), $request->file);
-
-        return back()->with('success', 'Imported successfully');
+        $request->validate(['file' => 'required|mimes:xlsx,csv']);
+        Excel::import(new StoreProductSubcategoryImport, $request->file('file'));
+        return back()->with('success', 'Subcategories imported successfully.');
     }
 
     public function export()
     {
-        return Excel::download(new ProductSubcategoryExport, 'subcategories.xlsx');
+        return Excel::download(new StoreProductSubcategoryExport, 'subcategories.xlsx');
     }
-
-    public function sample()
+    
+    // Helper for AJAX (Used in Product Create Page later)
+    public function getByCategory(Request $request)
     {
-        return response()->download(storage_path('app/samples/subcategories-sample.xlsx'));
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+
+        $subcategories = ProductSubcategory::where('category_id', $request->category_id)
+            ->where(function($q) use ($storeId) {
+                $q->whereNull('store_id')->orWhere('store_id', $storeId);
+            })
+            ->where('is_active', true)
+            ->select('id', 'name')
+            ->get();
+            
+        return response()->json($subcategories);
     }
 }

@@ -10,8 +10,8 @@ use App\Http\Controllers\Store\StorePermissionController;
 use App\Http\Controllers\Store\GeneralSettingController;
 use App\Http\Controllers\Store\ProductCategoryController;
 use App\Http\Controllers\Store\ProductController;
-use App\Http\Controllers\Store\ProductSubcategoryController;
 use App\Http\Controllers\Store\StoreCustomerController;
+use App\Http\Controllers\Store\ProductSubcategoryController;
 use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
@@ -82,7 +82,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/general', [GeneralSettingController::class, 'update'])->name('settings.update');
-    Route::resource('my-products', StoreProductController::class);
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
@@ -91,33 +90,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
    
             // ================= CATEGORIES =================
-        Route::resource('categories', ProductCategoryController::class)
-            ->names('warehouse.categories')->except(['show']);
+       Route::resource('categories', ProductCategoryController::class);
+    Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
+    Route::get('categories/export', [ProductCategoryController::class, 'export'])->name('categories.export');
+    Route::post('categories/status', [ProductCategoryController::class, 'updateStatus'])->name('categories.status');
 
-        Route::post('categories/status', [ProductCategoryController::class, 'changeStatus'])
-            ->name('warehouse.categories.status');
+    // 2. Subcategories
+    Route::resource('subcategories', ProductSubcategoryController::class);
+    Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
+    Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
+    Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
 
-        Route::post('categories/import', [ProductCategoryController::class, 'import'])
-            ->name('warehouse.categories.import');
-
-        Route::get('categories/export', [ProductCategoryController::class, 'export'])
-            ->name('warehouse.categories.export');
-
-        Route::get('categories/sample', [ProductCategoryController::class, 'sample'])
-            ->name('warehouse.categories.sample');
-                // ================= SUBCATEGORIES =================
-        Route::resource('subcategories', ProductSubcategoryController::class)
-            ->names('warehouse.subcategories')->except(['show']);
-
-        Route::post('subcategories/status', [ProductSubcategoryController::class, 'changeStatus'])
-            ->name('warehouse.subcategories.status');
-
-        Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])
-            ->name('warehouse.subcategories.import');
-
-        Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])
-            ->name('warehouse.subcategories.export');
-
-        Route::get('subcategories/sample', [ProductSubcategoryController::class, 'sample'])
-            ->name('warehouse.subcategories.sample');
+    // 3. Products (Replaces old inventory routes if needed, or works alongside)
+    Route::resource('products', StoreProductController::class);
+    Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
+    Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
+    Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
 });

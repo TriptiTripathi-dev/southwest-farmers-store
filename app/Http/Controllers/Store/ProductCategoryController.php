@@ -4,126 +4,128 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
-use App\Imports\ProductCategoryImport;
-use App\Exports\ProductCategoryExport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
+use App\Exports\StoreProductCategoryExport; // Hum niche banayenge
+use App\Imports\StoreProductCategoryImport; // Hum niche banayenge
 
 class ProductCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = ProductCategory::withCount('subcategories')
-            ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'ilike', "%{$request->search}%")
-                  ->orWhere('code', 'ilike', "%{$request->search}%");
-            })
-            ->when($request->status !== null, function ($q) use ($request) {
-                $q->where('is_active', $request->status);
-            })
-            ->latest()
-            ->paginate(10);
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
 
-        return view('warehouse.categories.index', compact('categories'));
+        $query = ProductCategory::where(function($q) use ($storeId) {
+            $q->whereNull('store_id') // Global
+              ->orWhere('store_id', $storeId); // Local
+        });
+
+        // Search
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by Type
+        if ($request->has('type') && $request->type != '') {
+            if ($request->type == 'warehouse') {
+                $query->whereNull('store_id');
+            } else {
+                $query->whereNotNull('store_id');
+            }
+        }
+
+        $categories = $query->latest()->paginate(10);
+
+        return view('store.categories.index', compact('categories'));
     }
 
     public function create()
     {
-        return view('warehouse.categories.create');
+        return view('store.categories.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:product_categories,code',
-            'icon' => 'nullable|image|max:2048', // Validation
+            'code' => 'required|string|unique:product_categories,code',
         ]);
 
-        $data = $request->all();
+        $user = Auth::user();
+        
+        ProductCategory::create([
+            'store_id' => $user->store_id ?? $user->id, // Mark as Local
+            'name' => $request->name,
+            'code' => $request->code,
+            'is_active' => true
+        ]);
 
-        if ($request->hasFile('icon')) {
-            $data['icon'] = $request->file('icon')->store('categories', 'public');
-        }
-
-        ProductCategory::create($data);
-
-        return redirect()->route('warehouse.categories.index')
-            ->with('success', 'Category created successfully');
+        return redirect()->route('store.categories.index')->with('success', 'Category created successfully.');
     }
 
-    public function edit(ProductCategory $category)
+    public function edit($id)
     {
-        return view('warehouse.categories.edit', compact('category'));
+        $category = ProductCategory::where('id', $id)
+            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
+            ->firstOrFail();
+
+        return view('store.categories.edit', compact('category'));
     }
 
-    public function update(Request $request, ProductCategory $category)
+    public function update(Request $request, $id)
     {
+        $category = ProductCategory::where('id', $id)
+            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
+            ->firstOrFail();
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:product_categories,code,' . $category->id,
-            'icon' => 'nullable|image|max:2048',
+            'code' => 'required|string|unique:product_categories,code,' . $id,
         ]);
 
-        $data = $request->all();
+        $category->update([
+            'name' => $request->name,
+            'code' => $request->code,
+        ]);
 
-        if ($request->hasFile('icon')) {
-            // Delete old icon
-            if ($category->icon) {
-                Storage::disk('public')->delete($category->icon);
-            }
-            $data['icon'] = $request->file('icon')->store('categories', 'public');
-        }
-
-        $category->update($data);
-
-        return back()->with('success', 'Category updated successfully');
+        return redirect()->route('store.categories.index')->with('success', 'Category updated successfully.');
     }
 
-    public function destroy(ProductCategory $category)
+    public function destroy($id)
     {
-        try {
-            if ($category->subcategories()->exists()) {
-                return back()->with('error', 'Cannot delete category with associated subcategories.');
-            }
-            
-            if ($category->icon) {
-                Storage::disk('public')->delete($category->icon);
-            }
+        $category = ProductCategory::where('id', $id)
+            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
+            ->firstOrFail();
 
-            $category->delete();
-            return back()->with('success', 'Category deleted successfully');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed');
-        }
+        $category->delete();
+        return back()->with('success', 'Category deleted successfully.');
     }
 
-    public function changeStatus(Request $request)
+    public function updateStatus(Request $request)
     {
-        try {
-            ProductCategory::findOrFail($request->id)
-                ->update(['is_active' => $request->status]);
-            return response()->json(['message' => 'Status updated successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Error'], 500);
+        // Only allow status toggle for Local Categories
+        $category = ProductCategory::where('id', $request->id)
+            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
+            ->first();
+
+        if ($category) {
+            $category->update(['is_active' => $request->status]);
+            return response()->json(['success' => true]);
         }
+        return response()->json(['success' => false], 403);
     }
 
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,csv']);
-        Excel::import(new ProductCategoryImport, $request->file);
-        return back()->with('success', 'Imported successfully');
+        Excel::import(new StoreProductCategoryImport, $request->file('file'));
+        return back()->with('success', 'Categories imported successfully.');
     }
 
     public function export()
     {
-        return Excel::download(new ProductCategoryExport, 'categories.xlsx');
-    }
-    
-    public function sample()
-    {
-         return response()->download(storage_path('app/samples/categories-sample.xlsx'));
+        return Excel::download(new StoreProductCategoryExport, 'categories.xlsx');
     }
 }

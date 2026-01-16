@@ -85,28 +85,26 @@
                   @php
                         $isProductsActive = request()->routeIs('products.index');
                     @endphp
-                <li class="menuitem-{{ request()->routeIs('products.index') ? 'active' : '' }} {{ request()->routeIs('products.index') ? 'show' : '' }}">
-                  
-                     <a href="#sidebarProducts" data-bs-toggle="collapse" 
-                       class="tp-link {{ request()->routeIs('products.index') ? 'active' : '' }}"
-                       aria-expanded="{{ request()->routeIs('products.index') ? 'true' : 'false' }}">
-                        <span class="nav-icon">
-                            <iconify-icon icon="tabler:users-group"></iconify-icon>
-                        </span>
-                        <span class="sidebar-text"> Products </span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse {{ request()->routeIs('products.index') ? 'show' : '' }}" id="sidebarProducts">
-                        <ul class="nav-second-level">
-                            <li>
-                                <a href="{{route('products.index')}}" class="tp-link {{ request()->routeIs('products.index') ? 'active' : '' }}">
-                                    Product Catalog
-                                  
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+               <li class="nav-item">
+    <a class="nav-link collapsed" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarProducts">
+        <i class="mdi mdi-package-variant-closed menu-icon"></i>
+        <span class="menu-title">Products</span>
+        <i class="menu-arrow"></i>
+    </a>
+    <div class="collapse" id="sidebarProducts">
+        <ul class="nav flex-column sub-menu">
+            <li class="nav-item"> 
+                <a class="nav-link" href="{{ route('store.categories.index') }}">Categories</a>
+            </li>
+            <li class="nav-item"> 
+                <a class="nav-link" href="{{ route('store.subcategories.index') }}">Subcategories</a>
+            </li>
+            <li class="nav-item"> 
+                <a class="nav-link" href="{{ route('store.products.index') }}">Product List</a>
+            </li>
+        </ul>
+    </div>
+</li>
 
                 {{-- ORDERS --}}
                 <li>
