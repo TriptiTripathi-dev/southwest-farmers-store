@@ -94,13 +94,13 @@
     <div class="collapse" id="sidebarProducts">
         <ul class="nav flex-column sub-menu">
             <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.categories.index') }}">Categories</a>
+                <a class="nav-link" href="{{ route('categories.index') }}">Categories</a>
             </li>
             <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.subcategories.index') }}">Subcategories</a>
+                <a class="nav-link" href="{{ route('subcategories.index') }}">Subcategories</a>
             </li>
             <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.products.index') }}">Product List</a>
+                <a class="nav-link" href="{{ route('products.index') }}">Product List</a>
             </li>
         </ul>
     </div>
