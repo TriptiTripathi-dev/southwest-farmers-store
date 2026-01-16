@@ -88,22 +88,25 @@ Route::middleware('auth')->group(function () {
     Route::delete('/inventory/requests/{id}', [StoreInventoryController::class, 'cancelRequest'])->name('inventory.requests.destroy');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
-   
-            // ================= CATEGORIES =================
-       Route::resource('categories', ProductCategoryController::class);
-    Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
-    Route::get('categories/export', [ProductCategoryController::class, 'export'])->name('categories.export');
-    Route::post('categories/status', [ProductCategoryController::class, 'updateStatus'])->name('categories.status');
 
-    // 2. Subcategories
-    Route::resource('subcategories', ProductSubcategoryController::class);
-    Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
-    Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
-    Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
+    Route::prefix('store')->name('store.')->group(function () {
 
-    // 3. Products (Replaces old inventory routes if needed, or works alongside)
-    Route::resource('products', StoreProductController::class);
-    Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
-    Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
-    Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
+        // ================= CATEGORIES =================
+        Route::resource('categories', ProductCategoryController::class);
+        Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
+        Route::get('categories/export', [ProductCategoryController::class, 'export'])->name('categories.export');
+        Route::post('categories/status', [ProductCategoryController::class, 'updateStatus'])->name('categories.status');
+
+        // ================= SUBCATEGORIES =================
+        Route::resource('subcategories', ProductSubcategoryController::class);
+        Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
+        Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
+        Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
+
+        // ================= PRODUCTS =================
+        Route::resource('products', StoreProductController::class);
+        Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
+        Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
+        Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
+    });
 });
