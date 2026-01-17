@@ -3,174 +3,187 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\ProductSubcategory;
 use App\Models\StoreStock;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StoreProductExport;
+use App\Imports\StoreProductImport;
 
 class StoreProductController extends Controller
 {
-    /**
-     * 1. Product Listing Page (Inventory)
-     * Source of Truth: StoreStocks Table
-     */
-public function index(Request $request)
+    public function index(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
-        // FIX: Use 'store_stocks.store_id' to avoid ambiguity with 'products.store_id'
+        // Query Store Stocks (linked with Products)
         $query = StoreStock::where('store_stocks.store_id', $storeId)
-            ->with('product')
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->select('store_stocks.*');
+            ->select('store_stocks.*', 'products.store_id as product_store_id', 'products.product_name', 'products.sku', 'products.image', 'products.is_active as product_status');
 
+        // Search
         if ($request->has('search')) {
             $search = $request->search;
-            $query->whereHas('product', function($q) use ($search) {
-                $q->where('product_name', 'ilike', "%{$search}%") // Use ilike for Postgres
-                  ->orWhere('sku', 'ilike', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('products.product_name', 'like', "%{$search}%")
+                  ->orWhere('products.sku', 'like', "%{$search}%");
             });
         }
 
-        $stocks = $query->orderBy('products.product_name', 'asc')->paginate(10);
+        // Filter by Type
+        if ($request->has('type') && $request->type != '') {
+            if ($request->type == 'warehouse') {
+                $query->whereNull('products.store_id');
+            } else {
+                $query->whereNotNull('products.store_id');
+            }
+        }
 
-        return view('my_products.index', compact('stocks'));
+        $products = $query->orderBy('products.product_name')->paginate(10);
+        $categories = ProductCategory::where('is_active', true)->get(); // For Import Modal
+
+        return view('store.products.index', compact('products', 'categories'));
     }
 
-    /**
-     * Show Create/Import Page
-     */
     public function create()
     {
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
-
-        // Fetch Global Products that are NOT yet in this store's stock
-        $globalProducts = Product::global()
+        
+        // Fetch Categories (Global + Local)
+        $categories = ProductCategory::whereNull('store_id')
+            ->orWhere('store_id', $storeId)
             ->where('is_active', true)
-            ->whereDoesntHave('storeStocks', function($q) use ($storeId) {
-                $q->where('store_id', $storeId);
-            })
             ->get();
 
-        // Fetch categories for Local Product creation
-        $categories = \App\Models\ProductCategory::where('is_active', true)->get();
-
-        return view('my_products.create', compact('globalProducts', 'categories'));
+        return view('store.products.create', compact('categories'));
     }
 
-    /**
-     * Store Logic (Handles both Tab A and Tab B)
-     */
     public function store(Request $request)
     {
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'sku' => 'required|unique:products,sku',
+            'category_id' => 'required',
+            'selling_price' => 'required|numeric',
+        ]);
+
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
-        if ($request->type === 'import') {
-            // --- TAB A: IMPORT GLOBAL ---
-            $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'selling_price' => 'required|numeric|min:0'
-            ]);
-
-            StoreStock::create([
-                'store_id' => $storeId,
-                'product_id' => $request->product_id,
-                'quantity' => 0, // Default start
-                'selling_price' => $request->selling_price
-            ]);
-
-            return redirect()->route('my-products.index')->with('success', 'Global product added to inventory.');
-
-        } else {
-            // --- TAB B: CREATE LOCAL ---
-            $request->validate([
-                'product_name' => 'required|string|max:255',
-                'sku' => 'required|string|unique:products,sku',
-                'category_id' => 'required|exists:product_categories,id',
-                'selling_price' => 'required|numeric|min:0',
-                'image' => 'nullable|image|max:2048'
-            ]);
-
-            // 1. Create Product (Local)
-            $productData = $request->only(['product_name', 'sku', 'description', 'category_id']);
-            $productData['store_id'] = $storeId; // Mark as Local
-            $productData['is_active'] = 1;
-            
-            // Handle Image
-            if ($request->hasFile('image')) {
-                $productData['image'] = $request->file('image')->store('products', 'public');
-            }
-
-            $product = Product::create($productData);
-
-            // 2. Create Stock Entry
-            StoreStock::create([
-                'store_id' => $storeId,
-                'product_id' => $product->id,
-                'quantity' => 0,
-                'selling_price' => $request->selling_price
-            ]);
-
-            return redirect()->route('my-products.index')->with('success', 'Local product created and added.');
-        }
-    }
-
-    /**
-     * Edit Page
-     */
-    public function edit($id)
-    {
-        // Find Stock entry, ensuring it belongs to this store
-        $stock = StoreStock::where('id', $id)
-            ->where('store_id', Auth::user()->store_id ?? Auth::user()->id)
-            ->with('product')
-            ->firstOrFail();
-            
-        return view('my_products.edit', compact('stock'));
-    }
-
-    /**
-     * Update Logic (Restricted based on Global/Local)
-     */
-    public function update(Request $request, $id)
-    {
-        $stock = StoreStock::where('id', $id)->firstOrFail();
-        $product = $stock->product;
-
-        // Validation Common to both
-        $request->validate([
-            'selling_price' => 'required|numeric|min:0',
+        // 1. Create Local Product
+        $product = Product::create([
+            'store_id' => $storeId,
+            'category_id' => $request->category_id,
+            'subcategory_id' => $request->subcategory_id,
+            'product_name' => $request->product_name,
+            'sku' => $request->sku,
+            'barcode' => $request->barcode,
+            'unit' => $request->unit ?? 'pcs',
+            'price' => $request->selling_price, // Base price same as selling
+            'image' => $request->hasFile('image') ? $request->file('image')->store('products', 'public') : null,
+            'is_active' => true
         ]);
 
-        // Update Stock Price (Allowed for everyone)
+        // 2. Add to Stock
+        StoreStock::create([
+            'store_id' => $storeId,
+            'product_id' => $product->id,
+            'quantity' => 0,
+            'selling_price' => $request->selling_price
+        ]);
+
+        return redirect()->route('store.products.index')->with('success', 'Product created successfully.');
+    }
+
+    public function edit($id)
+    {
+        // $id here is the store_stocks.id (from the list)
+        $stock = StoreStock::where('id', $id)->with('product')->firstOrFail();
+        
+        // Check permissions inside view or here?
+        // We will allow editing "selling_price" for everyone.
+        // Full edit only for Local.
+
+        $categories = ProductCategory::all(); 
+        // Note: For full edit, you might want to load subcategories via JS or pass them if Local.
+        
+        return view('store.products.edit', compact('stock', 'categories'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $stock = StoreStock::findOrFail($id);
+        $product = $stock->product;
+
+        $request->validate(['selling_price' => 'required|numeric']);
+
+        // 1. Always update Selling Price
         $stock->update(['selling_price' => $request->selling_price]);
 
-        // Logic Split
-        if ($product->is_global) {
-            // GLOBAL PRODUCT: Do not update name/image/description
-            // Only stock price updated above.
-            $msg = "Selling price updated.";
-        } else {
-            // LOCAL PRODUCT: Allow full update
-            $request->validate([
-                'product_name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-            ]);
-
-            $prodData = $request->only(['product_name', 'description']);
-
+        // 2. If Local Product, update other details
+        if ($product->store_id != null) {
+            $product->update($request->only([
+                'product_name', 'description', 'category_id', 'subcategory_id', 'unit', 'barcode'
+            ]));
+            
             if ($request->hasFile('image')) {
-                $prodData['image'] = $request->file('image')->store('products', 'public');
+                $product->update(['image' => $request->file('image')->store('products', 'public')]);
             }
-
-            $product->update($prodData);
-            $msg = "Local product details updated.";
         }
 
-        return redirect()->route('my-products.index')->with('success', $msg);
+        return redirect()->route('store.products.index')->with('success', 'Product updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $stock = StoreStock::findOrFail($id);
+        $product = $stock->product;
+
+        // Only allow delete if it's a Local Product
+        if ($product->store_id != null) {
+            $stock->delete(); // Remove stock entry
+            $product->delete(); // Soft delete product
+            return back()->with('success', 'Local product deleted.');
+        }
+
+        return back()->with('error', 'Cannot delete Warehouse products.');
+    }
+
+    public function updateStatus(Request $request)
+    {
+        // Only for Local Products
+        $product = Product::find($request->id);
+        if ($product && $product->store_id != null) {
+            $product->update(['is_active' => $request->status]);
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false], 403);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv',
+            'category_id' => 'required',
+            'subcategory_id' => 'required'
+        ]);
+
+        // Pass Category/Subcategory IDs to the Import Class
+        Excel::import(new StoreProductImport(
+            $request->category_id, 
+            $request->subcategory_id
+        ), $request->file('file'));
+
+        return back()->with('success', 'Products imported successfully.');
+    }
+
+    public function export()
+    {
+        return Excel::download(new StoreProductExport, 'products.xlsx');
     }
 }
