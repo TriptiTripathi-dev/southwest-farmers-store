@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
 # 1️⃣ System dependencies (Includes libpq-dev for Postgres)
 RUN apt-get update && apt-get install -y --no-install-recommends \
