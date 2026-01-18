@@ -17,7 +17,7 @@ class StoreInventoryController extends Controller
     {
         $user = Auth::user();
 
-          $query = StoreStock::where('store_id', $user->id)
+          $query = StoreStock::where('store_id', $user->store_id)
             ->with('product');
             if ($request->filled('search')) {
             $search = $request->search;
