@@ -86,7 +86,7 @@
                 $isProductsActive = request()->routeIs('products.*');
                 $isCategoryActive = request()->routeIs('store.categories.*');
                 $isSubCategoryActive = request()->routeIs('store.subcategories.*');
-                $allActive = request()->routeIs('products.*') || request()->routeIs('store.categories.*') || request()->routeIs('store.subcategories.*');
+                $allActive = $isProductsActive || $isCategoryActive || $isSubCategoryActive;
                 @endphp
                 <li class="menuitem-{{ $allActive  ? 'active' : '' }} {{ $allActive ? 'show' : '' }}">
                     <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="{{ $allActive ? 'true' : 'false' }}" aria-controls="sidebarProducts">
