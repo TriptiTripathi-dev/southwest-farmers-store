@@ -89,7 +89,7 @@
                 $allActive = $isProductsActive || $isCategoryActive || $isSubCategoryActive;
                 @endphp
                 <li class="menuitem-{{ $allActive  ? 'active' : '' }} {{ $allActive ? 'show' : '' }}">
-                    <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="{{ $allActive ? 'true' : 'false' }}" aria-controls="sidebarProducts">
+                    <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts"  aria-expanded="{{ $allActive ? 'true' : 'false' }}" >
                         <i class="mdi mdi-package-variant-closed menu-icon"></i>
                         <span class="menu-title">Products</span>
                         <i class="menu-arrow"></i>
