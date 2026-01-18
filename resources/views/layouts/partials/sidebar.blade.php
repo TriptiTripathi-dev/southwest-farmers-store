@@ -92,9 +92,11 @@
                     <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts"  data-bs-toggle="collapse"
                         class="tp-link {{ $allActive ? 'active' : '' }}"
                         aria-expanded="{{ $allActive ? 'true' : 'false' }}" >
-                        <i class="mdi mdi-package-variant-closed menu-icon"></i>
-                        <span class="menu-title">Products</span>
-                        <i class="menu-arrow"></i>
+                       <span class="nav-icon">
+                            <iconify-icon icon="tabler:box-seam"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Products</span>
+                        <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
                         <ul class="nav flex-column sub-menu">
