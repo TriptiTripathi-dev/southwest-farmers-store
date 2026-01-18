@@ -85,7 +85,7 @@ class StoreProductController extends Controller
             'barcode' => $request->barcode,
             'unit' => $request->unit ?? 'pcs',
             'price' => $request->selling_price, // Base price same as selling
-            'image' => $request->hasFile('image') ? $request->file('image')->store('products', 'public') : null,
+            'icon' => $request->hasFile('image') ? $request->file('image')->store('products', 'public') : null,
             'is_active' => true
         ]);
 
@@ -132,7 +132,7 @@ class StoreProductController extends Controller
             ]));
             
             if ($request->hasFile('image')) {
-                $product->update(['image' => $request->file('image')->store('products', 'public')]);
+                $product->update(['icon' => $request->file('image')->store('products', 'public')]);
             }
         }
 
