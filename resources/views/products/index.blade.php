@@ -163,7 +163,7 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="rounded bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-3 border border-success border-opacity-25" style="width: 36px; height: 36px;">
-                                                    <i class="mdi mdi-check text-success"></i>
+                                                   <img src="{{asset('storage/'.$product->icon)}}">
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-0 fw-semibold text-dark">{{ $product->product_name }}</h6>
