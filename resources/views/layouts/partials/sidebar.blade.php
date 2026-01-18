@@ -99,14 +99,14 @@
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
-                        <ul class="nav flex-column sub-menu">
-                            <li class="nav-item">
+                        <ul class="nav-second-level">
+                            <li >
                                 <a class="tp-link {{ $isCategoryActive ? 'active' : '' }}" href="{{ route('store.categories.index') }}">Categories</a>
                             </li>
-                            <li class="nav-item">
+                            <li >
                                 <a class="tp-link {{ $isSubCategoryActive ? 'active' : '' }}" href="{{ route('store.subcategories.index') }}">Subcategories</a>
                             </li>
-                            <li class="nav-item">
+                            <li >
                                 <a class="tp-link {{ $isProductsActive ? 'active' : '' }}" href="{{ route('store.products.index') }}">Product List</a>
                             </li>
                         </ul>
