@@ -18,7 +18,7 @@ class StoreProfileController extends Controller
             $query->where('store_name', 'like', '%' . $request->search . '%')
                 ->orWhere('store_code', 'like', '%' . $request->search . '%');
         }
-        $query->where('stpre_user_id',$user->id);
+        $query->where('store_user_id',$user->id);
         $stores = $query->latest()->paginate(10);
         return view('store.index', compact('stores'));
     }
