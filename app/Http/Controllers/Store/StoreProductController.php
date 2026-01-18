@@ -23,7 +23,7 @@ class StoreProductController extends Controller
         // Query Store Stocks (linked with Products)
         $query = StoreStock::where('store_stocks.store_id', $storeId)
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->select('store_stocks.*', 'products.store_id as product_store_id', 'products.product_name', 'products.sku', 'products.image', 'products.is_active as product_status');
+            ->select('store_stocks.*', 'products.store_id as product_store_id', 'products.product_name', 'products.sku', 'products.icon', 'products.is_active as product_status');
 
         // Search
         if ($request->has('search')) {
