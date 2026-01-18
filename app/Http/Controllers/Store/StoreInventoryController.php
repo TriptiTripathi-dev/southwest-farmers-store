@@ -43,7 +43,7 @@ class StoreInventoryController extends Controller
 
         // Create the request
         StockRequest::create([
-            'store_id'           => $user->id,
+            'store_id'           => $user->store_id,
             'product_id'         => $request->product_id,
             'requested_quantity' => $request->quantity,
             'status'             => 'pending',
