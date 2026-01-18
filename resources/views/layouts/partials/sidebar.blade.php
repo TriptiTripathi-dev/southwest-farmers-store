@@ -97,13 +97,13 @@
                     <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
                         <ul class="nav flex-column sub-menu">
                             <li class="nav-item">
-                                <a class="tp-link {{ request()->routeIs('store.categories.*') ? 'active' : '' }}" href="{{ route('store.categories.index') }}">Categories</a>
+                                <a class="tp-link {{ $isCategoryActive ? 'active' : '' }}" href="{{ route('store.categories.index') }}">Categories</a>
                             </li>
                             <li class="nav-item">
-                                <a class="tp-link  {{ request()->routeIs('store.subcategories.*') ? 'active' : '' }}" href="{{ route('store.subcategories.index') }}">Subcategories</a>
+                                <a class="tp-link {{ $isSubCategoryActive ? 'active' : '' }}" href="{{ route('store.subcategories.index') }}">Subcategories</a>
                             </li>
                             <li class="nav-item">
-                                <a class="tp-link  {{ request()->routeIs('store.products.*') ? 'active' : '' }}" href="{{ route('store.products.index') }}">Product List</a>
+                                <a class="tp-link {{ $isProductsActive ? 'active' : '' }}" href="{{ route('store.products.index') }}">Product List</a>
                             </li>
                         </ul>
                     </div>
