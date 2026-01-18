@@ -10,12 +10,10 @@ use Illuminate\Support\Facades\Storage;
 
 class StoreProfileController extends Controller
 {
-    /**
-     * Show the Store Profile Page
-     */
     public function index(Request $request)
     {
         $user = StoreUser::where('id', auth()->user()->id)->first();
+        dd($user);
         $query = StoreDetail::query();
 
         if ($request->search) {
@@ -36,10 +34,6 @@ class StoreProfileController extends Controller
 
    public function update(Request $request, StoreDetail $store)
     {
-        // 1. Remove dd() to allow code to run. 
-        // If $store is null here, ensure your Route is using {store} and not {id}
-        
-        // 2. Validation
         $request->validate([
             'store_name' => 'required|string|max:255',
             'phone'      => 'nullable|string|max:20',

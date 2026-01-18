@@ -16,7 +16,7 @@ class StaffController extends Controller
     {
         $currentUser = Auth::user();
 
-        $query = StoreUser::where('parent_id', $currentUser->id)
+        $query = StoreUser::where('store_id', $currentUser->store_id)
             ->where('id', '!=', $currentUser->id)
             ->with('roles');
 
