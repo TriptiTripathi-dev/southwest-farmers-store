@@ -12,8 +12,8 @@ class StoreProfileController extends Controller
 {
     public function index(Request $request)
     {
-        $user = StoreUser::where('id', auth()->user()->id)->first();
-        dd($user);
+        $user = StoreUser::where('store_id', auth()->user()->store_id)->first();
+        
         $query = StoreDetail::query();
 
         if ($request->search) {

@@ -21,7 +21,7 @@ class StoreUser extends Authenticatable
         'password',
         'phone',
         'profile',
-        'designation',   // Yahan Role ID store karenge
+        'store_role_id',   // Yahan Role ID store karenge
         'is_active',
     ];
 

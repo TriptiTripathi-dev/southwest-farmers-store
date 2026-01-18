@@ -35,7 +35,7 @@ class StaffController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('designation', $request->role);
+            $query->where('store_role_id', $request->role);
         }
 
         if ($request->filled('status')) {
@@ -104,7 +104,7 @@ class StaffController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
-                'designation' => $request->role_id,
+                'store_role_id' => $request->role_id,
                 'is_active' => $request->has('is_active') ? 1 : 0,
             ]);
 
@@ -127,7 +127,7 @@ class StaffController extends Controller
         $currentUser = Auth::user();
         $staff = StoreUser::where('id', $id)->where('parent_id', $currentUser->id)->firstOrFail();
         $roles = StoreRole::where('name', '!=', 'Super Admin')->get();
-        $currentRoleId = $staff->designation ?? $staff->roles->first()?->id;
+        $currentRoleId = $staff->store_role_id ?? $staff->roles->first()?->id;
 
         return view('staff.edit', compact('staff', 'roles', 'currentRoleId'));
     }
@@ -153,7 +153,7 @@ class StaffController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'designation' => $request->role_id,
+                'store_role_id' => $request->role_id,
                 'is_active' => $request->has('is_active') ? 1 : 0,
             ];
 
