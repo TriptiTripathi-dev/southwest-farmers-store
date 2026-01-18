@@ -10,9 +10,17 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'store_id', 'category_id', 'subcategory_id', 
-        'product_name', 'sku', 'image', 'description', 
-        'base_price', 'is_active'
+        'store_id', 
+        'category_id', 
+        'subcategory_id', 
+        'product_name', 
+        'sku', 
+        'barcode',       // Added
+        'unit',          // Added
+        'price',         // Fixed (was base_price)
+        'icon',          // Fixed (matches DB column)
+        'description', 
+        'is_active'
     ];
 
     // Helper to check if Global
@@ -32,7 +40,7 @@ class Product extends Model
         return $query->whereNotNull('store_id');
     }
 
-    // --- ADDED THIS RELATIONSHIP ---
+    // Relationships
     public function storeStocks()
     {
         return $this->hasMany(StoreStock::class);
