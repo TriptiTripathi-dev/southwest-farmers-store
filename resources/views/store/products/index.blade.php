@@ -54,8 +54,8 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ asset('storage/'.$item->image) }}" class="rounded-circle" width="30" height="30" 
-                                                     onerror="this.src='https://via.placeholder.com/30'">
+                                                <img src="{{ asset('storage/'.$item->icon) }}" class="rounded-circle" width="30" height="30" 
+                                                    >
                                                 <div class="ms-3">
                                                     <p class="mb-0 fw-bold">{{ $item->product_name }}</p>
                                                 </div>
