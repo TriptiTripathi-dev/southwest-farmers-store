@@ -13,16 +13,13 @@ class StoreProfileController extends Controller
     public function index(Request $request)
     {
         $user = StoreUser::where('store_id', auth()->user()->store_id)->first();
-        
         $query = StoreDetail::query();
-
         if ($request->search) {
             $query->where('store_name', 'like', '%' . $request->search . '%')
                 ->orWhere('store_code', 'like', '%' . $request->search . '%');
         }
-
+        $query->where('stpre_user_id',$user->id);
         $stores = $query->latest()->paginate(10);
-
         return view('store.index', compact('stores'));
     }
 
