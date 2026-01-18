@@ -1,15 +1,15 @@
 <div class="app-sidebar-menu">
     <div class="h-100" data-simplebar>
         <div id="sidebar-menu">
-@php
-   
-     $logo = asset('assets/images/logo.jpg');
-   
-        $settings = \App\Models\StoreSetting::first();
-        if($settings && $settings->logo) {
+            @php
+
+            $logo = asset('assets/images/logo.jpg');
+
+            $settings = \App\Models\StoreSetting::first();
+            if($settings && $settings->logo) {
             $logo = asset('storage/' . $settings->logo);
-        }
-@endphp
+            }
+            @endphp
             {{-- LOGO SECTION --}}
             <div class="logo-box">
                 <a href="{{ route('dashboard') }}" class="logo logo-light">
@@ -49,11 +49,11 @@
                 {{-- INVENTORY --}}
                 <li>
                     @php
-                        $isInventoryActive = request()->routeIs('inventory.index','inventory.requests','inventory.adjustments'); 
+                    $isInventoryActive = request()->routeIs('inventory.index','inventory.requests','inventory.adjustments');
                     @endphp
-                    <a href="#sidebarInventory" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isInventoryActive ? 'active' : '' }}" 
-                       aria-expanded="{{ $isInventoryActive ? 'true' : 'false' }}">
+                    <a href="#sidebarInventory" data-bs-toggle="collapse"
+                        class="tp-link {{ $isInventoryActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isInventoryActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                         </span>
@@ -82,36 +82,39 @@
                 </li>
 
                 {{-- PRODUCTS --}}
-                  @php
-                        $isProductsActive = request()->routeIs('products.index');
-                    @endphp
-               <li class="nav-item">
-    <a class="nav-link collapsed" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarProducts">
-        <i class="mdi mdi-package-variant-closed menu-icon"></i>
-        <span class="menu-title">Products</span>
-        <i class="menu-arrow"></i>
-    </a>
-    <div class="collapse" id="sidebarProducts">
-        <ul class="nav flex-column sub-menu">
-            <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.categories.index') }}">Categories</a>
-            </li>
-            <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.subcategories.index') }}">Subcategories</a>
-            </li>
-            <li class="nav-item"> 
-                <a class="nav-link" href="{{ route('store.products.index') }}">Product List</a>
-            </li>
-        </ul>
-    </div>
-</li>
+                @php
+                $isProductsActive = request()->routeIs('products.*');
+                $isCategoryActive = request()->routeIs('store.categories.*');
+                $isSubCategoryActive = request()->routeIs('store.subcategories.*');
+                $allActive = request()->routeIs('products.*') || request()->routeIs('store.categories.*') || request()->routeIs('store.subcategories.*');
+                @endphp
+                <li class="menuitem-{{ $allActive  ? 'active' : '' }} {{ $allActive ? 'show' : '' }}">
+                    <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="{{ $allActive ? 'true' : 'false' }}" aria-controls="sidebarProducts">
+                        <i class="mdi mdi-package-variant-closed menu-icon"></i>
+                        <span class="menu-title">Products</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+                    <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item">
+                                <a class="tp-link {{ request()->routeIs($isCategoryActive) ? 'active' : '' }}" href="{{ route('store.categories.index') }}">Categories</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="tp-link {{ request()->routeIs($isSubCategoryActive) ? 'active' : '' }}" href="{{ route('store.subcategories.index') }}">Subcategories</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="tp-link {{ request()->routeIs($isProductsActive) ? 'active' : '' }}" href="{{ route('store.products.index') }}">Product List</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
 
                 {{-- ORDERS --}}
                 <li>
                     @php $isOrdersActive = request()->is('orders*'); @endphp
-                    <a href="#sidebarOrders" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isOrdersActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isOrdersActive ? 'true' : 'false' }}">
+                    <a href="#sidebarOrders" data-bs-toggle="collapse"
+                        class="tp-link {{ $isOrdersActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isOrdersActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:shopping-cart"></iconify-icon>
                         </span>
@@ -142,9 +145,9 @@
                 {{-- SALES & BILLING --}}
                 <li>
                     @php $isSalesActive = request()->is('sales*'); @endphp
-                    <a href="#sidebarSales" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isSalesActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isSalesActive ? 'true' : 'false' }}">
+                    <a href="#sidebarSales" data-bs-toggle="collapse"
+                        class="tp-link {{ $isSalesActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isSalesActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:receipt"></iconify-icon>
                         </span>
@@ -173,23 +176,23 @@
                 </li>
 
                 {{-- CUSTOMERS --}}
-               <li>
-    <a href="{{ route('customers.index') }}" class="tp-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
-        <span class="nav-icon">
-            <iconify-icon icon="tabler:users-group"></iconify-icon>
-        </span>
-        <span class="sidebar-text"> Customers </span>
-    </a>
-</li>
+                <li>
+                    <a href="{{ route('customers.index') }}" class="tp-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:users-group"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Customers </span>
+                    </a>
+                </li>
 
                 <li class="menu-title mt-2">Management</li>
 
                 {{-- REPORTS --}}
                 <li>
                     @php $isReportsActive = request()->is('reports*'); @endphp
-                    <a href="#sidebarReports" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isReportsActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isReportsActive ? 'true' : 'false' }}">
+                    <a href="#sidebarReports" data-bs-toggle="collapse"
+                        class="tp-link {{ $isReportsActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isReportsActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:chart-bar"></iconify-icon>
                         </span>
@@ -215,9 +218,9 @@
                 {{-- SUPPORT --}}
                 <li>
                     @php $isSupportActive = request()->is('support*'); @endphp
-                    <a href="#sidebarSupport" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isSupportActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isSupportActive ? 'true' : 'false' }}">
+                    <a href="#sidebarSupport" data-bs-toggle="collapse"
+                        class="tp-link {{ $isSupportActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isSupportActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:headset"></iconify-icon>
                         </span>
@@ -241,14 +244,14 @@
                 </li>
 
                 {{-- STAFF MANAGEMENT --}}
-                 @php 
-                        $isStaffActive = request()->routeIs('staff.*');
-                    @endphp
+                @php
+                $isStaffActive = request()->routeIs('staff.*');
+                @endphp
                 <li class="menuitem-{{ $isStaffActive ? 'active' : '' }} {{ $isStaffActive ? 'show' : '' }}">
-                   
-                    <a href="#sidebarStaff" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isStaffActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isStaffActive ? 'true' : 'false' }}">
+
+                    <a href="#sidebarStaff" data-bs-toggle="collapse"
+                        class="tp-link {{ $isStaffActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isStaffActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:users-group"></iconify-icon>
                         </span>
@@ -258,8 +261,8 @@
                     <div class="collapse {{ $isStaffActive ? 'show' : '' }}" id="sidebarStaff">
                         <ul class="nav-second-level">
                             <li>
-                                <a href="{{ route('staff.index') }}" 
-                                   class="tp-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
+                                <a href="{{ route('staff.index') }}"
+                                    class="tp-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
                                     Store Staff
                                 </a>
                             </li>
@@ -268,38 +271,38 @@
                 </li>
 
                 {{-- ACCESS CONTROL (Roles & Permissions) --}}
-                 @php
-                        $isRoleActive = request()->routeIs('roles.*');
-                        $isPermissionActive = request()->routeIs('permissions.*');
-                        $isAccessActive = $isRoleActive || $isPermissionActive;
-                    @endphp
+                @php
+                $isRoleActive = request()->routeIs('roles.*');
+                $isPermissionActive = request()->routeIs('permissions.*');
+                $isAccessActive = $isRoleActive || $isPermissionActive;
+                @endphp
                 <li class="menuitem-{{ $isAccessActive ? 'active' : '' }} {{ $isAccessActive ? 'show' : '' }}">
-                   
-                    
-                    <a href="#sidebarAccess" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isAccessActive ? 'active' : '' }}" 
-                       aria-expanded="{{ $isAccessActive ? 'true' : 'false' }}">
+
+
+                    <a href="#sidebarAccess" data-bs-toggle="collapse"
+                        class="tp-link {{ $isAccessActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isAccessActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:lock"></iconify-icon>
                         </span>
                         <span class="sidebar-text"> Access Control </span>
                         <span class="menu-arrow"></span>
                     </a>
-                    
+
                     <div class="collapse {{ $isAccessActive ? 'show' : '' }}" id="sidebarAccess">
                         <ul class="nav-second-level">
                             <li>
-                                <a href="{{ route('roles.index') }}" 
-                                   class="tp-link {{ $isRoleActive ? 'active' : '' }}">
-                                   Roles
+                                <a href="{{ route('roles.index') }}"
+                                    class="tp-link {{ $isRoleActive ? 'active' : '' }}">
+                                    Roles
                                 </a>
                             </li>
-                            <li>
-                                <a href="{{ route('permissions.index') }}" 
-                                   class="tp-link {{ $isPermissionActive ? 'active' : '' }}">
-                                   Permissions
+                            <!-- <li>
+                                <a href="{{ route('permissions.index') }}"
+                                    class="tp-link {{ $isPermissionActive ? 'active' : '' }}">
+                                    Permissions
                                 </a>
-                            </li>
+                            </li> -->
                         </ul>
                     </div>
                 </li>
@@ -307,16 +310,16 @@
                 <li class="menu-title mt-2">System</li>
 
                 {{-- SETTINGS --}}
-                   @php
-                        $isProfileActive = request()->routeIs('settings.general');
-                        $isStoreSettingsActive = request()->routeIs('store.index') || request()->routeIs('store.edit');
-                        $isSettingsActive = $isProfileActive || $isStoreSettingsActive;
-                    @endphp
+                @php
+                $isProfileActive = request()->routeIs('settings.general');
+                $isStoreSettingsActive = request()->routeIs('store.index') || request()->routeIs('store.edit');
+                $isSettingsActive = $isProfileActive || $isStoreSettingsActive;
+                @endphp
                 <li class="menuitem-{{ $isSettingsActive ? 'active' : '' }} {{ $isSettingsActive ? 'show' : '' }}">
-                 
-                    <a href="#sidebarSettings" data-bs-toggle="collapse" 
-                       class="tp-link {{ $isSettingsActive ? 'active' : '' }}"
-                       aria-expanded="{{ $isSettingsActive ? 'true' : 'false' }}">
+
+                    <a href="#sidebarSettings" data-bs-toggle="collapse"
+                        class="tp-link {{ $isSettingsActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isSettingsActive ? 'true' : 'false' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:settings"></iconify-icon>
                         </span>
@@ -325,11 +328,11 @@
                     </a>
                     <div class="collapse {{ $isSettingsActive ? 'show' : '' }}" id="sidebarSettings">
                         <ul class="nav-second-level">
-                           <li><a href="{{ route('settings.general') }}" class="tp-link {{ $isProfileActive ? 'active' : '' }}">General Settings</a></li>
+                            <li><a href="{{ route('settings.general') }}" class="tp-link {{ $isProfileActive ? 'active' : '' }}">General Settings</a></li>
                             <li>
-                                <a href="{{ route('store.index') }}" 
-                                   class="tp-link {{ $isStoreSettingsActive ? 'active' : '' }}">
-                                   Store Settings
+                                <a href="{{ route('store.index') }}"
+                                    class="tp-link {{ $isStoreSettingsActive ? 'active' : '' }}">
+                                    Store Settings
                                 </a>
                             </li>
                         </ul>
