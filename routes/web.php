@@ -92,7 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('store')->name('store.')->group(function () {
 
         // ================= CATEGORIES =================
-        Route::resource('categories', ProductCategoryController::class);
+       Route::resource('categories', ProductCategoryController::class)->except('show');
         Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
         Route::get('categories/export', [ProductCategoryController::class, 'export'])->name('categories.export');
         Route::post('categories/status', [ProductCategoryController::class, 'updateStatus'])->name('categories.status');
