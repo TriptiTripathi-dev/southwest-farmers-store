@@ -66,7 +66,7 @@
                                         <td>{{$item->subcategory->name}}</td>
                                         <td>{{ $item->sku }}</td>
                                         <td>
-                                            @if($item->product_store_id == null)
+                                            @if($item->product_store_id == '')
                                                 <span class="badge bg-info text-white">Warehouse</span>
                                             @else
                                                 <span class="badge bg-warning text-dark">Store</span>
