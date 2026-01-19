@@ -74,12 +74,12 @@
                                         </td>
                                         <td class="fw-bold">₹{{ $item->price }}</td>
                                         <td>
-                                            @if($item->product_store_id == null)
+                                            @if($item->store_id == null)
                                                 <span class="badge bg-secondary">Managed by Admin</span>
                                             @else
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input status-toggle" type="checkbox" 
-                                                        data-id="{{ $item->product_id }}" {{ $item->product_status ? 'checked' : '' }}>
+                                                        data-id="{{ $item->id }}" {{ $item->is_active ? 'checked' : '' }}>
                                                 </div>
                                             @endif
                                         </td>
