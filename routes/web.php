@@ -78,8 +78,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('permissions', StorePermissionController::class);
     Route::resource('staff', StaffController::class);
     Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/general', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');

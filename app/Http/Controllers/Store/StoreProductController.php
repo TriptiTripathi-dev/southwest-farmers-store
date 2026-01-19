@@ -111,7 +111,7 @@ class StoreProductController extends Controller
     public function edit($id)
     {
         // $id here is the store_stocks.id (from the list)
-        $stock = StoreStock::where('id', $id)->with('product')->firstOrFail();
+        $stock = Product::where('id', $id)->firstOrFail();
         
         // Check permissions inside view or here?
         // We will allow editing "selling_price" for everyone.
