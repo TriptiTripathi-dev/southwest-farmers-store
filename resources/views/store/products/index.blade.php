@@ -75,7 +75,7 @@
                                         <td class="fw-bold">₹{{ $item->price }}</td>
                                         <td>
                                             @if($item->store_id == null)
-                                                <span class="badge bg-secondary">Managed by Admin</span>
+                                                <span class="badge bg-secondary">Managed by Warehouse</span>
                                             @else
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input status-toggle" type="checkbox" 
@@ -86,7 +86,7 @@
                                         <td>
                                             <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1"><i class="mdi mdi-pencil"></i></a>
                                             
-                                            @if($item->product_store_id != null)
+                                            @if($item->store_id != null)
                                                 <form action="{{ route('store.products.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
                                                     @csrf @method('DELETE')
                                                     <button type="button" class="btn btn-sm btn-danger py-1 delete-btn"><i class="mdi mdi-trash-can"></i></button>
