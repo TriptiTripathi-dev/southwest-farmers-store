@@ -87,7 +87,7 @@ public function analytics($id)
     $history = StockAdjustment::where('store_id', $storeId)
         ->where('product_id', $id)
         ->where('operation', 'subtract')
-        ->where('created_at', '>=', $start)
+        ->where('created_at', '==', $start)
         ->selectRaw("DATE(created_at) as date, SUM(quantity) as total") // Use DATE() for broader DB compatibility; adjust if needed
         ->groupBy('date')
         ->orderBy('date')
