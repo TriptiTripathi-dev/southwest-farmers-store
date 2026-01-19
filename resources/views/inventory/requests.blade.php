@@ -7,6 +7,9 @@
                     <h4 class="h4 fw-bold m-0 text-dark">Stock Requests</h4>
                     <p class="text-muted small mb-0 mt-1">Track and manage your Store requisitions</p>
                 </div>
+                <button type="button" class="btn btn-success text-white btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+    <i class="mdi mdi-file-excel"></i> Bulk Import
+</button>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal">
                     <i class="mdi mdi-plus me-2"></i> New Request
                 </button>
@@ -156,4 +159,42 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Import Stock Requests</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('inventory.requests.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    
+                    <div class="alert alert-info small mb-3">
+                        <i class="mdi mdi-information-outline"></i> 
+                        Please download the sample file to ensure correct formatting.
+                        <br>
+                        <strong>Required Columns:</strong> sku, quantity
+                    </div>
+
+                    <div class="mb-3 text-end">
+                        <a href="{{ route('inventory.requests.sample') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="mdi mdi-download"></i> Download Sample CSV
+                        </a>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Upload File (CSV/Excel)</label>
+                        <input type="file" name="file" class="form-control" required>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success text-white">Upload & Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </x-app-layout>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\StoreStock;
 use App\Models\StockRequest;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StockRequestImport;
 use Illuminate\Support\Facades\Auth;
 use App\Models\StockAdjustment;
 use App\Models\Product;
@@ -50,6 +52,30 @@ class StoreInventoryController extends Controller
         ]);
 
         return back()->with('success', 'Stock requisition sent to Store successfully!');
+    }
+
+    // --- New Methods for Bulk Import ---
+
+    public function downloadSampleCsv()
+    {
+        // Generates a simple CSV file on the fly
+        return response()->streamDownload(function () {
+            echo "sku,quantity\n";
+            echo "STR-001,10\n";
+            echo "STR-002,5\n";
+            echo "STR-003,20\n";
+        }, 'stock_request_sample.csv');
+    }
+
+    public function importStockRequests(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt,xlsx'
+        ]);
+
+        Excel::import(new StockRequestImport, $request->file('file'));
+
+        return back()->with('success', 'Stock requests imported successfully.');
     }
 
     // Section 2: Stock Requests (CRUD with Search & Select)

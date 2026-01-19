@@ -86,6 +86,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
     Route::delete('/inventory/requests/{id}', [StoreInventoryController::class, 'cancelRequest'])->name('inventory.requests.destroy');
+    Route::get('/stocks/requests/sample', [StoreInventoryController::class, 'downloadSampleCsv'])->name('inventory.requests.sample');
+    Route::post('/stocks/requests/import', [StoreInventoryController::class, 'importStockRequests'])->name('inventory.requests.import');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
 
