@@ -41,10 +41,11 @@
                                 <thead>
                                     <tr>
                                         <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Subcategory</th>
                                         <th>SKU</th>
                                         <th>Type</th>
                                         <th>Price</th>
-                                        <th>Stock</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -61,6 +62,8 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        <td>{{$item->category->name}}</td>
+                                        <td>{{$item->subcategory->name}}</td>
                                         <td>{{ $item->sku }}</td>
                                         <td>
                                             @if($item->product_store_id == null)
@@ -69,8 +72,7 @@
                                                 <span class="badge bg-warning text-dark">Store</span>
                                             @endif
                                         </td>
-                                        <td class="fw-bold">₹{{ $item->selling_price }}</td>
-                                        <td>{{ $item->quantity }}</td>
+                                        <td class="fw-bold">₹{{ $item->price }}</td>
                                         <td>
                                             @if($item->product_store_id == null)
                                                 <span class="badge bg-secondary">Managed by Admin</span>

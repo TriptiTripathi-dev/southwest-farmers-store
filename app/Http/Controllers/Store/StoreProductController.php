@@ -21,7 +21,7 @@ class StoreProductController extends Controller
         $storeId = $user->store_id ?? $user->id;
 
         // Query Store Stocks (linked with Products)
-       $query = Product::with(['category', 'subcategory']);
+       $query = Product::with(['category', 'subcategory','storeStocks']);
 
         // 1. Search Filter
       if ($request->filled('search')) {
