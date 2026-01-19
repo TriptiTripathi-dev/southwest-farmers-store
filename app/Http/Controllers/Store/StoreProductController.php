@@ -125,13 +125,8 @@ class StoreProductController extends Controller
 
     public function update(Request $request, $id)
     {
-        $stock = StoreStock::findOrFail($id);
-        $product = $stock->product;
+        $product = Product::findOrFail($id);
 
-        $request->validate(['selling_price' => 'required|numeric']);
-
-        // 1. Always update Selling Price
-        $stock->update(['selling_price' => $request->selling_price]);
 
         // 2. If Local Product, update other details
         if ($product->store_id != null) {
@@ -142,6 +137,8 @@ class StoreProductController extends Controller
             if ($request->hasFile('image')) {
                 $product->update(['icon' => $request->file('image')->store('products', 'public')]);
             }
+        }else{
+            
         }
 
         return redirect()->route('store.products.index')->with('success', 'Product updated successfully.');

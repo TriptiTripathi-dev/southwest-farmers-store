@@ -84,14 +84,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1"><i class="mdi mdi-pencil"></i></a>
+                                            
                                             
                                             @if($item->store_id != null)
+                                            <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1"><i class="mdi mdi-pencil"></i></a>
                                                 <form action="{{ route('store.products.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
                                                     @csrf @method('DELETE')
                                                     <button type="button" class="btn btn-sm btn-danger py-1 delete-btn"><i class="mdi mdi-trash-can"></i></button>
                                                 </form>
                                             @else
+                                            <a disabled class="btn btn-sm btn-primary py-1"><i class="mdi mdi-lock"></i></a>
                                                 <button disabled class="btn btn-sm btn-secondary py-1" title="Cannot delete Warehouse Product"><i class="mdi mdi-lock"></i></button>
                                             @endif
                                         </td>
