@@ -161,9 +161,7 @@
         </div>
     </div>
 
-    {{-- Include Payment Modal (Reused) --}}
-    @include('inventory.partials.payment_modal') 
-    {{-- Note: You can inline the modal here similar to the index page if you don't have partials set up --}}
+    {{-- PAYMENT PROOF MODAL --}}
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="paymentForm" class="modal-content" method="POST" enctype="multipart/form-data">
@@ -174,13 +172,19 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="payment_req_id">
+                    
+                    <div class="alert alert-warning small">
+                        <i class="mdi mdi-alert-circle me-1"></i> 
+                        Upload proof of payment/receipt for the warehouse to verify.
+                    </div>
+
                     <div class="mb-3">
-                        <label class="form-label">Payment Proof <span class="text-danger">*</span></label>
+                        <label class="form-label">Payment Proof (Image/PDF) <span class="text-danger">*</span></label>
                         <input type="file" name="store_payment_proof" class="form-control" required accept="image/*,.pdf">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Remarks <span class="text-danger">*</span></label>
-                        <textarea name="store_remarks" class="form-control" required rows="2"></textarea>
+                        <textarea name="store_remarks" class="form-control" required rows="2" placeholder="Transaction ID, Bank Name, etc."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -202,6 +206,7 @@
         document.getElementById('paymentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            
             fetch("{{ route('inventory.requests.upload_proof') }}", {
                 method: "POST",
                 body: formData,
@@ -212,9 +217,10 @@
                 if(data.success) {
                     Swal.fire('Success', data.message, 'success').then(() => location.reload());
                 } else {
-                    Swal.fire('Error', data.message, 'error');
+                    Swal.fire('Error', data.message || 'Upload failed', 'error');
                 }
-            });
+            })
+            .catch(err => Swal.fire('Error', 'Server error', 'error'));
         });
     </script>
     @endpush
