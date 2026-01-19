@@ -71,6 +71,9 @@
                                             @endif
                                         </td>
                                         <td>
+                                            <a href="{{ route('store.categories.analytics', $cat->id) }}" class="btn btn-sm btn-info py-1 me-1" title="Analytics">
+    <i class="mdi mdi-chart-bar"></i>
+</a>
                                             @if(is_null($cat->store_id))
                                                 <span class="text-muted small"><i class="mdi mdi-lock"></i> Locked</span>
                                             @else

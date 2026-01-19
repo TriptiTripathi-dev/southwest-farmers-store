@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StoreProductExport;
 use App\Imports\StoreProductImport;
+use App\Models\StockAdjustment;
 
 class StoreProductController extends Controller
 {
@@ -70,6 +71,31 @@ class StoreProductController extends Controller
 
         return view('store.products.create', compact('categories'));
     }
+
+    public function analytics($id)
+{
+    $user = Auth::user();
+    $storeId = $user->store_id ?? $user->id;
+
+    // 1. Fetch Product & Current Stock
+    $stock = StoreStock::where('store_id', $storeId)->where('product_id', $id)->with('product')->firstOrFail();
+    $product = $stock->product;
+
+    // 2. Consumption Trend (Last 30 Days - Subtract Operations)
+    $history = StockAdjustment::where('store_id', $storeId)
+        ->where('product_id', $id)
+        ->where('operation', 'subtract') // Sirf usage/sale count karenge
+        ->where('created_at', '>=', now()->subDays(30))
+        ->selectRaw("TO_CHAR(created_at, 'YYYY-MM-DD') as date, SUM(quantity) as total")
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
+
+    $dates = $history->pluck('date');
+    $usage = $history->pluck('total');
+
+    return view('store.products.analytics', compact('stock', 'product', 'dates', 'usage'));
+}
 
     public function store(Request $request)
     {

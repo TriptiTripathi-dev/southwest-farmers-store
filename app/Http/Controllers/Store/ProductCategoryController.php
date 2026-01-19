@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use App\Models\StoreStock; // Top par add karein
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StoreProductCategoryExport; // Hum niche banayenge
@@ -40,6 +42,34 @@ class ProductCategoryController extends Controller
 
         return view('store.categories.index', compact('categories'));
     }
+
+    public function analytics($id)
+{
+    $user = Auth::user();
+    $storeId = $user->store_id ?? $user->id;
+    $category = ProductCategory::findOrFail($id);
+
+    // 1. Total Inventory in this Category
+    $stats = StoreStock::where('store_stocks.store_id', $storeId)
+        ->join('products', 'store_stocks.product_id', '=', 'products.id')
+        ->where('products.category_id', $id)
+        ->selectRaw('COUNT(products.id) as total_products, SUM(store_stocks.quantity) as total_qty, SUM(store_stocks.quantity * store_stocks.selling_price) as total_value')
+        ->first();
+
+    // 2. Top 5 Products by Stock Quantity in this Category
+    $topProducts = StoreStock::where('store_stocks.store_id', $storeId)
+        ->join('products', 'store_stocks.product_id', '=', 'products.id')
+        ->where('products.category_id', $id)
+        ->orderByDesc('store_stocks.quantity')
+        ->limit(5)
+        ->select('products.product_name', 'store_stocks.quantity')
+        ->get();
+
+    $labels = $topProducts->pluck('product_name');
+    $data = $topProducts->pluck('quantity');
+
+    return view('store.categories.analytics', compact('category', 'stats', 'labels', 'data'));
+}
 
     public function create()
     {

@@ -11,6 +11,7 @@ use App\Http\Controllers\Store\GeneralSettingController;
 use App\Http\Controllers\Store\ProductCategoryController;
 use App\Http\Controllers\Store\ProductController;
 use App\Http\Controllers\Store\StoreCustomerController;
+use App\Http\Controllers\Store\StoreAnalyticsController;
 use App\Http\Controllers\Store\ProductSubcategoryController;
 use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
@@ -90,7 +91,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
 
     Route::prefix('store')->name('store.')->group(function () {
+Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');
 
+        // 2. Category Analytics Route
+        Route::get('categories/{id}/analytics', [ProductCategoryController::class, 'analytics'])->name('categories.analytics');
+
+        // 3. Subcategory Analytics Route
+        Route::get('subcategories/{id}/analytics', [ProductSubcategoryController::class, 'analytics'])->name('subcategories.analytics');
         // ================= CATEGORIES =================
        Route::resource('categories', ProductCategoryController::class)->except('show');
         Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
@@ -102,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
         Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
         Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
+        Route::get('/analytics', [StoreAnalyticsController::class, 'index'])->name('analytics.index');
 
         // ================= PRODUCTS =================
         Route::resource('products', StoreProductController::class);

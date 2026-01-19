@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
+use App\Models\StoreStock; // Top par add karein
+use Illuminate\Support\Facades\DB;
 use App\Models\ProductSubcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -154,4 +156,32 @@ class ProductSubcategoryController extends Controller
             
         return response()->json($subcategories);
     }
+
+    public function analytics($id)
+{
+    $user = Auth::user();
+    $storeId = $user->store_id ?? $user->id;
+    $subcategory = ProductSubcategory::findOrFail($id);
+
+    // 1. Stats
+    $stats = StoreStock::where('store_stocks.store_id', $storeId)
+        ->join('products', 'store_stocks.product_id', '=', 'products.id')
+        ->where('products.subcategory_id', $id)
+        ->selectRaw('COUNT(products.id) as total_products, SUM(store_stocks.quantity) as total_qty, SUM(store_stocks.quantity * store_stocks.selling_price) as total_value')
+        ->first();
+
+    // 2. Top Products Graph
+    $topProducts = StoreStock::where('store_stocks.store_id', $storeId)
+        ->join('products', 'store_stocks.product_id', '=', 'products.id')
+        ->where('products.subcategory_id', $id)
+        ->orderByDesc('store_stocks.quantity')
+        ->limit(5)
+        ->select('products.product_name', 'store_stocks.quantity')
+        ->get();
+
+    $labels = $topProducts->pluck('product_name');
+    $data = $topProducts->pluck('quantity');
+
+    return view('store.subcategories.analytics', compact('subcategory', 'stats', 'labels', 'data'));
+}
 }
