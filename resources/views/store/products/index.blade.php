@@ -85,7 +85,7 @@
                                         </td>
                                         <td>
                                             
-                                            <a href="{{ route('store.products.analytics', $item->product_id) }}" class="btn btn-sm btn-info py-1 me-1" title="Analytics">
+                                            <a href="{{ route('store.products.analytics', $item->id) }}" class="btn btn-sm btn-info py-1 me-1" title="Analytics">
     <i class="mdi mdi-chart-bar"></i>
 </a>
                                             @if($item->store_id != null)
