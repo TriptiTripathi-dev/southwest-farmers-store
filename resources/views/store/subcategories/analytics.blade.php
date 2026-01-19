@@ -2,7 +2,7 @@
     <div class="content-wrapper">
         <div class="row mb-3">
             <div class="col-12 d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Analytics: {{ $category->name }}</h4>
+                <h4 class="card-title mb-0">Analytics: {{ $subcategory->name }}</h4>
                 <a href="{{ route('store.categories.index') }}" class="btn btn-secondary btn-sm">Back</a>
             </div>
         </div>
