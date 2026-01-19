@@ -83,7 +83,7 @@ public function analytics($id)
 
     // Consumption Trend (Last 30 Days - Subtract Operations)
     $end = now()->startOfDay(); // Today, but adjust if you want up to now()
-    $start = $end->copy()->subDays(30); // 30 days back
+    $start = $end->copy()->subDays(10); // 30 days back
     $history = StockAdjustment::where('store_id', $storeId)
         ->where('product_id', $id)
         ->where('operation', 'subtract')
