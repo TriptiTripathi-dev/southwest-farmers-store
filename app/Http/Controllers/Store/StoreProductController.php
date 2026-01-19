@@ -21,29 +21,37 @@ class StoreProductController extends Controller
         $storeId = $user->store_id ?? $user->id;
 
         // Query Store Stocks (linked with Products)
-        $query = StoreStock::where('store_stocks.store_id', $storeId)
-            ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->select('store_stocks.*', 'products.store_id as product_store_id', 'products.product_name', 'products.sku', 'products.icon', 'products.is_active as product_status');
+       $query = Product::with(['category', 'subcategory']);
 
-        // Search
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('products.product_name', 'like', "%{$search}%")
-                  ->orWhere('products.sku', 'like', "%{$search}%");
-            });
+        // 1. Search Filter
+      if ($request->filled('search')) {
+    $search = $request->search;
+    $query->where(function($q) use ($search) {
+        $q->where('product_name', 'ilike', "%{$search}%")   // Change 'like' to 'ilike'
+          ->orWhere('sku', 'ilike', "%{$search}%")          // Change 'like' to 'ilike'
+          ->orWhere('barcode', 'ilike', "%{$search}%");     // Change 'like' to 'ilike'
+    });
+}
+
+        // 2. Status Filter
+        if ($request->filled('status')) {
+            $isActive = $request->status === 'active' ? 1 : 0;
+            $query->where('is_active', $isActive);
         }
 
-        // Filter by Type
-        if ($request->has('type') && $request->type != '') {
-            if ($request->type == 'warehouse') {
-                $query->whereNull('products.store_id');
-            } else {
-                $query->whereNotNull('products.store_id');
-            }
+        // 3. Category Filter (Added this)
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
         }
 
-        $products = $query->orderBy('products.product_name')->paginate(10);
+        // Fetch Data
+        $products = $query->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        // Fetch Categories for the Filter Dropdown
+        $categories = ProductCategory::select('id', 'name')->get();
+        $products = $query->orderBy('product_name')->paginate(10);
         $categories = ProductCategory::where('is_active', true)->get(); // For Import Modal
 
         return view('store.products.index', compact('products', 'categories'));
