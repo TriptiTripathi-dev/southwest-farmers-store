@@ -1,59 +1,69 @@
 <x-app-layout title="Stock Requests">
-    <div class="content">
+    <div class="content-wrapper">
         <div class="container-fluid">
-            
-            <div class="py-4 d-flex align-items-center justify-content-between">
+
+            {{-- HEADER --}}
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
                 <div>
-                    <h4 class="h4 fw-bold m-0 text-dark">Stock Requests</h4>
-                    <p class="text-muted small mb-0 mt-1">Track and manage your Store requisitions</p>
+                    <h4 class="fw-bold m-0 text-dark">Stock Requests</h4>
+                    <p class="text-muted small mb-0 mt-1">Manage inventory replenishment from warehouse</p>
                 </div>
-                <button type="button" class="btn btn-success btn-sm text-white me-2" data-bs-toggle="modal" data-bs-target="#importModal">
-    <i class="mdi mdi-file-excel"></i> Bulk Import
-</button>
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal">
-                    <i class="mdi mdi-plus me-2"></i> New Request
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="mdi mdi-file-excel"></i> Import
+                    </button>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+                        <i class="mdi mdi-plus me-1"></i> New Request
+                    </button>
+                </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-3">
-                    <form action="{{ route('inventory.requests') }}" method="GET" class="row g-2 align-items-center">
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0"><i class="mdi mdi-magnify text-muted"></i></span>
-                                <input type="text" name="search" value="{{ request('search') }}" class="form-control border-start-0 ps-0" placeholder="Search product...">
-                            </div>
+            {{-- TABS --}}
+            <ul class="nav nav-tabs mb-4 border-bottom-0">
+                <li class="nav-item">
+                    <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold border-bottom-0' : '' }}"
+                       href="{{ route('inventory.requests', ['status' => 'pending']) }}">
+                       <i class="mdi mdi-clock-outline me-1"></i> Pending 
+                       <span class="badge bg-warning text-dark ms-1">{{ $pendingCount }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request('status') == 'in_transit' ? 'active fw-bold border-bottom-0' : '' }}"
+                       href="{{ route('inventory.requests', ['status' => 'in_transit']) }}">
+                       <i class="mdi mdi-truck-fast me-1"></i> In Transit
+                       <span class="badge bg-info ms-1">{{ $inTransitCount }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request('status') == 'history' ? 'active fw-bold border-bottom-0' : '' }}"
+                       href="{{ route('inventory.requests', ['status' => 'history']) }}">
+                       <i class="mdi mdi-history me-1"></i> History
+                    </a>
+                </li>
+            </ul>
+
+            {{-- MAIN CONTENT CARD --}}
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Request List</h6>
+                    <form method="GET" action="{{ route('inventory.requests') }}" class="d-flex gap-2">
+                        <input type="hidden" name="status" value="{{ request('status', 'pending') }}">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" name="search" class="form-control" placeholder="Search ID or Product..." value="{{ request('search') }}">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="mdi mdi-magnify"></i></button>
                         </div>
-                        <div class="col-md-3">
-                            <select name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
-                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-dark w-100">Filter</button>
-                        </div>
-                        @if(request()->hasAny(['search', 'status']))
-                        <div class="col-md-1">
-                            <a href="{{ route('inventory.requests') }}" class="btn btn-light border w-100" title="Clear Filters"><i class="mdi mdi-close"></i></a>
-                        </div>
-                        @endif
                     </form>
                 </div>
-            </div>
 
-            <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="ps-4 py-3 text-muted small fw-bold">PRODUCT DETAILS</th>
-                                    <th class="py-3 text-muted small fw-bold">REQUESTED QTY</th>
-                                    <th class="py-3 text-muted small fw-bold">STATUS</th>
+                                    <th class="ps-4 py-3 text-muted small fw-bold">REQ ID</th>
+                                    <th class="py-3 text-muted small fw-bold">PRODUCT</th>
+                                    <th class="py-3 text-muted small fw-bold text-center">QTY</th>
+                                    <th class="py-3 text-muted small fw-bold text-center">STATUS</th>
                                     <th class="py-3 text-muted small fw-bold">DATE</th>
                                     <th class="pe-4 py-3 text-end text-muted small fw-bold">ACTIONS</th>
                                 </tr>
@@ -61,50 +71,61 @@
                             <tbody>
                                 @forelse($requests as $req)
                                 <tr>
-                                    <td class="ps-4 py-3">
+                                    <td class="ps-4 fw-bold">#{{ $req->id }}</td>
+                                    <td>
                                         <div class="fw-semibold text-dark">{{ $req->product->product_name }}</div>
                                         <div class="small text-muted font-monospace">{{ $req->product->sku }}</div>
                                     </td>
-                                    <td>
-                                        <span class="fw-bold">{{ $req->requested_quantity }}</span> <span class="small text-muted">{{ $req->product->unit }}</span>
+                                    <td class="text-center">
+                                        <span class="fw-bold">{{ $req->requested_quantity }}</span> 
+                                        <span class="small text-muted">{{ $req->product->unit }}</span>
+                                        @if($req->fulfilled_quantity && $req->fulfilled_quantity != $req->requested_quantity)
+                                            <div class="text-xs text-success">Sent: {{ $req->fulfilled_quantity }}</div>
+                                        @endif
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         @php
                                             $badges = [
                                                 'pending' => 'bg-warning text-dark',
-                                                'approved' => 'bg-info text-white',
+                                                'dispatched' => 'bg-info text-white',
                                                 'rejected' => 'bg-danger text-white',
                                                 'completed' => 'bg-success text-white'
                                             ];
-                                            $badgeClass = $badges[$req->status] ?? 'bg-secondary text-white';
+                                            $label = $req->status == 'dispatched' ? 'In Transit' : ucfirst($req->status);
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} px-3 rounded-pill text-uppercase" style="font-size: 0.75rem;">
-                                            {{ $req->status }}
+                                        <span class="badge {{ $badges[$req->status] ?? 'bg-secondary' }} px-3 rounded-pill">
+                                            {{ $label }}
                                         </span>
                                     </td>
                                     <td class="text-muted small">
-                                        {{ $req->created_at->format('M d, Y') }}<br>
-                                        <span class="text-xs">{{ $req->created_at->format('h:i A') }}</span>
+                                        {{ $req->created_at->format('M d, Y') }}
                                     </td>
                                     <td class="pe-4 text-end">
+                                        <a href="{{ route('inventory.requests.show', $req->id) }}" class="btn btn-sm btn-outline-dark me-1" title="Manage">
+                                            Manage
+                                        </a>
+
+                                        @if($req->status == 'dispatched')
+                                            <button onclick="openPaymentModal({{ $req->id }})" class="btn btn-sm btn-success text-white">
+                                                <i class="mdi mdi-upload me-1"></i> Pay
+                                            </button>
+                                        @endif
+
                                         @if($req->status == 'pending')
-                                            <form action="{{ route('inventory.requests.destroy', $req->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this request?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Cancel Request">
+                                            <form action="{{ route('inventory.requests.destroy', $req->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this request?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel">
                                                     <i class="mdi mdi-trash-can-outline"></i>
                                                 </button>
                                             </form>
-                                        @else
-                                            <span class="text-muted small"><i class="mdi mdi-lock"></i></span>
                                         @endif
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">
+                                    <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="mdi mdi-clipboard-text-off fs-1 opacity-50 mb-2"></i>
-                                        <p>No requests found matching your filters.</p>
+                                        <p>No requests found in this category.</p>
                                     </td>
                                 </tr>
                                 @endforelse
@@ -112,89 +133,131 @@
                         </table>
                     </div>
                 </div>
+                @if($requests->hasPages())
                 <div class="card-footer bg-white border-top py-3">
                     {{ $requests->links() }}
                 </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="modal fade" id="newRequestModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form action="{{ route('inventory.request') }}" method="POST">
-                    @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold">New Stock Request</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-info small mb-3">
-                            <i class="mdi mdi-information-outline me-1"></i> Request items from the Central Store.
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Select Product</label>
-                            <select name="product_id" class="form-select form-select-lg" required>
-                                <option value="" disabled selected>Choose a product...</option>
-                                @foreach($products as $product)
-                                    <option value="{{ $product->id }}">
-                                        {{ $product->product_name }} ({{ $product->sku }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Quantity Needed</label>
-                            <input type="number" name="quantity" class="form-control form-control-lg" min="1" placeholder="e.g., 50" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary px-4">Submit Request</button>
-                    </div>
-                </form>
+                @endif
             </div>
         </div>
     </div>
-    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bulk Import Stock Requests</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('inventory.requests.import') }}" method="POST" enctype="multipart/form-data">
+
+    {{-- NEW REQUEST MODAL --}}
+    <div class="modal fade" id="newRequestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="{{ route('inventory.request') }}" method="POST" class="modal-content">
                 @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">New Stock Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
-                    
-                    <div class="alert alert-info small mb-3">
-                        <i class="mdi mdi-information-outline"></i> 
-                        Please download the sample file to ensure correct formatting.
-                        <br>
-                        <strong>Required Columns:</strong> sku, quantity
-                    </div>
-
-                    <div class="mb-3 text-end">
-                        <a href="{{ route('inventory.requests.sample') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="mdi mdi-download"></i> Download Sample CSV
-                        </a>
-                    </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Upload File (CSV/Excel)</label>
-                        <input type="file" name="file" class="form-control" required>
+                        <label class="form-label">Product <span class="text-danger">*</span></label>
+                        <select name="product_id" class="form-select" required>
+                            <option value="">Select Product...</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->sku }})</option>
+                            @endforeach
+                        </select>
                     </div>
-
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success text-white">Upload & Import</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
                 </div>
             </form>
         </div>
     </div>
-</div>
+
+    {{-- IMPORT MODAL (Same as before) --}}
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="{{ route('inventory.requests.import') }}" method="POST" enctype="multipart/form-data" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Bulk Import</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">Required columns: sku, quantity</div>
+                    <div class="text-end mb-2">
+                        <a href="{{ route('inventory.requests.sample') }}" class="small">Download Sample</a>
+                    </div>
+                    <input type="file" name="file" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success text-white">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- UPLOAD PAYMENT PROOF MODAL --}}
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="paymentForm" class="modal-content" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Payment Proof</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="request_id" id="payment_req_id">
+                    
+                    <div class="alert alert-warning small">
+                        <i class="mdi mdi-alert-circle me-1"></i> 
+                        Your stock is in transit. Upload payment proof so the warehouse can verify and complete the order.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Proof (Image/PDF) <span class="text-danger">*</span></label>
+                        <input type="file" name="store_payment_proof" class="form-control" required accept="image/*,.pdf">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks <span class="text-danger">*</span></label>
+                        <textarea name="store_remarks" class="form-control" required rows="2" placeholder="Transaction ID, Bank Name, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success text-white">Upload & Notify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function openPaymentModal(id) {
+            document.getElementById('payment_req_id').value = id;
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch("{{ route('inventory.requests.upload_proof') }}", {
+                method: "POST",
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Upload failed', 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', 'Server error', 'error'));
+        });
+    </script>
+    @endpush
 </x-app-layout>

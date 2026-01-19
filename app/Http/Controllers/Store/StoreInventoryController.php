@@ -18,10 +18,10 @@ class StoreInventoryController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-
-          $query = StoreStock::where('store_id', $user->store_id)
+        $query = StoreStock::where('store_id', $user->store_id)
             ->with('product');
-            if ($request->filled('search')) {
+            
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('product', function($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%")
@@ -30,7 +30,6 @@ class StoreInventoryController extends Controller
         }
 
         $stocks = $query->latest()->paginate(15);
-
         return view('inventory.index', compact('stocks'));
     }
 
@@ -43,7 +42,6 @@ class StoreInventoryController extends Controller
 
         $user = Auth::user();
 
-        // Create the request
         StockRequest::create([
             'store_id'           => $user->store_id,
             'product_id'         => $request->product_id,
@@ -51,76 +49,121 @@ class StoreInventoryController extends Controller
             'status'             => 'pending',
         ]);
 
-        return back()->with('success', 'Stock requisition sent to Store successfully!');
+        return back()->with('success', 'Stock requisition sent to Warehouse successfully!');
     }
 
-    // --- New Methods for Bulk Import ---
-
+    // --- Bulk Import Methods ---
     public function downloadSampleCsv()
     {
-        // Generates a simple CSV file on the fly
         return response()->streamDownload(function () {
             echo "sku,quantity\n";
             echo "STR-001,10\n";
             echo "STR-002,5\n";
-            echo "STR-003,20\n";
         }, 'stock_request_sample.csv');
     }
 
     public function importStockRequests(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:csv,txt,xlsx'
-        ]);
-
+        $request->validate(['file' => 'required|mimes:csv,txt,xlsx']);
         Excel::import(new StockRequestImport, $request->file('file'));
-
         return back()->with('success', 'Stock requests imported successfully.');
     }
 
-    // Section 2: Stock Requests (CRUD with Search & Select)
+    // --- UPDATED: Requests Listing with Tabs ---
     public function requests(Request $request)
     {
         $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+        $status = $request->get('status', 'pending');
+        $search = $request->input('search');
 
-        // 1. Prepare Request Query
-        // Note: I assumed you meant $user->store_id in the first check based on previous context
-        $query = StockRequest::where('store_id', $user->store_id ?? $user->id)
-            ->with('product');
+        $query = StockRequest::where('store_id', $storeId)->with('product');
 
-        // 2. Apply Search Filter (Product Name or SKU)
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('product', function($q) use ($search) {
-                // Changed 'like' to 'ilike' for case-insensitive search (PostgreSQL)
-                $q->where('product_name', 'ilike', "%{$search}%")
-                  ->orWhere('sku', 'ilike', "%{$search}%");
+        // Search Filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
             });
         }
 
-        // 3. Apply Status Select Filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // Tab Status Logic
+        if ($status === 'history') {
+            $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
+        } elseif ($status === 'in_transit') {
+            $query->where('status', StockRequest::STATUS_DISPATCHED);
+        } else {
+            $query->where('status', $status);
         }
 
-        $requests = $query->latest()->paginate(15);
+        $requests = $query->latest()->paginate(15)->appends($request->query());
 
-        // 4. Fetch Products for "New Request" Dropdown
-        $products = \App\Models\Product::where('is_active', true)
+        // Count Stats for Tabs
+        $pendingCount = StockRequest::where('store_id', $storeId)->where('status', 'pending')->count();
+        $inTransitCount = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->count();
+        $completedCount = StockRequest::where('store_id', $storeId)->where('status', 'completed')->count();
+        $rejectedCount = StockRequest::where('store_id', $storeId)->where('status', 'rejected')->count();
+
+        // Products for Dropdown
+        $products = Product::where('is_active', true)
             ->select('id', 'product_name', 'sku', 'unit')
             ->orderBy('product_name')
             ->get();
 
-        return view('inventory.requests', compact('requests', 'products'));
+        return view('inventory.requests', compact(
+            'requests', 'products', 
+            'pendingCount', 'inTransitCount', 'completedCount', 'rejectedCount'
+        ));
     }
 
-    // Cancel a Pending Request
+    // --- NEW: Show Request Details ---
+    public function showRequest($id)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+
+        $stockRequest = StockRequest::where('store_id', $storeId)
+            ->with(['product', 'store'])
+            ->findOrFail($id);
+
+        return view('inventory.show', compact('stockRequest'));
+    }
+
+    // --- NEW: Upload Payment Proof (Store Action) ---
+    public function uploadPaymentProof(Request $request)
+    {
+        $request->validate([
+            'request_id' => 'required|exists:stock_requests,id',
+            'store_payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'store_remarks' => 'required|string'
+        ]);
+
+        $user = Auth::user();
+        $stockRequest = StockRequest::where('id', $request->request_id)
+            ->where('store_id', $user->store_id ?? $user->id)
+            ->firstOrFail();
+
+        // Prevent update if already completed (optional check)
+        if ($stockRequest->status === StockRequest::STATUS_COMPLETED) {
+            return response()->json(['success' => false, 'message' => 'Request already completed.'], 400);
+        }
+
+        $path = $request->file('store_payment_proof')->store('payment_proofs', 'public');
+
+        $stockRequest->update([
+            'store_payment_proof' => $path,
+            'store_remarks' => $request->store_remarks
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Payment proof uploaded successfully!']);
+    }
+
+    // Cancel Pending Request
     public function cancelRequest($id)
     {
         $user = Auth::user();
-        
         $stockRequest = StockRequest::where('id', $id)
-            ->where('store_id', $user->id ?? $user->id)
+            ->where('store_id', $user->store_id ?? $user->id)
             ->firstOrFail();
 
         if ($stockRequest->status == 'pending') {
@@ -128,32 +171,23 @@ class StoreInventoryController extends Controller
             return back()->with('success', 'Stock request cancelled successfully.');
         }
 
-        return back()->with('error', 'Cannot cancel a request that has already been processed.');
+        return back()->with('error', 'Cannot cancel a processed request.');
     }
 
+    // ... (Adjustment methods remain unchanged) ...
     public function adjustments()
     {
+        // ... existing code ...
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
-
-        // 1. Fetch Adjustment History
-        $adjustments = StockAdjustment::where('store_id', $storeId)
-            ->with(['product', 'user'])
-            ->latest()
-            ->paginate(15);
-
-        // 2. Fetch Active Products for the Dropdown
-        $products = Product::where('is_active', true)
-            ->select('id', 'product_name', 'sku', 'unit')
-            ->orderBy('product_name')
-            ->get();
-
+        $adjustments = StockAdjustment::where('store_id', $storeId)->with(['product', 'user'])->latest()->paginate(15);
+        $products = Product::where('is_active', true)->select('id', 'product_name', 'sku', 'unit')->get();
         return view('inventory.adjustments', compact('adjustments', 'products'));
     }
 
-    // Process the Adjustment
     public function storeAdjustment(Request $request)
     {
+        // ... existing code ...
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity'   => 'required|integer|min:1',
@@ -164,34 +198,21 @@ class StoreInventoryController extends Controller
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
-        // Use Transaction to ensure DB integrity
         DB::transaction(function () use ($request, $user, $storeId) {
-            
-            // 1. Find or Create the Stock Record
-            $stock = StoreStock::firstOrNew([
-                'store_id'   => $storeId,
-                'product_id' => $request->product_id
-            ]);
-
+            $stock = StoreStock::firstOrNew(['store_id' => $storeId, 'product_id' => $request->product_id]);
             if ($request->operation === 'add') {
                 $stock->quantity = ($stock->quantity ?? 0) + $request->quantity;
             } else {
-                // Prevent negative stock
                 if (($stock->quantity ?? 0) < $request->quantity) {
-                    throw new \Exception("Insufficient stock. Current: " . ($stock->quantity ?? 0));
+                    throw new \Exception("Insufficient stock.");
                 }
                 $stock->quantity -= $request->quantity;
             }
             $stock->save();
 
-            // 3. Log the Adjustment
             StockAdjustment::create([
-                'store_id'   => $storeId,
-                'product_id' => $request->product_id,
-                'user_id'    => $user->id,
-                'quantity'   => $request->quantity,
-                'operation'  => $request->operation,
-                'reason'     => $request->reason,
+                'store_id' => $storeId, 'product_id' => $request->product_id, 'user_id' => $user->id,
+                'quantity' => $request->quantity, 'operation' => $request->operation, 'reason' => $request->reason,
             ]);
         });
 
