@@ -111,7 +111,7 @@ class StoreProductController extends Controller
     public function edit($id)
     {
         // $id here is the store_stocks.id (from the list)
-        $stock = Product::where('id', $id)->firstOrFail();
+        $product = Product::where('id', $id)->firstOrFail();
         
         // Check permissions inside view or here?
         // We will allow editing "selling_price" for everyone.
@@ -120,7 +120,7 @@ class StoreProductController extends Controller
         $categories = ProductCategory::all(); 
         // Note: For full edit, you might want to load subcategories via JS or pass them if Local.
         
-        return view('store.products.edit', compact('stock', 'categories'));
+        return view('store.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, $id)
