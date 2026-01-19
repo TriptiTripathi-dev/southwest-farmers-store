@@ -72,27 +72,36 @@ class StoreProductController extends Controller
         return view('store.products.create', compact('categories'));
     }
 
-    public function analytics($id)
+public function analytics($id)
 {
     $user = Auth::user();
     $storeId = $user->store_id ?? $user->id;
 
-    // 1. Fetch Product & Current Stock
+    // Fetch Product & Current Stock
     $stock = StoreStock::where('store_id', $storeId)->where('product_id', $id)->with('product')->firstOrFail();
     $product = $stock->product;
 
-    // 2. Consumption Trend (Last 30 Days - Subtract Operations)
+    // Consumption Trend (Last 30 Days - Subtract Operations)
+    $end = now()->startOfDay(); // Today, but adjust if you want up to now()
+    $start = $end->copy()->subDays(30); // 30 days back
     $history = StockAdjustment::where('store_id', $storeId)
         ->where('product_id', $id)
-        ->where('operation', 'subtract') // Sirf usage/sale count karenge
-        ->where('created_at', '>=', now()->subDays(30))
-        ->selectRaw("TO_CHAR(created_at, 'YYYY-MM-DD') as date, SUM(quantity) as total")
+        ->where('operation', 'subtract')
+        ->where('created_at', '>=', $start)
+        ->selectRaw("DATE(created_at) as date, SUM(quantity) as total") // Use DATE() for broader DB compatibility; adjust if needed
         ->groupBy('date')
         ->orderBy('date')
-        ->get();
+        ->pluck('total', 'date'); // Keyed by date for easy merging
 
-    $dates = $history->pluck('date');
-    $usage = $history->pluck('total');
+    // Generate all dates in the period
+    $period = new \DatePeriod($start, new \DateInterval('P1D'), $end);
+    $dates = [];
+    $usage = [];
+    foreach ($period as $date) {
+        $dateStr = $date->format('Y-m-d');
+        $dates[] = $dateStr;
+        $usage[] = $history->get($dateStr, 0); // Default to 0 if no usage
+    }
 
     return view('store.products.analytics', compact('stock', 'product', 'dates', 'usage'));
 }

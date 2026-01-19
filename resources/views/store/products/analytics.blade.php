@@ -252,11 +252,11 @@
         }
 
         function calculateInsights() {
-            const usage = chartData.usage;
-            const totalUsage = usage.reduce((a, b) => a + b, 0);
-            const avgUsage = (totalUsage / usage.length).toFixed(2);
-            const maxUsage = Math.max(...usage);
-            const currentStock = {{ $stock->quantity }};
+          const usage = chartData.usage;
+    const totalUsage = usage.reduce((a, b) => a + b, 0);
+    const avgUsage = usage.length > 0 ? (totalUsage / usage.length).toFixed(2) : 0;
+    const maxUsage = usage.length > 0 ? Math.max(...usage) : 0;
+    const currentStock = {{ $stock->quantity }};
             
             // Update average usage
             document.getElementById('avgUsage').textContent = avgUsage + ' {{ $product->unit }}';
