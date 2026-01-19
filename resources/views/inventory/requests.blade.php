@@ -7,7 +7,7 @@
                     <h4 class="h4 fw-bold m-0 text-dark">Stock Requests</h4>
                     <p class="text-muted small mb-0 mt-1">Track and manage your Store requisitions</p>
                 </div>
-                <button type="button" class="btn btn-success text-white btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                <button type="button" class="btn btn-success btn-sm text-white me-2" data-bs-toggle="modal" data-bs-target="#importModal">
     <i class="mdi mdi-file-excel"></i> Bulk Import
 </button>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newRequestModal">
