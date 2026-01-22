@@ -89,10 +89,10 @@
                 $allActive = $isProductsActive || $isCategoryActive || $isSubCategoryActive;
                 @endphp
                 <li class="menuitem-{{ $allActive  ? 'active' : '' }} {{ $allActive ? 'show' : '' }}">
-                    <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts"  data-bs-toggle="collapse"
+                    <a class="tp-link {{ $allActive ? 'active' : '' }}" href="#sidebarProducts" data-bs-toggle="collapse"
                         class="tp-link {{ $allActive ? 'active' : '' }}"
-                        aria-expanded="{{ $allActive ? 'true' : 'false' }}" >
-                       <span class="nav-icon">
+                        aria-expanded="{{ $allActive ? 'true' : 'false' }}">
+                        <span class="nav-icon">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                         </span>
                         <span class="sidebar-text"> Products</span>
@@ -100,14 +100,64 @@
                     </a>
                     <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
                         <ul class="nav-second-level">
-                            <li >
+                            <li>
                                 <a class="tp-link {{ $isCategoryActive ? 'active' : '' }}" href="{{ route('store.categories.index') }}">Categories</a>
                             </li>
-                            <li >
+                            <li>
                                 <a class="tp-link {{ $isSubCategoryActive ? 'active' : '' }}" href="{{ route('store.subcategories.index') }}">Subcategories</a>
                             </li>
-                            <li >
+                            <li>
                                 <a class="tp-link {{ $isProductsActive ? 'active' : '' }}" href="{{ route('store.products.index') }}">Product List</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+              <li>
+                    <a href="#sidebarStockControl" data-bs-toggle="collapse"
+                        class="tp-link {{ request()->routeIs('store.stock-control.*') ? 'active' : '' }}"
+                        aria-expanded="{{ request()->routeIs('store.stock-control.*') ? 'true' : 'false' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:package"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">Stock Control</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('store.stock-control.*') ? 'show' : '' }}" id="sidebarStockControl">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a href="{{ route('store.stock-control.overview') }}"
+                                    class="tp-link {{ request()->routeIs('store.stock-control.overview') ? 'active' : '' }}">
+                                    My Stock Overview
+                                </a>
+                            </li>
+                          
+                            <li>
+                                <a href="{{ route('store.stock-control.low-stock') }}"
+                                    class="tp-link {{ request()->routeIs('store.stock-control.low-stock') ? 'active' : '' }}">
+                                    Low Stock & Reorder
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.stock-control.expiry') }}"
+                                    class="tp-link {{ request()->routeIs('store.stock-control.expiry') ? 'active' : '' }}">
+                                    Expiry & Damage Alert
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.stock-control.valuation') }}"
+                                    class="tp-link {{ request()->routeIs('store.stock-control.valuation') ? 'active' : '' }}">
+                                    Valuation
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.stock-control.recall.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.stock-control.recall.*') ? 'active' : '' }}">
+                                    Recall Requests
+                                    @if(isset($pendingRecallCount) && $pendingRecallCount > 0)
+                                    <span class="badge bg-danger ms-1 float-end">{{ $pendingRecallCount }}</span>
+                                    @endif
+                                </a>
                             </li>
                         </ul>
                     </div>

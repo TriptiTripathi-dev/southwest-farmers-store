@@ -84,7 +84,11 @@
                                             @endif
                                         </td>
                                         <td>
-                                            
+                                            <a href="{{ route('inventory.history', $item->id) }}" 
+   class="btn btn-sm btn-outline-info me-1" 
+   data-bs-toggle="tooltip" title="View History">
+    <i class="mdi mdi-history"></i>
+</a>
                                             <a href="{{ route('store.products.analytics', $item->id) }}" class="btn btn-sm btn-info py-1 me-1" title="Analytics">
     <i class="mdi mdi-chart-bar"></i>
 </a>

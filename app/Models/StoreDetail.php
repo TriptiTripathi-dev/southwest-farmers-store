@@ -27,4 +27,8 @@ class StoreDetail extends Model
         'is_active',
         'store_user_id'
     ];
+     public function user()
+    {
+        return $this->belongsTo(StoreUser::class, 'store_user_id');
+    }
 }
