@@ -44,7 +44,7 @@ class StoreStockControlController extends Controller
             ->addColumn('quantity', fn($row) => $row->quantity)
             ->addColumn('value', fn($row) => number_format($row->quantity * ($row->product->cost_price ?? 0), 2))
             ->addColumn('action', fn($row) => '
-                <a href="' . route('store.stock-control.history', $row->product_id) . '" class="btn btn-sm btn-info">History</a>
+                <a href="' . route('store.stock-control.overview', $row->product_id) . '" class="btn btn-sm btn-info">History</a>
             ')
             ->make(true);
     }
