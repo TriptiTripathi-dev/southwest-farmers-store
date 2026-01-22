@@ -50,7 +50,6 @@
                         <th>Quantity</th>
                         <th>Selling Price</th>
                         <th>Total Value</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
             </table>
@@ -92,8 +91,7 @@ $(document).ready(function() {
             { data: 'category_name' },
             { data: 'quantity' },
             { data: 'selling_price' },
-            { data: 'value' },
-            { data: 'action', orderable: false, searchable: false }
+            { data: 'value' }
         ],
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
