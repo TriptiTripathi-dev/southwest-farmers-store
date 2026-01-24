@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RecallRequest extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'recall_requests';
 
     protected $fillable = [
         'store_id',
@@ -27,36 +29,53 @@ class RecallRequest extends Model
         'received_by_ware_user_id',
     ];
 
-    const STATUS_PENDING_STORE_APPROVAL = 'pending_store_approval';
-    const STATUS_APPROVED_BY_STORE = 'approved_by_store';
-    const STATUS_PARTIAL_APPROVED = 'partial_approved';
-    const STATUS_REJECTED_BY_STORE = 'rejected_by_store';
-    const STATUS_DISPATCHED = 'dispatched';
-    const STATUS_RECEIVED = 'received';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_CANCELLED = 'cancelled';
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'requested_quantity' => 'integer',
+        'approved_quantity' => 'integer',
+        'dispatched_quantity' => 'integer',
+        'received_quantity' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
 
-    public function store(): BelongsTo
+    // --- Relationships ---
+
+    public function store()
     {
-        return $this->belongsTo(StoreDetail::class);
+        return $this->belongsTo(StoreDetail::class, 'store_id');
     }
 
-    public function product(): BelongsTo
+    public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function initiator(): BelongsTo
+    /**
+     * The Store User who initiated the request.
+     */
+    public function initiator()
     {
-        return $this->belongsTo(WareUser::class, 'initiated_by');
+        return $this->belongsTo(StoreUser::class, 'initiated_by');
     }
 
-    public function storeApprover(): BelongsTo
+    /**
+     * The Store User (Manager) who approved the dispatch.
+     */
+    public function storeApprover()
     {
         return $this->belongsTo(StoreUser::class, 'approved_by_store_user_id');
     }
 
-    public function warehouseReceiver(): BelongsTo
+    /**
+     * The Warehouse User who received the stock.
+     */
+    public function warehouseReceiver()
     {
         return $this->belongsTo(WareUser::class, 'received_by_ware_user_id');
     }

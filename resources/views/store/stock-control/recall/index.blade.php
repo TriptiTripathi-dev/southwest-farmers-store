@@ -1,14 +1,19 @@
-<x-app-layout title="Recall Requests">
+<x-app-layout title="My Recall Requests">
 
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-undo-variant text-warning me-2"></i> Recall Requests
+                <i class="mdi mdi-undo-variant text-danger me-2"></i> Stock Returns (Recall)
             </h4>
-            <small class="text-muted">Manage warehouse-initiated recall requests for your store</small>
+            <small class="text-muted">Manage items you are sending back to the Warehouse</small>
         </div>
+        
+        {{-- NEW: Create Button for Store-Initiated Recall --}}
+        <a href="{{ route('store.stock-control.recall.create') }}" class="btn btn-danger">
+            <i class="mdi mdi-plus-circle me-1"></i> Create Return Request
+        </a>
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -19,44 +24,66 @@
                         <tr>
                             <th>ID</th>
                             <th>Product</th>
-                            <th>Requested Qty</th>
+                            <th class="text-center">Return Qty</th>
                             <th>Reason</th>
-                            <th>Status</th>
-                            <th>Initiated By</th>
-                            <th>Date</th>
-                            <th>Actions</th>
+                            <th class="text-center">Status</th>
+                            <th>Created Date</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recalls as $recall)
                             <tr>
-                                <td>#{{ str_pad($recall->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ $recall->product->product_name }}</td>
-                                <td class="fw-bold">{{ $recall->requested_quantity }}</td>
-                                <td>{{ ucwords(str_replace('_', ' ', $recall->reason)) }}</td>
                                 <td>
-                                    <span class="badge bg-{{ 
-                                        $recall->status == 'pending_store_approval' ? 'warning' : 
-                                        ($recall->status == 'completed' ? 'success' : 
-                                        ($recall->status == 'rejected_by_store' ? 'danger' : 'primary')) 
-                                    }}">
-                                        {{ ucwords(str_replace('_', ' ', $recall->status)) }}
+                                    <span class="fw-bold">#{{ str_pad($recall->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ $recall->product->product_name }}</div>
+                                    <small class="text-muted">{{ $recall->product->sku }}</small>
+                                </td>
+                                <td class="text-center fw-bold fs-6">{{ $recall->requested_quantity }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ ucwords(str_replace('_', ' ', $recall->reason)) }}
                                     </span>
                                 </td>
-                                <td>{{ $recall->initiator->name ?? 'Warehouse Admin' }}</td>
-                                <td>{{ $recall->created_at->format('d M Y H:i') }}</td>
-                                <td>
-                                    <a href="{{ route('store.stock-control.recall.show', $recall) }}" 
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="mdi mdi-eye me-1"></i> View & Respond
-                                    </a>
+                                <td class="text-center">
+                                    @if($recall->status == 'pending')
+                                        <span class="badge bg-warning text-dark">Pending Dispatch</span>
+                                    @elseif($recall->status == 'dispatched')
+                                        <span class="badge bg-info text-white">Dispatched</span>
+                                    @elseif($recall->status == 'received')
+                                        <span class="badge bg-success">Received by Warehouse</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ $recall->status }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ $recall->created_at->format('d M Y') }} <br> <small class="text-muted">{{ $recall->created_at->format('h:i A') }}</small></td>
+                                <td class="text-end">
+                                    @if($recall->status == 'pending')
+                                        <a href="{{ route('store.stock-control.recall.show', $recall) }}" 
+                                           class="btn btn-sm btn-danger shadow-sm">
+                                            <i class="mdi mdi-truck-delivery me-1"></i> Dispatch Now
+                                        </a>
+                                    @else
+                                        <a href="{{ route('store.stock-control.recall.show', $recall->id) }}" 
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="mdi mdi-eye me-1"></i> View Details
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="mdi mdi-information-outline fs-3 d-block mb-2"></i>
-                                    No recall requests at this time.
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <div class="opacity-50 mb-2">
+                                        <i class="mdi mdi-package-variant-closed-remove fs-1"></i>
+                                    </div>
+                                    <h5>No return requests found</h5>
+                                    <p class="small mb-3">You haven't initiated any stock returns yet.</p>
+                                    <a href="{{ route('store.stock-control.recall.create') }}" class="btn btn-sm btn-outline-danger">
+                                        Create First Request
+                                    </a>
                                 </td>
                             </tr>
                         @endforelse

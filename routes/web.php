@@ -35,7 +35,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
         ->name('password.update');
 });
-
+Route::get('/pos-test', function () {
+    return view('pos-test');
+});
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
@@ -100,11 +102,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
 
         // Recall Requests (Store View)
-        Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
-        Route::get('/recall/{recall}', [StoreRecallController::class, 'show'])->name('recall.show');
-        Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
-        Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
-        Route::post('/recall/{recall}/dispatch', [StoreRecallController::class, 'dispatch'])->name('recall.dispatch');
+     Route::prefix('recall')->name('recall.')->group(function () {
+    Route::get('/', [StoreRecallController::class, 'index'])->name('index');
+    Route::get('/create', [StoreRecallController::class, 'create'])->name('create');
+    Route::post('/store', [StoreRecallController::class, 'store'])->name('store');
+    Route::get('/{id}', [StoreRecallController::class, 'show'])->name('show');
+    Route::post('/{id}/dispatch', [StoreRecallController::class, 'dispatch'])->name('dispatch');
+});
     });
     Route::prefix('store')->name('store.')->group(function () {
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');

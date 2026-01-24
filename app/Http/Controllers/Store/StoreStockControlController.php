@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\StoreStock;
 use App\Models\ProductCategory;
 use Carbon\Carbon;
 use App\Models\StockRequest;
 use App\Models\ProductBatch;
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
@@ -15,16 +17,51 @@ use Illuminate\Support\Facades\DB;
 
 class StoreStockControlController extends Controller
 {
-    public function overview()
+   public function overview()
     {
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
+        
         $categories = ProductCategory::where('is_active', true)->get();
-        return view('store.stock-control.overview', compact('categories'));
+
+        // --- 1. Area-wise Total Sales (For Chart) ---
+        $areaSales = StockTransaction::join('store_customers', 'stock_transactions.customer_id', '=', 'store_customers.id')
+            ->where('stock_transactions.store_id', $storeId)
+            ->where('stock_transactions.type', 'sale')
+            ->whereNotNull('store_customers.address')
+            ->select('store_customers.address', DB::raw('SUM(ABS(stock_transactions.quantity_change)) as total_sold'))
+            ->groupBy('store_customers.address')
+            ->orderByDesc('total_sold')
+            ->get();
+
+        $areaLabels = $areaSales->pluck('address');
+        $areaData = $areaSales->pluck('total_sold');
+
+        // --- 2. Top Selling Product Per Area (For Insights Table) ---
+        // Finds the most popular item in each specific area
+        $topProductsByArea = DB::table('stock_transactions as t')
+            ->join('store_customers as c', 't.customer_id', '=', 'c.id')
+            ->join('products as p', 't.product_id', '=', 'p.id')
+            ->where('t.store_id', $storeId)
+            ->where('t.type', 'sale')
+            ->whereNotNull('c.address')
+            ->select('c.address', 'p.product_name', DB::raw('SUM(ABS(t.quantity_change)) as qty'))
+            ->groupBy('c.address', 'p.product_name')
+            ->orderBy('c.address')
+            ->orderByDesc('qty')
+            ->get()
+            ->groupBy('address')
+            ->map(function ($group) {
+                return $group->first(); // Returns the single top product row for the address
+            });
+
+        return view('store.stock-control.overview', compact('categories', 'areaLabels', 'areaData', 'topProductsByArea'));
     }
 
     public function overviewData(Request $request)
     {
         $user = Auth::user();
-        $storeId = $user->store_id;
+        $storeId = $user->store_id ?? $user->id;
 
         $query = StoreStock::where('store_id', $storeId)
             ->with(['product.category']);
@@ -42,8 +79,8 @@ class StoreStockControlController extends Controller
             ->addColumn('sku', fn($row) => $row->product->sku ?? '-')
             ->addColumn('category_name', fn($row) => $row->product->category->name ?? '-')
             ->addColumn('quantity', fn($row) => $row->quantity)
-            ->addColumn('value', fn($row) => number_format($row->quantity * ($row->product->cost_price ?? 0), 2))
-         
+            ->addColumn('selling_price', fn($row) => number_format($row->selling_price ?? 0, 2))
+            ->addColumn('value', fn($row) => number_format($row->quantity * ($row->selling_price ?? 0), 2))
             ->make(true);
     }
 
@@ -103,20 +140,46 @@ class StoreStockControlController extends Controller
         return response()->json(['success' => true, 'message' => 'Stock request sent successfully']);
     }
 
-    public function valuation()
+    public function valuation(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
 
-        // 1. Current Total Store Value (fixed: use products.cost_price)
-        $storeValue = StoreStock::where('store_stocks.store_id', $storeId)
-            ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->sum(DB::raw('store_stocks.quantity * products.cost_price'));
+        // --- 1. Filters Setup ---
+        $categoryId = $request->get('category_id');
+        $productId = $request->get('product_id');
+        
+        // Default: Last 30 days
+        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : Carbon::today()->subDays(29);
+        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : Carbon::today();
 
-        // 2. Top 10 Products by Value (fixed ambiguity & correct column)
-        $topProducts = StoreStock::where('store_stocks.store_id', $storeId)
-            ->join('products', 'store_stocks.product_id', '=', 'products.id')
+        // Dropdown Data
+        $categories = ProductCategory::where('is_active', true)->get();
+        // Only show products that have ever been in this store to keep list manageable
+        $productsList = Product::whereHas('storeStocks', function($q) use ($storeId) {
+            $q->where('store_id', $storeId);
+        })->select('id', 'product_name')->get();
+
+
+        // --- 2. Calculate Current Valuation (Filtered) ---
+        // Base Query
+        $stockQuery = StoreStock::where('store_stocks.store_id', $storeId)
+            ->join('products', 'store_stocks.product_id', '=', 'products.id');
+
+        if ($categoryId) {
+            $stockQuery->where('products.category_id', $categoryId);
+        }
+        if ($productId) {
+            $stockQuery->where('store_stocks.product_id', $productId);
+        }
+
+        // Current Total Value
+        $storeValue = $stockQuery->sum(DB::raw('store_stocks.quantity * products.cost_price'));
+
+        // --- 3. Top Products (Filtered) ---
+        $topProducts = (clone $stockQuery)
             ->select([
+                'products.id',
                 'products.product_name',
                 'products.sku',
                 'store_stocks.quantity',
@@ -126,29 +189,58 @@ class StoreStockControlController extends Controller
             ->limit(10)
             ->get();
 
-        // 3. 30-Day Valuation Trend (real data from stock_transactions)
-        $trend = DB::table('stock_transactions')
-            ->select(DB::raw('DATE(created_at) as date'))
-            ->selectRaw('SUM(quantity_change * running_balance) as daily_change')
-            ->where('store_id', $storeId)
-            ->where('created_at', '>=', Carbon::today()->subDays(30))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
 
-        $dates = [];
-        $trendData = [];
-        $cumulative = $storeValue;
+        // --- 4. Trend Analysis (Advanced Rewind Logic) ---
+        // We calculate daily changes to "rewind" the current value back to the start date.
+        
+        // Query daily value changes (Qty Change * Cost Price)
+        $trendQuery = DB::table('stock_transactions')
+            ->join('products', 'stock_transactions.product_id', '=', 'products.id')
+            ->select(DB::raw('DATE(stock_transactions.created_at) as date'))
+            ->selectRaw('SUM(stock_transactions.quantity_change * products.cost_price) as daily_value_change')
+            ->where('stock_transactions.store_id', $storeId)
+            ->whereBetween('stock_transactions.created_at', [
+                $startDate->copy()->startOfDay(), 
+                Carbon::now()->endOfDay() // Fetch up to now to rewind correctly
+            ])
+            ->groupBy('date');
 
-        for ($i = 29; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i)->format('Y-m-d');
-            $dates[] = $date;
-
-            $dayChange = $trend->firstWhere('date', $date)->daily_change ?? 0;
-            $cumulative -= $dayChange; // backward to show historical value
-            $trendData[] = max(0, round($cumulative, 2));
+        if ($categoryId) {
+            $trendQuery->where('products.category_id', $categoryId);
+        }
+        if ($productId) {
+            $trendQuery->where('stock_transactions.product_id', $productId);
         }
 
+        $dailyChanges = $trendQuery->get()->keyBy('date');
+
+        // Rewind Loop
+        $dates = [];
+        $trendData = [];
+        $currentTracker = $storeValue; // Start with current value
+        
+        // Loop from Today backwards to Start Date
+        // We go slightly past end date if needed to calculate the "End Date Value" correctly
+        $loopDate = Carbon::today();
+        
+        while ($loopDate->gte($startDate)) {
+            $dateStr = $loopDate->format('Y-m-d');
+            
+            // If the loop date is within user's requested range, record it
+            if ($loopDate->lte($endDate)) {
+                $dates[] = $dateStr;
+                $trendData[] = max(0, round($currentTracker, 2));
+            }
+
+            // Apply "Rewind": Subtract today's change to get yesterday's closing value
+            // (Current - Change = Previous)
+            $change = $dailyChanges[$dateStr]->daily_value_change ?? 0;
+            $currentTracker -= $change;
+
+            $loopDate->subDay();
+        }
+
+        // Arrays are currently in reverse chronological order (Today -> Past), flip them
         $dates = array_reverse($dates);
         $trendData = array_reverse($trendData);
 
@@ -156,7 +248,9 @@ class StoreStockControlController extends Controller
             'storeValue',
             'topProducts',
             'dates',
-            'trendData'
+            'trendData',
+            'categories',
+            'productsList'
         ));
     }
 

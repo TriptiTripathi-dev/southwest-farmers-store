@@ -14,6 +14,7 @@ class StockTransaction extends Model
         'warehouse_id',
         'product_batch_id',
         'ware_user_id',
+        'customer_id',
         'store_id',
         'type',
         'quantity_change',
@@ -23,6 +24,11 @@ class StockTransaction extends Model
     ];
 
     // Relationships
+
+    public function customer()
+    {
+        return $this->belongsTo(StoreCustomer::class, 'customer_id');
+    }
 
     public function product()
     {
