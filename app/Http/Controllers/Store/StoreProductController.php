@@ -13,6 +13,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StoreProductExport;
 use App\Imports\StoreProductImport;
 use App\Models\StockAdjustment;
+use App\Models\StockTransaction;
+use Carbon\Carbon;
 
 class StoreProductController extends Controller
 {
@@ -22,17 +24,17 @@ class StoreProductController extends Controller
         $storeId = $user->store_id ?? $user->id;
 
         // Query Store Stocks (linked with Products)
-       $query = Product::with(['category', 'subcategory','storeStocks']);
+        $query = Product::with(['category', 'subcategory', 'storeStocks']);
 
         // 1. Search Filter
-      if ($request->filled('search')) {
-    $search = $request->search;
-    $query->where(function($q) use ($search) {
-        $q->where('product_name', 'ilike', "%{$search}%")   // Change 'like' to 'ilike'
-          ->orWhere('sku', 'ilike', "%{$search}%")          // Change 'like' to 'ilike'
-          ->orWhere('barcode', 'ilike', "%{$search}%");     // Change 'like' to 'ilike'
-    });
-}
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'ilike', "%{$search}%")   // Change 'like' to 'ilike'
+                    ->orWhere('sku', 'ilike', "%{$search}%")          // Change 'like' to 'ilike'
+                    ->orWhere('barcode', 'ilike', "%{$search}%");     // Change 'like' to 'ilike'
+            });
+        }
 
         // 2. Status Filter
         if ($request->filled('status')) {
@@ -62,7 +64,7 @@ class StoreProductController extends Controller
     {
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
-        
+
         // Fetch Categories (Global + Local)
         $categories = ProductCategory::whereNull('store_id')
             ->orWhere('store_id', $storeId)
@@ -72,39 +74,114 @@ class StoreProductController extends Controller
         return view('store.products.create', compact('categories'));
     }
 
-public function analytics($id)
-{
-    $user = Auth::user();
-    $storeId = $user->store_id ?? $user->id;
+    public function analytics(Request $request, $id)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id ?? $user->id;
 
-    // Fetch Product & Current Stock
-    $stock = StoreStock::where('store_id', $storeId)->where('product_id', $id)->with('product')->firstOrFail();
-    $product = $stock->product;
+        // 1. Fetch Product & Stock
+        $stock = StoreStock::where('store_id', $storeId)
+            ->where('product_id', $id)
+            ->with('product')
+            ->firstOrFail();
+        $product = $stock->product;
 
-    // Consumption Trend (Last 30 Days - Subtract Operations)
-    $end = now()->startOfDay(); // Today, but adjust if you want up to now()
-    $start = $end->copy()->subDays(10); // 30 days back
-    $history = StockAdjustment::where('store_id', $storeId)
-        ->where('product_id', $id)
-        ->where('operation', 'subtract')
-        ->where('created_at', '>=', $start)
-        ->selectRaw("DATE(created_at) as date, SUM(quantity) as total") // Use DATE() for broader DB compatibility; adjust if needed
-        ->groupBy('date')
-        ->orderBy('date')
-        ->pluck('total', 'date'); // Keyed by date for easy merging
+        // 2. Filter Setup (Date Range)
+        $dateRange = $request->input('date_range');
+        if ($dateRange && str_contains($dateRange, ' to ')) {
+            $dates = explode(' to ', $dateRange);
+            $start = Carbon::parse($dates[0]);
+            $end = Carbon::parse($dates[1]);
+        } else {
+            // Default: Last 30 Days
+            $start = now()->subDays(29);
+            $end = now();
+        }
 
-    // Generate all dates in the period
-    $period = new \DatePeriod($start, new \DateInterval('P1D'), $end);
-    $dates = [];
-    $usage = [];
-    foreach ($period as $date) {
-        $dateStr = $date->format('Y-m-d');
-        $dates[] = $dateStr;
-        $usage[] = $history->get($dateStr, 0); // Default to 0 if no usage
+        // 3. Base Query (Sales Transactions)
+        $query = StockTransaction::join('store_customers', 'stock_transactions.customer_id', '=', 'store_customers.id')
+            ->where('stock_transactions.store_id', $storeId)
+            ->where('stock_transactions.product_id', $id)
+            ->where('stock_transactions.type', 'sale')
+            ->whereBetween('stock_transactions.created_at', [$start->startOfDay(), $end->endOfDay()]);
+
+        // 4. Apply Location Filter
+        if ($request->location) {
+            $query->where('store_customers.address', $request->location);
+        }
+
+        // 5. Aggregate Data for Charts
+        $salesData = (clone $query)
+            ->selectRaw('DATE(stock_transactions.created_at) as date, SUM(ABS(quantity_change)) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('total', 'date');
+
+        // 6. Calculate KPIs
+        $totalSold = $salesData->sum();
+        $daysCount = $start->diffInDays($end) + 1;
+        $avgDaily = $daysCount > 0 ? round($totalSold / $daysCount, 2) : 0;
+
+        // 7. Prepare Chart Arrays
+        $period = new \DatePeriod($start, new \DateInterval('P1D'), $end->copy()->addDay());
+        $dates = [];
+        $usage = [];
+        foreach ($period as $dt) {
+            $dateStr = $dt->format('Y-m-d');
+            $dates[] = $dt->format('d M');
+            $usage[] = $salesData->get($dateStr, 0);
+        }
+
+        // 8. Get Distinct Locations for Dropdown
+        $locations = StockTransaction::join('store_customers', 'stock_transactions.customer_id', '=', 'store_customers.id')
+            ->where('stock_transactions.store_id', $storeId)
+            ->where('stock_transactions.product_id', $id)
+            ->where('stock_transactions.type', 'sale')
+            ->whereNotNull('store_customers.address')
+            ->distinct()
+            ->pluck('store_customers.address')
+            ->sort()
+            ->values();
+
+        // 9. AJAX Request for Location Stats
+     // 9. AJAX Request for Location Stats
+        // FIX: $request->ajax() hata diya kyunki fetch API header nahi bhejta
+        if ($request->has('location_stats')) {
+            $locationStats = StockTransaction::join('store_customers', 'stock_transactions.customer_id', '=', 'store_customers.id')
+                ->join('store_stocks', function ($join) use ($storeId, $id) {
+                    $join->on('stock_transactions.product_id', '=', 'store_stocks.product_id')
+                        ->where('store_stocks.store_id', $storeId);
+                })
+                ->where('stock_transactions.store_id', $storeId)
+                ->where('stock_transactions.product_id', $id)
+                ->where('stock_transactions.type', 'sale')
+                ->whereBetween('stock_transactions.created_at', [$start->startOfDay(), $end->endOfDay()])
+                ->whereNotNull('store_customers.address')
+                ->selectRaw('
+                    store_customers.address as location, 
+                    SUM(ABS(stock_transactions.quantity_change)) as total_sold,
+                    SUM(ABS(stock_transactions.quantity_change) * store_stocks.selling_price) as revenue
+                ')
+                ->groupBy('store_customers.address')
+                ->orderByDesc('total_sold')
+                ->limit(10)
+                ->get();
+
+            return response()->json([
+                'locations' => $locationStats
+            ]);
+        }
+
+        return view('store.products.analytics', compact(
+            'stock',
+            'product',
+            'dates',
+            'usage',
+            'locations',
+            'totalSold',
+            'avgDaily'
+        ));
     }
-
-    return view('store.products.analytics', compact('stock', 'product', 'dates', 'usage'));
-}
 
     public function store(Request $request)
     {
@@ -147,14 +224,14 @@ public function analytics($id)
     {
         // $id here is the store_stocks.id (from the list)
         $product = Product::where('id', $id)->firstOrFail();
-        
+
         // Check permissions inside view or here?
         // We will allow editing "selling_price" for everyone.
         // Full edit only for Local.
 
-        $categories = ProductCategory::all(); 
+        $categories = ProductCategory::all();
         // Note: For full edit, you might want to load subcategories via JS or pass them if Local.
-        
+
         return view('store.products.edit', compact('product', 'categories'));
     }
 
@@ -166,14 +243,18 @@ public function analytics($id)
         // 2. If Local Product, update other details
         if ($product->store_id != null) {
             $product->update($request->only([
-                'product_name', 'description', 'category_id', 'subcategory_id', 'unit', 'barcode'
+                'product_name',
+                'description',
+                'category_id',
+                'subcategory_id',
+                'unit',
+                'barcode'
             ]));
-            
+
             if ($request->hasFile('image')) {
                 $product->update(['icon' => $request->file('image')->store('products', 'public')]);
             }
-        }else{
-            
+        } else {
         }
 
         return redirect()->route('store.products.index')->with('success', 'Product updated successfully.');
@@ -215,7 +296,7 @@ public function analytics($id)
 
         // Pass Category/Subcategory IDs to the Import Class
         Excel::import(new StoreProductImport(
-            $request->category_id, 
+            $request->category_id,
             $request->subcategory_id
         ), $request->file('file'));
 

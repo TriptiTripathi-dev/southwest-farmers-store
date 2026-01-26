@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\RecallRequest;
-use App\Models\ProductBatch;
 use App\Models\StoreStock;
 use App\Models\StockTransaction;
 use App\Models\StoreDetail;
+use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,11 +27,9 @@ class StoreRecallController extends Controller
         if ($request->ajax()) {
             $tab = $request->get('tab');
 
-            // --- TAB 1: RECALL REQUESTS HISTORY ---
+            // TAB: Recalls
             if ($tab === 'recalls') {
-                $query = RecallRequest::where('store_id', $storeId)
-                    ->with(['product', 'initiator'])
-                    ->select('recall_requests.*');
+                $query = RecallRequest::where('store_id', $storeId)->with(['product', 'initiator'])->select('recall_requests.*');
 
                 return DataTables::of($query)
                     ->editColumn('id', fn($row) => '#' . str_pad($row->id, 5, '0', STR_PAD_LEFT))
@@ -55,51 +53,40 @@ class StoreRecallController extends Controller
                     ->make(true);
             }
 
-            // --- TAB 2: EXPIRY & DAMAGE ALERTS (From Expiry Page) ---
+            // TAB: Expiry
             if ($tab === 'expiry') {
                 $query = ProductBatch::query()
-        ->join('products', 'product_batches.product_id', '=', 'products.id')
-        ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
-        ->where('product_batches.store_id', $storeId)
-        ->select([
-            'product_batches.*',
-            'products.product_name',
-            'products.sku',
-            'product_categories.name as category_name',
-            // Fixed: Direct subtraction (PostgreSQL mein ye integer days deta hai)
-            DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left"),
-            DB::raw("(product_batches.quantity * product_batches.cost_price) as value")
-        ])
-        ->where('product_batches.quantity', '>', 0)
+                    ->join('products', 'product_batches.product_id', '=', 'products.id')
+                    ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+                    ->where('product_batches.store_id', $storeId)
+                    ->where('product_batches.quantity', '>', 0)
                     ->select([
                         'product_batches.*',
                         'products.product_name',
                         'products.sku',
                         'product_categories.name as category_name',
-                        DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left")
+                        DB::raw("DATEDIFF(product_batches.expiry_date, CURRENT_DATE) as days_left")
                     ]);
 
                 return DataTables::of($query)
                     ->editColumn('expiry_date', fn($row) => $row->expiry_date ? Carbon::parse($row->expiry_date)->format('d M Y') : '-')
-                   
                     ->addColumn('status', function ($row) {
                         $daysLeft = $row->days_left;
                         if ($daysLeft !== null && $daysLeft < 0) return '<span class="badge bg-danger">Expired</span>';
                         if ($daysLeft !== null && $daysLeft <= 30) return '<span class="badge bg-warning text-dark">Expiring Soon</span>';
-                     
+                        return '<span class="badge bg-secondary">OK</span>';
                     })
                     ->addColumn('action', function($row) {
-                        // Action: Link to Create Recall Page with Batch ID pre-filled
                         return '<a href="'.route('store.stock-control.recall.create', ['batch_id' => $row->id]).'" class="btn btn-sm btn-outline-danger shadow-sm"><i class="mdi mdi-undo-variant me-1"></i> Recall</a>';
                     })
                     ->rawColumns(['status', 'action'])
                     ->make(true);
             }
 
-            // --- TAB 3: LOW STOCK ALERTS ---
+            // TAB: Low stock
             if ($tab === 'lowstock') {
                 $query = StoreStock::where('store_id', $storeId)
-                    ->where('quantity', '<', 10) // Low Stock Threshold
+                    ->where('quantity', '<', 10)
                     ->with(['product.category']);
 
                 return DataTables::of($query)
@@ -113,7 +100,6 @@ class StoreRecallController extends Controller
             }
         }
 
-        // Counts for Tab Badges
         $expiryCount = ProductBatch::where('store_id', $storeId)
             ->where('quantity', '>', 0)
             ->where(function($q) { $q->where('expiry_date', '<=', now()->addDays(60)); })
@@ -125,21 +111,18 @@ class StoreRecallController extends Controller
     }
 
     /**
-     * Show form to create a new recall request.
-     * Optionally accepts 'batch_id' to pre-fill the form.
+     * Show create form
      */
     public function create(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
 
-        // Fetch products available in stock
         $products = StoreStock::where('store_id', $storeId)
             ->where('quantity', '>', 0)
             ->with('product')
             ->get();
 
-        // Check if coming from Expiry Tab with a specific batch
         $selectedBatch = null;
         if ($request->batch_id) {
             $selectedBatch = ProductBatch::with('product')->where('store_id', $storeId)->find($request->batch_id);
@@ -149,7 +132,7 @@ class StoreRecallController extends Controller
     }
 
     /**
-     * Store the new recall request.
+     * Store new recall
      */
     public function store(Request $request)
     {
@@ -163,7 +146,6 @@ class StoreRecallController extends Controller
             'reason_remarks' => 'nullable|string',
         ]);
 
-        // Verify Total Store Stock
         $stock = StoreStock::where('store_id', $storeId)
             ->where('product_id', $request->product_id)
             ->first();
@@ -172,54 +154,48 @@ class StoreRecallController extends Controller
             return back()->withErrors(['quantity' => 'Insufficient stock. You only have ' . ($stock->quantity ?? 0) . ' units.'])->withInput();
         }
 
-        // Logic to append Batch Info to remarks if needed
-        // (Since we are creating a generic request first, we store batch info in text if DB column doesn't exist)
-        $remarks = $request->reason_remarks;
-        /* Uncomment if you want to validate against specific batch quantity
-           if ($request->batch_id) { ... logic ... } 
-        */
-
         RecallRequest::create([
             'store_id' => $storeId,
             'product_id' => $request->product_id,
             'requested_quantity' => $request->quantity,
             'reason' => $request->reason,
-            'reason_remarks' => $remarks,
-            'status' => 'pending_warehouse_approval', // Sent to warehouse
+            'reason_remarks' => $request->reason_remarks,
+            'status' => 'pending_warehouse_approval',
             'initiated_by' => $user->id,
         ]);
 
         return redirect()->route('store.stock-control.recall.index')->with('success', 'Recall request created. Waiting for Warehouse approval.');
     }
 
-    // ... [Show, Dispatch methods remain unchanged] ...
-   public function show(RecallRequest $recall)
+    /**
+     * Show recall details
+     */
+    public function show(RecallRequest $recall)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
 
-        if ($recall->store_id != $storeId) {
-            abort(403);
-        }
+        if ($recall->store_id != $storeId) abort(403);
 
         $recall->load(['product', 'initiator']);
 
-        // FIX: Fetch batches belonging to THIS Store for THIS Product
-        // Only show batches that have quantity > 0
         $batches = ProductBatch::where('product_id', $recall->product_id)
+            ->where('store_id', $storeId)
             ->where('quantity', '>', 0)
-            ->orderBy('expiry_date', 'asc')
             ->get();
 
         return view('store.stock-control.recall.show', compact('recall', 'batches'));
     }
 
+    /**
+     * Dispatch selected batches back to warehouse
+     */
     public function dispatch(Request $request, RecallRequest $recall)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
 
-       
+        if ($recall->store_id != $storeId) abort(403);
 
         $request->validate([
             'batches' => 'required|array',
@@ -227,47 +203,45 @@ class StoreRecallController extends Controller
             'batches.*.quantity' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($request, $recall, $user, $storeId) {
+        DB::transaction(function () use ($request, $recall, $storeId) {
             $totalDispatched = 0;
 
             foreach ($request->batches as $batchData) {
-                // Fetch Batch from STORE context
                 $batch = ProductBatch::where('id', $batchData['batch_id'])
-                            ->lockForUpdate()
-                            ->firstOrFail();
+                    ->where('store_id', $storeId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
                 if ($batch->quantity < $batchData['quantity']) {
-                    throw new \Exception("Insufficient quantity in batch " . $batch->batch_number);
+                    throw new \Exception("Insufficient quantity in batch " . $batch->id);
                 }
 
-                // Decrement Batch Quantity
                 $batch->decrement('quantity', $batchData['quantity']);
                 $totalDispatched += $batchData['quantity'];
+
                 $detail = StoreDetail::find($storeId);
-                // Log Transaction
+
                 StockTransaction::create([
                     'product_id' => $recall->product_id,
                     'product_batch_id' => $batch->id,
                     'store_id' => $storeId,
                     'type' => 'recall_out',
                     'quantity_change' => -$batchData['quantity'],
-                    'running_balance' => $batch->quantity, // Balance of specific batch
+                    'running_balance' => $batch->quantity,
                     'reference_id' => 'RECALL-' . $recall->id,
                     'remarks' => 'Dispatched to Warehouse (Recall)',
-                    'warehouse_id' => $detail->warehouse_id,
+                    'warehouse_id' => $detail?->warehouse_id,
                 ]);
             }
 
-            // Decrement Aggregate Store Stock
             $storeStock = StoreStock::where('store_id', $storeId)
                 ->where('product_id', $recall->product_id)
                 ->first();
-            
-            if($storeStock) {
+
+            if ($storeStock) {
                 $storeStock->decrement('quantity', $totalDispatched);
             }
 
-            // Update Request Status
             $recall->update([
                 'dispatched_quantity' => $totalDispatched,
                 'status' => 'dispatched',

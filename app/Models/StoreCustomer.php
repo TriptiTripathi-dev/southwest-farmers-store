@@ -18,6 +18,7 @@ class StoreCustomer extends Model
         'phone',
         'party_type',
         'email',
+        'area',    
         'address',
         'due',
         'image',

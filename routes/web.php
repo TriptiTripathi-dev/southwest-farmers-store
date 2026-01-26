@@ -35,7 +35,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
         ->name('password.update');
 });
-
+Route::get('/pos-test', function () {
+    return view('pos-test');
+});
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
@@ -74,7 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
     Route::get('/inventory/requests/{id}/challan', [StoreInventoryController::class, 'downloadChallan'])
-    ->name('inventory.requests.challan');
+        ->name('inventory.requests.challan');
     // STOCK CONTROL MODULE - All Routes
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         // Overview
@@ -102,13 +104,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
 
         // Recall Requests (Store View)
+        Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
+        Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
+        // Stock Control & Recall
         Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
         Route::get('/recall/create', [StoreRecallController::class, 'create'])->name('recall.create');
         Route::post('/recall', [StoreRecallController::class, 'store'])->name('recall.store');
         Route::get('/recall/{recall}', [StoreRecallController::class, 'show'])->name('recall.show');
-        Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
-        Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
         Route::post('/recall/{recall}/dispatch', [StoreRecallController::class, 'dispatch'])->name('recall.dispatch');
+        Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');
