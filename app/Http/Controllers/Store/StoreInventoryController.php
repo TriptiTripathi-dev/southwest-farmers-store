@@ -15,11 +15,27 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
+  use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StockRequestImport;
 
 class StoreInventoryController extends Controller
 {
+  
+
+public function downloadChallan($id)
+{
+    $request = StockRequest::with(['store', 'product'])->findOrFail($id);
+
+    if (!in_array($request->status, ['dispatched', 'completed'])) {
+        return back()->with('error', 'Challan is only available after dispatch.');
+    }
+
+    $pdf = Pdf::loadView('pdf.delivery-challan', compact('request'))
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->stream('Delivery-Challan-REQ-' . str_pad($request->id, 6, '0', STR_PAD_LEFT) . '.pdf');
+}
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -205,5 +221,51 @@ class StoreInventoryController extends Controller
             ->latest()
             ->paginate(20);
         return view('inventory.history', compact('product', 'transactions'));
+    }
+
+    public function audit()
+    {
+        $products = StoreStock::where('store_id', Auth::user()->store_id)->with('product')->get();
+        return view('store.inventory.audit', compact('products'));
+    }
+
+    // Submit Audit & Calculate Variance
+    public function submitAudit(Request $request, StoreStockService $stockService)
+    {
+        $request->validate(['products' => 'required|array']);
+
+        foreach ($request->products as $prod) {
+            $stock = StoreStock::where('store_id', Auth::user()->store_id)
+                ->where('product_id', $prod['id'])
+                ->first();
+
+            if (!$stock) continue;
+
+            $systemQty = $stock->quantity;
+            $physicalQty = $prod['physical_qty'];
+
+            if ($systemQty != $physicalQty) {
+                $diff = $physicalQty - $systemQty; // e.g., 48 - 50 = -2
+
+                // Log Adjustment
+                StockAdjustment::create([
+                    'store_id' => Auth::user()->store_id,
+                    'product_id' => $prod['id'],
+                    'quantity' => $diff,
+                    'type' => 'audit_adjustment',
+                    'reason' => 'Cycle Count Variance',
+                    'user_id' => Auth::id()
+                ]);
+
+                // Adjust Stock (Use FIFO for negative adjustments)
+                if ($diff < 0) {
+                    $stockService->deductStockFIFO(Auth::user()->store_id, $prod['id'], abs($diff), 'Audit Variance', Auth::id());
+                } else {
+                    // Simple increment for positive (add to general/latest batch logic can be added here)
+                    $stock->increment('quantity', $diff);
+                }
+            }
+        }
+        return back()->with('success', 'Audit Completed & Variances Recorded');
     }
 }

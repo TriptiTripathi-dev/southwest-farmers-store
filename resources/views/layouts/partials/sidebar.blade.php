@@ -133,18 +133,6 @@
                             </li>
                           
                             <li>
-                                <a href="{{ route('store.stock-control.low-stock') }}"
-                                    class="tp-link {{ request()->routeIs('store.stock-control.low-stock') ? 'active' : '' }}">
-                                    Low Stock & Reorder
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('store.stock-control.expiry') }}"
-                                    class="tp-link {{ request()->routeIs('store.stock-control.expiry') ? 'active' : '' }}">
-                                    Expiry & Damage Alert
-                                </a>
-                            </li>
-                            <li>
                                 <a href="{{ route('store.stock-control.valuation') }}"
                                     class="tp-link {{ request()->routeIs('store.stock-control.valuation') ? 'active' : '' }}">
                                     Valuation
