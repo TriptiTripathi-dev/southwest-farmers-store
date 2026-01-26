@@ -7,26 +7,113 @@ use App\Models\RecallRequest;
 use App\Models\StoreStock;
 use App\Models\StockTransaction;
 use App\Models\StoreDetail;
+use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 
 class StoreRecallController extends Controller
 {
-    public function index()
+    /**
+     * Display the 3-Tab Dashboard (Recalls, Expiry, Low Stock).
+     */
+    public function index(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
 
-        $recalls = RecallRequest::where('store_id', $storeId)
-            ->with(['product', 'initiator'])
-            ->latest()
-            ->paginate(15);
+        if ($request->ajax()) {
+            $tab = $request->get('tab');
 
-        return view('store.stock-control.recall.index', compact('recalls'));
+            // TAB: Recalls
+            if ($tab === 'recalls') {
+                $query = RecallRequest::where('store_id', $storeId)->with(['product', 'initiator'])->select('recall_requests.*');
+
+                return DataTables::of($query)
+                    ->editColumn('id', fn($row) => '#' . str_pad($row->id, 5, '0', STR_PAD_LEFT))
+                    ->addColumn('product_name', fn($row) => $row->product->product_name ?? 'N/A')
+                    ->editColumn('reason', fn($row) => ucwords(str_replace('_', ' ', $row->reason)))
+                    ->editColumn('status', function ($row) {
+                        $badge = match($row->status) {
+                            'pending_warehouse_approval', 'pending_store_approval' => 'warning',
+                            'completed', 'dispatched' => 'success',
+                            'rejected', 'rejected_by_store' => 'danger',
+                            default => 'primary'
+                        };
+                        return '<span class="badge bg-'.$badge.'">'.ucwords(str_replace('_', ' ', $row->status)).'</span>';
+                    })
+                    ->addColumn('initiator_name', fn($row) => $row->initiator->name ?? 'System')
+                    ->editColumn('created_at', fn($row) => $row->created_at->format('d M Y H:i'))
+                    ->addColumn('action', function ($row) {
+                        return '<a href="'.route('store.stock-control.recall.show', $row->id).'" class="btn btn-sm btn-outline-primary"><i class="mdi mdi-eye me-1"></i> View</a>';
+                    })
+                    ->rawColumns(['status', 'action'])
+                    ->make(true);
+            }
+
+            // TAB: Expiry
+            if ($tab === 'expiry') {
+                $query = ProductBatch::query()
+                    ->join('products', 'product_batches.product_id', '=', 'products.id')
+                    ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+                    ->where('product_batches.store_id', $storeId)
+                    ->where('product_batches.quantity', '>', 0)
+                    ->select([
+                        'product_batches.*',
+                        'products.product_name',
+                        'products.sku',
+                        'product_categories.name as category_name',
+                        DB::raw("DATEDIFF(product_batches.expiry_date, CURRENT_DATE) as days_left")
+                    ]);
+
+                return DataTables::of($query)
+                    ->editColumn('expiry_date', fn($row) => $row->expiry_date ? Carbon::parse($row->expiry_date)->format('d M Y') : '-')
+                    ->addColumn('status', function ($row) {
+                        $daysLeft = $row->days_left;
+                        if ($daysLeft !== null && $daysLeft < 0) return '<span class="badge bg-danger">Expired</span>';
+                        if ($daysLeft !== null && $daysLeft <= 30) return '<span class="badge bg-warning text-dark">Expiring Soon</span>';
+                        return '<span class="badge bg-secondary">OK</span>';
+                    })
+                    ->addColumn('action', function($row) {
+                        return '<a href="'.route('store.stock-control.recall.create', ['batch_id' => $row->id]).'" class="btn btn-sm btn-outline-danger shadow-sm"><i class="mdi mdi-undo-variant me-1"></i> Recall</a>';
+                    })
+                    ->rawColumns(['status', 'action'])
+                    ->make(true);
+            }
+
+            // TAB: Low stock
+            if ($tab === 'lowstock') {
+                $query = StoreStock::where('store_id', $storeId)
+                    ->where('quantity', '<', 10)
+                    ->with(['product.category']);
+
+                return DataTables::of($query)
+                    ->addColumn('product_name', fn($row) => $row->product->product_name ?? 'N/A')
+                    ->addColumn('sku', fn($row) => $row->product->sku ?? '-')
+                    ->addColumn('category_name', fn($row) => $row->product->category->name ?? '-')
+                    ->editColumn('quantity', fn($row) => '<span class="badge bg-danger fs-6">'.$row->quantity.'</span>')
+                    ->addColumn('reorder_suggestion', fn($row) => 'Target: 20 (Order: '.max(0, 20 - $row->quantity).')')
+                    ->rawColumns(['quantity'])
+                    ->make(true);
+            }
+        }
+
+        $expiryCount = ProductBatch::where('store_id', $storeId)
+            ->where('quantity', '>', 0)
+            ->where(function($q) { $q->where('expiry_date', '<=', now()->addDays(60)); })
+            ->count();
+
+        $lowStockCount = StoreStock::where('store_id', $storeId)->where('quantity', '<', 10)->count();
+
+        return view('store.stock-control.recall.index', compact('expiryCount', 'lowStockCount'));
     }
 
-    public function create()
+    /**
+     * Show create form
+     */
+    public function create(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
@@ -36,10 +123,17 @@ class StoreRecallController extends Controller
             ->with('product')
             ->get();
 
-        return view('store.stock-control.recall.create', compact('products'));
+        $selectedBatch = null;
+        if ($request->batch_id) {
+            $selectedBatch = ProductBatch::with('product')->where('store_id', $storeId)->find($request->batch_id);
+        }
+
+        return view('store.stock-control.recall.create', compact('products', 'selectedBatch'));
     }
 
-    // --- STEP 1: Store Requests Recall ---
+    /**
+     * Store new recall
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -49,16 +143,15 @@ class StoreRecallController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'reason' => 'required|string',
-            'reason_remarks' => 'nullable|string'
+            'reason_remarks' => 'nullable|string',
         ]);
 
-        // Check Physical Stock
         $stock = StoreStock::where('store_id', $storeId)
             ->where('product_id', $request->product_id)
             ->first();
 
         if (!$stock || $stock->quantity < $request->quantity) {
-            return back()->with('error', 'Insufficient stock in store.');
+            return back()->withErrors(['quantity' => 'Insufficient stock. You only have ' . ($stock->quantity ?? 0) . ' units.'])->withInput();
         }
 
         RecallRequest::create([
@@ -67,76 +160,94 @@ class StoreRecallController extends Controller
             'requested_quantity' => $request->quantity,
             'reason' => $request->reason,
             'reason_remarks' => $request->reason_remarks,
-            // UPDATED STATUS: Waiting for Warehouse
             'status' => 'pending_warehouse_approval',
             'initiated_by' => $user->id,
         ]);
 
-        return redirect()->route('store.stock-control.recall.index')
-            ->with('success', 'Request sent to Warehouse. Please wait for approval.');
+        return redirect()->route('store.stock-control.recall.index')->with('success', 'Recall request created. Waiting for Warehouse approval.');
     }
 
-    public function show($id)
+    /**
+     * Show recall details
+     */
+    public function show(RecallRequest $recall)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
-        $recall = RecallRequest::with('product')->where('id', $id)
-            ->where('store_id', $storeId)
-            ->firstOrFail();
 
-        return view('store.stock-control.recall.show', compact('recall'));
-    }
-
-    // --- STEP 3: Store Dispatches (After Approval) ---
-    public function dispatch(Request $request, $id)
-    {
-        $user = Auth::user();
-        $storeId = $user->store_id;
-        $recall = RecallRequest::where('id', $id)->firstOrFail();
         if ($recall->store_id != $storeId) abort(403);
 
-        // Security Check: Only allow dispatch if Warehouse has approved
-        if ($recall->status !== 'approved') {
-            return back()->with('error', 'This request is not approved yet.');
-        }
+        $recall->load(['product', 'initiator']);
+
+        $batches = ProductBatch::where('product_id', $recall->product_id)
+            ->where('store_id', $storeId)
+            ->where('quantity', '>', 0)
+            ->get();
+
+        return view('store.stock-control.recall.show', compact('recall', 'batches'));
+    }
+
+    /**
+     * Dispatch selected batches back to warehouse
+     */
+    public function dispatch(Request $request, RecallRequest $recall)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        if ($recall->store_id != $storeId) abort(403);
 
         $request->validate([
-            'dispatch_qty' => 'required|integer|min:1|max:' . $recall->requested_quantity,
+            'batches' => 'required|array',
+            'batches.*.batch_id' => 'required|exists:product_batches,id',
+            'batches.*.quantity' => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($request, $recall, $user, $storeId) {
+        DB::transaction(function () use ($request, $recall, $storeId) {
+            $totalDispatched = 0;
 
-            // 1. Deduct Store Stock
+            foreach ($request->batches as $batchData) {
+                $batch = ProductBatch::where('id', $batchData['batch_id'])
+                    ->where('store_id', $storeId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($batch->quantity < $batchData['quantity']) {
+                    throw new \Exception("Insufficient quantity in batch " . $batch->id);
+                }
+
+                $batch->decrement('quantity', $batchData['quantity']);
+                $totalDispatched += $batchData['quantity'];
+
+                $detail = StoreDetail::find($storeId);
+
+                StockTransaction::create([
+                    'product_id' => $recall->product_id,
+                    'product_batch_id' => $batch->id,
+                    'store_id' => $storeId,
+                    'type' => 'recall_out',
+                    'quantity_change' => -$batchData['quantity'],
+                    'running_balance' => $batch->quantity,
+                    'reference_id' => 'RECALL-' . $recall->id,
+                    'remarks' => 'Dispatched to Warehouse (Recall)',
+                    'warehouse_id' => $detail?->warehouse_id,
+                ]);
+            }
+
             $storeStock = StoreStock::where('store_id', $storeId)
                 ->where('product_id', $recall->product_id)
                 ->first();
 
-            if (!$storeStock || $storeStock->quantity < $request->dispatch_qty) {
-                throw new \Exception("Not enough physical stock to dispatch.");
+            if ($storeStock) {
+                $storeStock->decrement('quantity', $totalDispatched);
             }
 
-            $storeStock->decrement('quantity', $request->dispatch_qty);
-            $wareId = StoreDetail::where('id', $recall->store_id)->first();
-
-            // 2. Log Transaction
-            StockTransaction::create([
-                'store_id' => $storeId,
-                'product_id' => $recall->product_id,
-                'type' => 'recall_out',
-                'quantity_change' => - ($request->dispatch_qty),
-                'running_balance' => $storeStock->quantity,
-                'reference_id' => 'RECALL-' . $recall->id,
-                'remarks' => 'Dispatched to Warehouse (Approved)',
-                'warehouse_id' => $wareId->warehouse_id,
-            ]);
-
-            // 3. Update Status
             $recall->update([
-                'dispatched_quantity' => $request->dispatch_qty,
+                'dispatched_quantity' => $totalDispatched,
                 'status' => 'dispatched',
             ]);
         });
 
-        return back()->with('success', 'Stock dispatched successfully.');
+        return back()->with('success', 'Stock dispatched to Warehouse successfully.');
     }
 }

@@ -75,6 +75,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/requests/import', [StoreInventoryController::class, 'importStockRequests'])->name('inventory.requests.import');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
+    Route::get('/inventory/requests/{id}/challan', [StoreInventoryController::class, 'downloadChallan'])
+        ->name('inventory.requests.challan');
     // STOCK CONTROL MODULE - All Routes
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         // Overview
@@ -102,13 +104,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
 
         // Recall Requests (Store View)
-     Route::prefix('recall')->name('recall.')->group(function () {
-    Route::get('/', [StoreRecallController::class, 'index'])->name('index');
-    Route::get('/create', [StoreRecallController::class, 'create'])->name('create');
-    Route::post('/store', [StoreRecallController::class, 'store'])->name('store');
-    Route::get('/{id}', [StoreRecallController::class, 'show'])->name('show');
-    Route::post('/{id}/dispatch', [StoreRecallController::class, 'dispatch'])->name('dispatch');
-});
+        Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
+        Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
+        // Stock Control & Recall
+        Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
+        Route::get('/recall/create', [StoreRecallController::class, 'create'])->name('recall.create');
+        Route::post('/recall', [StoreRecallController::class, 'store'])->name('recall.store');
+        Route::get('/recall/{recall}', [StoreRecallController::class, 'show'])->name('recall.show');
+        Route::post('/recall/{recall}/dispatch', [StoreRecallController::class, 'dispatch'])->name('recall.dispatch');
+        Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
+  use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StockRequestImport;
 
@@ -206,4 +207,174 @@ class StoreInventoryController extends Controller
             ->paginate(20);
         return view('inventory.history', compact('product', 'transactions'));
     }
+
+
+    /**
+     * Show form to create a request.
+     */
+    public function create(Request $request)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        $products = StoreStock::where('store_id', $storeId)
+            ->where('quantity', '>', 0)
+            ->with('product')
+            ->get();
+
+        $selectedBatch = null;
+        if ($request->batch_id) {
+            $selectedBatch = ProductBatch::with('product')->where('store_id', $storeId)->find($request->batch_id);
+        }
+
+        return view('store.stock-control.recall.create', compact('products', 'selectedBatch'));
+    }
+
+    /**
+     * Store the request.
+     */
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'reason' => 'required|string',
+            'reason_remarks' => 'nullable|string',
+        ]);
+
+        $stock = StoreStock::where('store_id', $storeId)
+            ->where('product_id', $request->product_id)
+            ->first();
+
+        if (!$stock || $stock->quantity < $request->quantity) {
+            return back()->withErrors(['quantity' => 'Insufficient stock. Available: ' . ($stock->quantity ?? 0)])->withInput();
+        }
+
+        // Append batch info to remarks if coming from specific batch
+        $remarks = $request->reason_remarks;
+        if ($request->batch_id) {
+            $batch = ProductBatch::find($request->batch_id);
+            if ($batch) {
+                $remarks .= " [Source Batch: " . $batch->batch_number . "]";
+            }
+        }
+
+        RecallRequest::create([
+            'store_id' => $storeId,
+            'product_id' => $request->product_id,
+            'requested_quantity' => $request->quantity,
+            'reason' => $request->reason,
+            'reason_remarks' => $remarks,
+            'status' => 'pending_warehouse_approval',
+            'initiated_by' => $user->id,
+        ]);
+
+        return redirect()->route('store.stock-control.recall.index')
+            ->with('success', 'Recall Request created. Waiting for Warehouse approval.');
+    }
+
+    /**
+     * Show details.
+     */
+    public function show(RecallRequest $recall)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        if ($recall->store_id != $storeId) abort(403);
+
+        $recall->load(['product', 'initiator']);
+
+        // Fetch batches belonging to THIS Store for dispatch
+        $batches = ProductBatch::where('product_id', $recall->product_id)
+            ->where('store_id', $storeId)
+            ->where('quantity', '>', 0)
+            ->orderBy('expiry_date', 'asc')
+            ->get();
+
+        return view('store.stock-control.recall.show', compact('recall', 'batches'));
+    }
+
+    /**
+     * Dispatch logic.
+     */
+    public function dispatch(Request $request, RecallRequest $recall)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        if ($recall->store_id != $storeId) abort(403);
+
+        if (!in_array($recall->status, ['approved', 'approved_by_store'])) {
+            return back()->with('error', 'Request must be approved before dispatch.');
+        }
+
+        $request->validate([
+            'batches' => 'required|array',
+            'batches.*.batch_id' => 'required|exists:product_batches,id',
+            'batches.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        DB::transaction(function () use ($request, $recall, $user, $storeId) {
+            $totalDispatched = 0;
+
+            foreach ($request->batches as $batchData) {
+                $batch = ProductBatch::where('id', $batchData['batch_id'])
+                            ->where('store_id', $storeId)
+                            ->lockForUpdate()
+                            ->firstOrFail();
+
+                if ($batch->quantity < $batchData['quantity']) {
+                    throw new \Exception("Insufficient quantity in batch " . $batch->batch_number);
+                }
+
+                $batch->decrement('quantity', $batchData['quantity']);
+                $totalDispatched += $batchData['quantity'];
+
+                StockTransaction::create([
+                    'product_id' => $recall->product_id,
+                    'product_batch_id' => $batch->id,
+                    'store_id' => $storeId,
+                    'type' => 'recall_out',
+                    'quantity_change' => -$batchData['quantity'],
+                    'running_balance' => $batch->quantity,
+                    'reference_id' => 'RECALL-' . $recall->id,
+                    'remarks' => 'Dispatched to Warehouse',
+                    'ware_user_id' => $user->id,
+                ]);
+            }
+
+            $storeStock = StoreStock::where('store_id', $storeId)
+                ->where('product_id', $recall->product_id)
+                ->first();
+            
+            if($storeStock) $storeStock->decrement('quantity', $totalDispatched);
+
+            $recall->update([
+                'dispatched_quantity' => $totalDispatched,
+                'status' => 'dispatched',
+            ]);
+        });
+
+        return back()->with('success', 'Stock dispatched successfully.');
+    }
+
+    public function downloadChallan(RecallRequest $recall)
+    {
+        $user = Auth::user();
+        if ($recall->store_id != $user->store_id) abort(403);
+
+        if (!in_array($recall->status, ['dispatched', 'received', 'completed'])) {
+            return back()->with('error', 'Challan is only available after dispatch.');
+        }
+
+        $recall->load(['product', 'store', 'initiator']);
+        $pdf = Pdf::loadView('pdf.recall-challan', compact('recall'));
+        return $pdf->download('Recall_Challan_#' . $recall->id . '.pdf');
+    }
+
+  
 }

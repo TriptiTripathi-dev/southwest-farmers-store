@@ -1,101 +1,87 @@
-<x-app-layout title="My Recall Requests">
+<x-app-layout title="Stock Alerts & Recalls">
 
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-undo-variant text-danger me-2"></i> Stock Returns (Recall)
+                <i class="mdi mdi-alert-decagram text-danger me-2"></i> Stock Alerts & Recalls
             </h4>
-            <small class="text-muted">Manage items you are sending back to the Warehouse</small>
+            <small class="text-muted">Manage recalls, expiration alerts, and low stock warnings</small>
         </div>
-        
-        {{-- NEW: Create Button for Store-Initiated Recall --}}
         <a href="{{ route('store.stock-control.recall.create') }}" class="btn btn-danger">
-            <i class="mdi mdi-plus-circle me-1"></i> Create Return Request
+            <i class="mdi mdi-plus-circle me-1"></i> Create Recall Request
         </a>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Product</th>
-                            <th class="text-center">Return Qty</th>
-                            <th>Reason</th>
-                            <th class="text-center">Status</th>
-                            <th>Created Date</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recalls as $recall)
-                            <tr>
-                                <td>
-                                    <span class="fw-bold">#{{ str_pad($recall->id, 5, '0', STR_PAD_LEFT) }}</span>
-                                </td>
-                                <td>
-                                    <div class="fw-bold">{{ $recall->product->product_name }}</div>
-                                    <small class="text-muted">{{ $recall->product->sku }}</small>
-                                </td>
-                                <td class="text-center fw-bold fs-6">{{ $recall->requested_quantity }}</td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">
-                                        {{ ucwords(str_replace('_', ' ', $recall->reason)) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    @if($recall->status == 'pending')
-                                        <span class="badge bg-warning text-dark">Pending Dispatch</span>
-                                    @elseif($recall->status == 'dispatched')
-                                        <span class="badge bg-info text-white">Dispatched</span>
-                                    @elseif($recall->status == 'received')
-                                        <span class="badge bg-success">Received by Warehouse</span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ $recall->status }}</span>
-                                    @endif
-                                </td>
-                                <td>{{ $recall->created_at->format('d M Y') }} <br> <small class="text-muted">{{ $recall->created_at->format('h:i A') }}</small></td>
-                                <td class="text-end">
-                                    @if($recall->status == 'pending')
-                                        <a href="{{ route('store.stock-control.recall.show', $recall) }}" 
-                                           class="btn btn-sm btn-danger shadow-sm">
-                                            <i class="mdi mdi-truck-delivery me-1"></i> Dispatch Now
-                                        </a>
-                                    @else
-                                        <a href="{{ route('store.stock-control.recall.show', $recall->id) }}" 
-                                           class="btn btn-sm btn-outline-secondary">
-                                            <i class="mdi mdi-eye me-1"></i> View Details
-                                        </a>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <div class="opacity-50 mb-2">
-                                        <i class="mdi mdi-package-variant-closed-remove fs-1"></i>
-                                    </div>
-                                    <h5>No return requests found</h5>
-                                    <p class="small mb-3">You haven't initiated any stock returns yet.</p>
-                                    <a href="{{ route('store.stock-control.recall.create') }}" class="btn btn-sm btn-outline-danger">
-                                        Create First Request
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+    {{-- TABS --}}
+    <ul class="nav nav-tabs mb-3" id="stockTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="recalls-tab" data-bs-toggle="tab" data-bs-target="#recalls" onclick="reloadTable('recallsTable')">
+                <i class="mdi mdi-undo-variant me-1"></i> Recall History
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-danger" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" onclick="reloadTable('expiryTable')">
+                <i class="mdi mdi-calendar-clock me-1"></i> Expiry & Damage
+                @if($expiryCount > 0) <span class="badge bg-danger ms-1">{{ $expiryCount }}</span> @endif
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold text-warning" id="lowstock-tab" data-bs-toggle="tab" data-bs-target="#lowstock" onclick="reloadTable('lowStockTable')">
+                <i class="mdi mdi-trending-down me-1"></i> Low Stock
+                @if($lowStockCount > 0) <span class="badge bg-warning text-dark ms-1">{{ $lowStockCount }}</span> @endif
+            </button>
+        </li>
+    </ul>
+
+    {{-- CONTENT --}}
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="recalls">
+            <div class="card border-0 shadow-sm"><div class="card-body">
+                <table id="recallsTable" class="table table-hover w-100">
+                    <thead class="table-light"><tr><th>ID</th><th>Product</th><th>Qty</th><th>Reason</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
                 </table>
-            </div>
-            <div class="mt-3">
-                {{ $recalls->links() }}
-            </div>
+            </div></div>
+        </div>
+
+        <div class="tab-pane fade" id="expiry">
+            <div class="card border-0 shadow-sm border-start border-danger border-4"><div class="card-body">
+                <table id="expiryTable" class="table table-hover w-100">
+                    <thead class="table-light"><tr><th>Batch</th><th>Product</th><th>SKU</th><th>Category</th><th>Expiry</th><th>Qty</th><th>Damaged</th><th>Status</th><th>Action</th></tr></thead>
+                </table>
+            </div></div>
+        </div>
+
+        <div class="tab-pane fade" id="lowstock">
+            <div class="card border-0 shadow-sm border-start border-warning border-4"><div class="card-body">
+                <table id="lowStockTable" class="table table-hover w-100">
+                    <thead class="table-light"><tr><th>Product</th><th>SKU</th><th>Category</th><th>On Hand</th><th>Suggestion</th></tr></thead>
+                </table>
+            </div></div>
         </div>
     </div>
-
 </div>
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+@endpush
+
+@push('scripts')
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    function reloadTable(id) { $('#' + id).DataTable().ajax.reload(null, false); }
+
+    $(document).ready(function() {
+        $('#recallsTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'recalls' } }, columns: [ {data:'id'}, {data:'product_name'}, {data:'requested_quantity'}, {data:'reason'}, {data:'status'}, {data:'created_at'}, {data:'action'} ], order: [[5, 'desc']] });
+        
+        $('#expiryTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'expiry' } }, columns: [ {data:'batch_number'}, {data:'product_name'}, {data:'sku'}, {data:'category_name'}, {data:'expiry_date'}, {data:'quantity'}, {data:'damaged_quantity'}, {data:'status'}, {data:'action'} ], order: [[4, 'asc']] });
+        
+        $('#lowStockTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'lowstock' } }, columns: [ {data:'product_name'}, {data:'sku'}, {data:'category_name'}, {data:'quantity'}, {data:'reorder_suggestion'} ], order: [[3, 'asc']] });
+        
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) { $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust(); });
+    });
+</script>
+@endpush
 </x-app-layout>
