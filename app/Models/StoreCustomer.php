@@ -29,7 +29,7 @@ class StoreCustomer extends Model
     public function getImageUrlAttribute()
     {
         return $this->image 
-            ? asset('storage/' . $this->image) 
+            ? Storage::url($this->image) 
             : 'https://placehold.co/100x100?text=No+Image';
     }
 }

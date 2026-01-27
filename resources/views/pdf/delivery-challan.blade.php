@@ -2,105 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Delivery Challan #{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</title>
+    <title>Recall Challan #{{ $recall->id }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 14px; color: #333; }
-        .header { width: 100%; border-bottom: 2px solid #ddd; padding-bottom: 20px; margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; color: #4B49AC; }
-        .challan-title { float: right; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #555; }
+        body { font-family: sans-serif; font-size: 13px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #444; padding-bottom: 10px; }
+        .title { font-size: 22px; font-weight: bold; text-transform: uppercase; color: #d32f2f; }
+        .sub-title { font-size: 14px; color: #555; }
         
-        .info-table { width: 100%; margin-bottom: 20px; }
-        .info-table td { vertical-align: top; padding: 5px; }
-        .label { font-weight: bold; color: #777; width: 120px; }
+        .meta-table { width: 100%; margin-bottom: 25px; border-collapse: collapse; }
+        .meta-table td { vertical-align: top; width: 50%; padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; }
+        .box-title { font-weight: bold; text-decoration: underline; display: block; margin-bottom: 5px; }
 
-        .items-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        .items-table th { background-color: #f8f9fa; color: #333; }
-        .items-table td { font-size: 13px; }
+        .info-row { margin-bottom: 20px; }
+        .info-label { font-weight: bold; display: inline-block; width: 120px; }
 
-        .footer { margin-top: 50px; width: 100%; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 20px; }
-        .signatures { width: 100%; margin-top: 60px; }
-        .signature-box { float: left; width: 33%; text-align: center; }
-        .line { border-top: 1px solid #333; width: 80%; margin: 0 auto 5px auto; }
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .items-table th, .items-table td { border: 1px solid #000; padding: 10px; text-align: left; }
+        .items-table th { background-color: #eee; font-weight: bold; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        .footer { margin-top: 60px; width: 100%; }
+        .signature-box { float: right; width: 250px; text-align: center; border-top: 1px solid #000; padding-top: 10px; }
+        
+        .clear { clear: both; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span class="logo">{{ config('app.name', 'Inventory System') }}</span>
-        <span class="challan-title">Delivery Challan</span>
-        <div style="clear: both;"></div>
+        <div class="title">Stock Return Note</div>
+        <div class="sub-title">(Recall Challan)</div>
     </div>
 
-    <table class="info-table">
+    <div class="info-row">
+        <div><span class="info-label">Challan No:</span> #RCL-{{ str_pad($recall->id, 5, '0', STR_PAD_LEFT) }}</div>
+        <div><span class="info-label">Date:</span> {{ now()->format('d M Y, h:i A') }}</div>
+        <div><span class="info-label">Status:</span> {{ strtoupper($recall->status) }}</div>
+    </div>
+
+    <table class="meta-table">
         <tr>
-            <td width="50%">
-                <strong>From (Warehouse):</strong><br>
-                Central Warehouse<br>
-                123 Logistics Park, Industrial Area<br>
-                New Delhi, India - 110020
+            <td>
+                <span class="box-title">SENDER (STORE)</span><br>
+                <strong>{{ $recall->store->store_name }}</strong><br>
+                {{ $recall->store->store_address ?? 'Store Address' }}<br>
+                {{ $recall->store->city ?? '' }}<br>
+                <br>
+                <strong>Initiated By:</strong> {{ $recall->initiator->name ?? 'Store Manager' }}
             </td>
-            <td width="50%">
-                <strong>To (Store):</strong><br>
-                {{ $request->store->store_name }}<br>
-                {{ $request->store->store_address ?? 'Address not available' }}<br>
-                {{ $request->store->city ?? '' }}
+            <td>
+                <span class="box-title">RECEIVER (WAREHOUSE)</span><br>
+                <strong>Central Warehouse</strong><br>
+                Inbound Logistics Dept.<br>
+                Returns Section<br>
             </td>
         </tr>
     </table>
 
-    <table class="info-table">
-        <tr>
-            <td><span class="label">Challan No:</span> #DC-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</td>
-            <td><span class="label">Reference Req:</span> #REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</td>
-        </tr>
-        <tr>
-            <td><span class="label">Date:</span> {{ now()->format('d M Y') }}</td>
-            <td><span class="label">Status:</span> {{ strtoupper($request->status) }}</td>
-        </tr>
-    </table>
-
+    <h4 style="margin-bottom: 5px;">Item Details</h4>
     <table class="items-table">
         <thead>
             <tr>
                 <th width="5%">#</th>
-                <th width="40%">Item Description</th>
-                <th width="20%">SKU</th>
-                <th width="15%">Category</th>
-                <th width="20%" style="text-align: center;">Quantity Dispatched</th>
+                <th width="45%">Product Description</th>
+                <th width="20%">Reason</th>
+                <th width="15%" class="text-center">Requested</th>
+                <th width="15%" class="text-center">Dispatched</th>
             </tr>
         </thead>
         <tbody>
-            @php $i = 1; @endphp
             <tr>
-                <td>{{ $i++ }}</td>
-                <td>{{ $request->product->product_name }}</td>
-                <td>{{ $request->product->sku }}</td>
-                <td>{{ $request->product->category->name ?? 'General' }}</td>
-                <td style="text-align: center; font-weight: bold;">{{ $request->fulfilled_quantity }}</td>
+                <td>1</td>
+                <td>
+                    <strong>{{ $recall->product->product_name }}</strong><br>
+                    <small>SKU: {{ $recall->product->sku }}</small><br>
+                    <small>Category: {{ $recall->product->category->name ?? 'N/A' }}</small>
+                </td>
+                <td>
+                    {{ ucwords(str_replace('_', ' ', $recall->reason)) }}<br>
+                    @if($recall->reason_remarks)
+                        <small><i>"{{ Str::limit($recall->reason_remarks, 30) }}"</i></small>
+                    @endif
+                </td>
+                <td class="text-center">{{ $recall->requested_quantity }}</td>
+                <td class="text-center" style="font-weight: bold; background-color: #f0f0f0;">
+                    {{ $recall->dispatched_quantity }}
+                </td>
             </tr>
-            </tbody>
+        </tbody>
     </table>
 
-    <div class="signatures">
-        <div class="signature-box">
-            <div class="line"></div>
-            Prepared By
-        </div>
-        <div class="signature-box">
-            <div class="line"></div>
-            Authorized By
-        </div>
-        <div class="signature-box">
-            <div class="line"></div>
-            Received By
-        </div>
-        <div style="clear: both;"></div>
-    </div>
-
     <div class="footer">
-        <p>This is a computer-generated document. No signature required.</p>
-        <p>Generated on: {{ now()->format('d M Y, h:i A') }}</p>
+        <p><strong>Declaration:</strong> The goods listed above are being returned to the warehouse. Please acknowledge receipt.</p>
+        
+        <div class="signature-box">
+            Authorized Signatory<br>
+            (Store Manager)
+        </div>
+        <div class="clear"></div>
     </div>
 
 </body>

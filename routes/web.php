@@ -9,6 +9,8 @@ use App\Http\Controllers\Store\StoreRoleController;
 use App\Http\Controllers\Store\StorePermissionController;
 use App\Http\Controllers\Store\GeneralSettingController;
 use App\Http\Controllers\Store\ProductCategoryController;
+use App\Http\Controllers\Store\StoreSalesController;
+use App\Http\Controllers\Store\StoreTransferController;
 use App\Http\Controllers\Store\ProductController;
 use App\Http\Controllers\Store\StoreCustomerController;
 use App\Http\Controllers\Store\StoreAnalyticsController;
@@ -56,6 +58,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('customers', StoreCustomerController::class);
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
+    Route::get('/pos', [StoreSalesController::class, 'index'])->name('sales.pos');
+   
+   
+    // 2. Transfer Routes
+    Route::get('/transfers', [StoreTransferController::class, 'index'])->name('transfers.index');
+    Route::post('/transfers', [StoreTransferController::class, 'store'])->name('transfers.store');
+    Route::post('/transfers/{transfer}/dispatch', [StoreTransferController::class, 'dispatchTransfer'])->name('transfers.dispatch');
+    Route::post('/transfers/{transfer}/receive', [StoreTransferController::class, 'receiveTransfer'])->name('transfers.receive');
     Route::post('/store/update-status', [StoreProfileController::class, 'updateStatus'])
         ->name('store.update-status');
     Route::resource('roles', StoreRoleController::class);
@@ -75,8 +85,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/requests/import', [StoreInventoryController::class, 'importStockRequests'])->name('inventory.requests.import');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
-    Route::get('/inventory/requests/{id}/challan', [StoreInventoryController::class, 'downloadChallan'])
-        ->name('inventory.requests.challan');
+
     // STOCK CONTROL MODULE - All Routes
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         // Overview
@@ -115,6 +124,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
+         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
+ 
+    Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
+    // New Customer Routes
+    Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
+    Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
+         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
+           Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');
         Route::get('categories/{id}/analytics', [ProductCategoryController::class, 'analytics'])->name('categories.analytics');
         Route::get('subcategories/{id}/analytics', [ProductSubcategoryController::class, 'analytics'])->name('subcategories.analytics');

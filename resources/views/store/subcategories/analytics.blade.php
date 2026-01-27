@@ -63,7 +63,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1 small">Inventory Value</p>
-                                <h3 class="mb-0 fw-bold">₹{{ number_format($stats->total_value, 2) }}</h3>
+                                <h3 class="mb-0 fw-bold">${{ number_format($stats->total_value, 2) }}</h3>
                                 <span class="badge bg-light text-success mt-2">
                                     <i class="mdi mdi-wallet"></i> Total Worth
                                 </span>
@@ -82,7 +82,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1 small">Avg. Unit Value</p>
-                                <h3 class="mb-0 fw-bold" id="avgUnitValue">₹0.00</h3>
+                                <h3 class="mb-0 fw-bold" id="avgUnitValue">$0.00</h3>
                                 <span class="badge bg-light text-primary mt-2">
                                     <i class="mdi mdi-trending-up"></i> Per Unit
                                 </span>
@@ -410,7 +410,7 @@
             
             // Average unit value
             const avgUnitValue = total > 0 ? (chartData.stats.total_value / total).toFixed(2) : 0;
-            document.getElementById('avgUnitValue').textContent = '₹' + avgUnitValue;
+            document.getElementById('avgUnitValue').textContent = '$' + avgUnitValue;
 
             // Top product share
             const topShare = total > 0 ? ((chartData.data[0] / total) * 100).toFixed(1) : 0;
@@ -462,7 +462,7 @@
                 ? (chartData.stats.total_value / chartData.stats.total_products).toFixed(2) 
                 : 0;
             document.getElementById('insight3').textContent = 
-                `Average value per product is ₹${valuePerProduct}, total subcategory worth ₹${chartData.stats.total_value.toFixed(2)}`;
+                `Average value per product is $${valuePerProduct}, total subcategory worth $${chartData.stats.total_value.toFixed(2)}`;
         }
 
         // Initialize on page load

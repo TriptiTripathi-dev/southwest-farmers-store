@@ -24,7 +24,7 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ asset('storage/'.$stock->product->image) }}" 
+                                    <img src="{{ Storage::url($stock->product->icon) }}" 
                                          class="rounded" width="40" height="40" alt="img"
                                          onerror="this.src='https://via.placeholder.com/40'">
                                     <div class="ms-3">

@@ -49,7 +49,7 @@
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="text-success fw-bold">Selling Price (₹) <span class="text-danger">*</span></label>
+                                    <label class="text-success fw-bold">Selling Price ($) <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" name="selling_price" class="form-control border-success fw-bold" placeholder="0.00" required>
                                 </div>
                                 <div class="col-md-4 mb-3">

@@ -67,7 +67,7 @@
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="text-success fw-bold">Selling Price (₹) <span class="text-danger">*</span></label>
+                                    <label class="text-success fw-bold">Selling Price ($) <span class="text-danger">*</span></label>
                                     {{-- Note: For Warehouse products, ensure your controller passes the store-specific price if it differs from base price --}}
                                     <input type="number" step="0.01" name="selling_price" class="form-control border-success fw-bold" 
                                            value="{{ $product->price }}" required>
@@ -88,7 +88,7 @@
                                     <input type="file" name="image" class="form-control">
                                     @if($product->image)
                                         <div class="mt-2">
-                                            <img src="{{ asset('storage/'.$product->image) }}" alt="Current Image" width="60" class="rounded">
+                                            <img src="{{ Storage::url($product->icon) }}" alt="Current Image" width="60" class="rounded">
                                         </div>
                                     @endif
                                 </div>
