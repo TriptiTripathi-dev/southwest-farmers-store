@@ -55,7 +55,7 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ asset('storage/'.$item->icon) }}" class="rounded-circle" width="30" height="30" 
+                                                <img src="{{$item->icon ? Storage::url($item->icon) : asset('assets\images\logo.jpg') }}" class="rounded-circle" width="30" height="30" 
                                                     >
                                                 <div class="ms-3">
                                                     <p class="mb-0 fw-bold">{{ $item->product_name }}</p>
@@ -72,7 +72,7 @@
                                                 <span class="badge bg-warning text-dark">Store</span>
                                             @endif
                                         </td>
-                                        <td class="fw-bold">₹{{ $item->price }}</td>
+                                        <td class="fw-bold">${{ $item->price }}</td>
                                         <td>
                                             @if($item->store_id == null)
                                                 <span class="badge bg-secondary">Managed by Warehouse</span>

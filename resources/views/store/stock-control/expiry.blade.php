@@ -58,7 +58,7 @@
                         <th>Days Left</th>
                         <th>Qty Available</th>
                         <th>Damaged</th>
-                        <th>Value (₹)</th>
+                        <th>Value ($)</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -103,7 +103,7 @@ $(document).ready(function() {
             { data: 'days_left' },
             { data: 'quantity' },
             { data: 'damaged_quantity' },
-            { data: 'value', render: data => '₹ ' + parseFloat(data || 0).toLocaleString('en-IN') },
+            { data: 'value', render: data => '$ ' + parseFloat(data || 0).toLocaleString('en-IN') },
             { data: 'status' }
         ],
         order: [[3, 'asc']],

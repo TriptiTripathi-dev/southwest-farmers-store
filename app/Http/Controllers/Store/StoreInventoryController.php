@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
-  use Barryvdh\DomPDF\Facade\Pdf;
+
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StockRequestImport;
 
@@ -362,19 +362,7 @@ class StoreInventoryController extends Controller
         return back()->with('success', 'Stock dispatched successfully.');
     }
 
-    public function downloadChallan(RecallRequest $recall)
-    {
-        $user = Auth::user();
-        if ($recall->store_id != $user->store_id) abort(403);
-
-        if (!in_array($recall->status, ['dispatched', 'received', 'completed'])) {
-            return back()->with('error', 'Challan is only available after dispatch.');
-        }
-
-        $recall->load(['product', 'store', 'initiator']);
-        $pdf = Pdf::loadView('pdf.recall-challan', compact('recall'));
-        return $pdf->download('Recall_Challan_#' . $recall->id . '.pdf');
-    }
+    
 
   
 }

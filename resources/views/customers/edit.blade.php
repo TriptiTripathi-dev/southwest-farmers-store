@@ -124,7 +124,7 @@
                                     <div class="col-md-2 text-center">
                                         <div class="border rounded-3 p-2 bg-light d-inline-block position-relative">
                                             @php
-                                                $imageUrl = $customer->image ? asset('storage/' . $customer->image) : 'https://placehold.co/80x80?text=IMG';
+                                                $imageUrl = $customer->image ? Storage::url($customer->image) : 'https://placehold.co/80x80?text=IMG';
                                             @endphp
                                             <img id="preview" src="{{ $imageUrl }}" class="img-fluid rounded-2" width="80" height="80" alt="Preview">
                                         </div>

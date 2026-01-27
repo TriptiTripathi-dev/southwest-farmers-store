@@ -275,7 +275,7 @@
                                 <span class="badge bg-white bg-opacity-25 text-white me-2">Total</span>
                                 <h6 class="mb-0 text-white-50">Store Value</h6>
                             </div>
-                            <h1 class="fw-bold mb-0 text-white display-6">₹{{ number_format($storeValue, 2) }}</h1>
+                            <h1 class="fw-bold mb-0 text-white display-6">${{ number_format($storeValue, 2) }}</h1>
                         </div>
                         <div class="bg-white bg-opacity-20 rounded-3 p-3 stat-icon">
                             <i class="mdi mdi-currency-inr display-4 "></i>
@@ -329,7 +329,7 @@
                                 <span class="badge bg-white bg-opacity-25 text-white me-2">Top</span>
                                 <h6 class="mb-0 text-white-50">Highest Value</h6>
                             </div>
-                            <h1 class="fw-bold mb-0 text-white display-6">₹{{ number_format($topProducts->first()?->value ?? 0, 2) }}</h1>
+                            <h1 class="fw-bold mb-0 text-white display-6">${{ number_format($topProducts->first()?->value ?? 0, 2) }}</h1>
                         </div>
                         <div class="bg-white bg-opacity-20 rounded-3 p-3 stat-icon">
                             <i class="mdi mdi-star-circle display-4 "></i>
@@ -431,7 +431,7 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="fw-bold text-success fs-6">
-                                        ₹ {{ number_format($product->value, 2) }}
+                                        $ {{ number_format($product->value, 2) }}
                                     </span>
                                 </td>
                                  <td class="text-end">
@@ -510,14 +510,14 @@ var options = {
     },
     yaxis: {
         title: { 
-            text: 'Value (₹)',
+            text: 'Value ($)',
             style: {
                 fontSize: '13px',
                 fontWeight: 600
             }
         },
         labels: {
-            formatter: val => "₹ " + val.toLocaleString('en-IN', { maximumFractionDigits: 0 }),
+            formatter: val => "$ " + val.toLocaleString('en-IN', { maximumFractionDigits: 0 }),
             style: {
                 fontSize: '12px'
             }

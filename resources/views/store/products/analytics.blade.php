@@ -331,7 +331,7 @@
                                 <span class="badge badge-metric bg-primary bg-opacity-10 text-primary me-2">Price</span>
                                 <p class="text-muted mb-0 small">Selling Price</p>
                             </div>
-                            <h2 class="mb-0 fw-bold display-6">₹{{ number_format($stock->selling_price) }}</h2>
+                            <h2 class="mb-0 fw-bold display-6">${{ number_format($stock->selling_price) }}</h2>
                             <span class="badge bg-light text-dark mt-2">per {{ $product->unit }}</span>
                         </div>
                         <div class="icon-wrapper gradient-primary rounded-3">
@@ -351,7 +351,7 @@
                                 <span class="badge badge-metric bg-warning bg-opacity-10 text-warning me-2">Value</span>
                                 <p class="text-muted mb-0 small">Stock Worth</p>
                             </div>
-                            <h2 class="mb-0 fw-bold display-6">₹{{ number_format($stock->quantity * $stock->selling_price) }}</h2>
+                            <h2 class="mb-0 fw-bold display-6">${{ number_format($stock->quantity * $stock->selling_price) }}</h2>
                             <span class="badge bg-light text-dark mt-2">Total Value</span>
                         </div>
                         <div class="icon-wrapper gradient-warning rounded-3">
@@ -677,7 +677,7 @@
                                             <small class="text-muted">${loc.total_sold} {{ $product->unit }} sold</small>
                                         </div>
                                     </div>
-                                    <span class="badge bg-primary">₹${parseFloat(loc.revenue).toLocaleString('en-IN')}</span>
+                                    <span class="badge bg-primary">$${parseFloat(loc.revenue).toLocaleString('en-IN')}</span>
                                 </div>
                                 <div class="progress" style="height: 6px; border-radius: 10px;">
                                     <div class="progress-bar bg-gradient" style="width: ${percentage}%; background: linear-gradient(90deg, #4B49AC, #7978E9);"></div>

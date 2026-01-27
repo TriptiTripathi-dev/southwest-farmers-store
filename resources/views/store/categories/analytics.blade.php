@@ -63,7 +63,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1 small">Inventory Value</p>
-                                <h3 class="mb-0 fw-bold">₹{{ number_format($stats->total_value, 2) }}</h3>
+                                <h3 class="mb-0 fw-bold">${{ number_format($stats->total_value, 2) }}</h3>
                                 <span class="badge bg-light text-success mt-2">
                                     <i class="mdi mdi-cash-multiple"></i> Worth
                                 </span>
@@ -82,7 +82,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1 small">Avg. Product Value</p>
-                                <h3 class="mb-0 fw-bold" id="avgValue">₹0.00</h3>
+                                <h3 class="mb-0 fw-bold" id="avgValue">$0.00</h3>
                                 <span class="badge bg-light text-danger mt-2">
                                     <i class="mdi mdi-chart-line"></i> Per SKU
                                 </span>
@@ -364,7 +364,7 @@
             const avgValue = chartData.stats.total_products > 0 
                 ? chartData.stats.total_value / chartData.stats.total_products 
                 : 0;
-            document.getElementById('avgValue').textContent = '₹' + avgValue.toFixed(2);
+            document.getElementById('avgValue').textContent = '$' + avgValue.toFixed(2);
 
             // Calculate average stock per product
             const avgStock = chartData.stats.total_products > 0 
@@ -383,7 +383,7 @@
                     `Top product holds ${topPercentage}% of total category stock`;
                 
                 document.getElementById('insight3').textContent = 
-                    `Average inventory value per product is ₹${avgValue.toFixed(2)}`;
+                    `Average inventory value per product is $${avgValue.toFixed(2)}`;
             }
 
             // Health indicator
