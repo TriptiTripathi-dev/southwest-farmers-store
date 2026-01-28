@@ -59,8 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
     Route::get('/pos', [StoreSalesController::class, 'index'])->name('sales.pos');
-   
-   
+
+
     // 2. Transfer Routes
     Route::get('/transfers', [StoreTransferController::class, 'index'])->name('transfers.index');
     Route::post('/transfers', [StoreTransferController::class, 'store'])->name('transfers.store');
@@ -91,7 +91,8 @@ Route::middleware('auth')->group(function () {
         // Overview
         Route::get('/overview', [StoreStockControlController::class, 'overview'])->name('overview');
         Route::get('/overview/data', [StoreStockControlController::class, 'overviewData'])->name('overview.data');
-
+        Route::patch('recall/{id}/update-status', [StoreRecallController::class, 'updateStatus'])
+            ->name('recall.update-status');
         // Request Stock
         Route::get('/requests', [StoreStockControlController::class, 'requests'])->name('requests');
         Route::post('/requests', [StoreStockControlController::class, 'storeRequest'])->name('requests.store');
@@ -115,6 +116,7 @@ Route::middleware('auth')->group(function () {
         // Recall Requests (Store View)
         Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
         Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
+
         // Stock Control & Recall
         Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
         Route::get('/recall/create', [StoreRecallController::class, 'create'])->name('recall.create');
@@ -124,14 +126,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
-         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
- 
-    Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
-    // New Customer Routes
-    Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
-    Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
-         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
-           Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
+        Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
+
+        Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
+        // New Customer Routes
+        Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
+        Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
+        Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
+        Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');
         Route::get('categories/{id}/analytics', [ProductCategoryController::class, 'analytics'])->name('categories.analytics');
         Route::get('subcategories/{id}/analytics', [ProductSubcategoryController::class, 'analytics'])->name('subcategories.analytics');
