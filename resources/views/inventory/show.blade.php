@@ -69,13 +69,7 @@
                             </div>
                         </div>
                     </div>
-  @if(in_array($stockRequest->status, ['dispatched', 'completed']))
-    <a href="{{ route('inventory.requests.challan', $stockRequest->id) }}" 
-       target="_blank" 
-       class="btn btn-dark">
-        <i class="fas fa-print"></i> Print Delivery Challan
-    </a>
-@endif
+ 
                     {{-- PAYMENT PROOF SECTION (If In Transit or Completed) --}}
                     @if(in_array($stockRequest->status, ['dispatched', 'completed']))
                     <div class="card border-0 shadow-sm">

@@ -166,7 +166,7 @@
                     <div class="collapse {{ $isOrdersActive ? 'show' : '' }}" id="sidebarOrders">
                         <ul class="nav-second-level">
                             <li>
-                                <a href="#" class="tp-link {{ request()->is('orders/create') ? 'active' : '' }}">
+                                <a href="{{ route('sales.pos') }}" class="tp-link {{ request()->is('orders/create') ? 'active' : '' }}">
                                     Create Order
                                 </a>
                             </li>

@@ -10,9 +10,12 @@ use App\Models\StoreStock;
 use App\Models\ProductCategory; // Assuming you have this model
 use App\Models\StoreCustomer; // Assuming you have this model
 use App\Models\Product;
+use App\Models\StockTransaction;
 use App\Services\StoreStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
+
 
 class StoreSalesController extends Controller
 {
@@ -107,7 +110,92 @@ class StoreSalesController extends Controller
     // 4. Checkout (Existing FIFO Logic)
     public function checkout(Request $request, StoreStockService $stockService)
     {
-        // ... (Keep your existing checkout logic here) ...
-        // Ensure you save 'customer_id' in the Sale model if a customer is selected
+        $request->validate([
+            'cart' => 'required|json',
+            'subtotal' => 'required|numeric',
+            'gst_amount' => 'required|numeric',
+            'tax_amount' => 'required|numeric',
+            'discount_amount' => 'required|numeric',
+            'total_amount' => 'required|numeric',
+        ]);
+
+        $cart = json_decode($request->cart, true);
+        if (empty($cart)) {
+            return response()->json(['message' => 'Cart is empty'], 400);
+        }
+
+        $storeId = Auth::user()->store_id;
+
+        DB::beginTransaction();
+        try {
+            // Generate Invoice Number (example: INV-YYYYMMDD-XXXX)
+            $invoicePrefix = 'INV-' . date('Ymd');
+            $lastSale = Sale::where('store_id', $storeId)
+                ->whereDate('created_at', today())
+                ->orderBy('id', 'desc')
+                ->first();
+            $seq = $lastSale ? (int)substr($lastSale->invoice_number ?? 'INV-0000-0000', -4) + 1 : 1;
+            $invoiceNumber = $invoicePrefix . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT);
+
+            // Create Sale
+            $sale = Sale::create([
+                'store_id' => $storeId,
+                'customer_id' => $request->customer_id,
+                'invoice_number' => $invoiceNumber,
+                'subtotal' => $request->subtotal,
+                'gst_amount' => $request->gst_amount,
+                'tax_amount' => $request->tax_amount,
+                'discount_amount' => $request->discount_amount,
+                'total_amount' => $request->total_amount,
+                'payment_method' => 'cash', // Later add payment method selection
+                'created_by' => Auth::id(),
+            ]);
+
+            foreach ($cart as $item) {
+                // Create SaleItem
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['price'] * $item['quantity'],
+                ]);
+
+                // Deduct from StoreStock
+                $storeStock = StoreStock::where('store_id', $storeId)
+                    ->where('product_id', $item['id'])
+                    ->firstOrFail();
+
+                if ($storeStock->quantity < $item['quantity']) {
+                    throw new \Exception('Insufficient stock for ' . $item['name']);
+                }
+
+                $storeStock->decrement('quantity', $item['quantity']);
+
+                // Create StockTransaction
+                StockTransaction::create([
+                    'product_id' => $item['id'],
+                    'store_id' => $storeId,
+                    'customer_id' => $request->customer_id,
+                    'type' => 'sale',
+                    'quantity_change' => -$item['quantity'],
+                    'running_balance' => $storeStock->quantity,
+                    'reference_id' => $sale->id,
+                    'remarks' => 'Sale Invoice: ' . $invoiceNumber,
+                    'ware_user_id' => Auth::id(), // Assuming store user
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'invoice' => $invoiceNumber,
+                'message' => 'Sale completed successfully!'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 }

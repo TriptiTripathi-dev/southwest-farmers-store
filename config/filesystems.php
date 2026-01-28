@@ -39,7 +39,7 @@ return [
         ],
 
         'public' => [
-            'driver' => 's3',
+            'driver' => 's3', 
             'key' => env('SUPABASE_ACCESS_KEY_ID'),
             'secret' => env('SUPABASE_SECRET_ACCESS_KEY'),
             'region' => env('SUPABASE_DEFAULT_REGION'),
@@ -48,10 +48,8 @@ return [
             'url' => env('SUPABASE_URL'),
             'visibility' => 'public',
             'use_path_style_endpoint' => true,
-            'throw' => false,
+            'throw' => true,
         ],
-
-
     ],
 
     /*

@@ -13,6 +13,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 
@@ -125,19 +126,35 @@ class StoreInventoryController extends Controller
             'store_payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'store_remarks' => 'required|string'
         ]);
+
         $user = Auth::user();
         $stockRequest = StockRequest::where('id', $request->request_id)
             ->where('store_id', $user->store_id ?? $user->id)
             ->firstOrFail();
-        if ($stockRequest->status === StockRequest::STATUS_COMPLETED) {
-            return response()->json(['success' => false, 'message' => 'Request already completed.'], 400);
+
+        // StoreInventoryController.php lines 136-141 ko replace karein
+        if ($request->hasFile('store_payment_proof')) {
+            try {
+
+                $path = Storage::putFile(
+                    'payment_proofs',
+                    $request->file('store_payment_proof')
+                );
+                if (!$path) {
+                    return response()->json(['success' => false, 'message' => 'Upload failed without error message.'], 500);
+                }
+
+                $stockRequest->update([
+                    'store_payment_proof' => $path,
+                    'store_remarks' => $request->store_remarks
+                ]);
+
+                return response()->json(['success' => true, 'message' => 'Payment proof uploaded successfully!', 'path' => $path]);
+            } catch (\Exception $e) {
+                \Log::error('S3 Upload Error: ' . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'S3 Error: ' . $e->getMessage()], 500);
+            }
         }
-        $path = $request->file('store_payment_proof')->store('payment_proofs', 'public');
-        $stockRequest->update([
-            'store_payment_proof' => $path,
-            'store_remarks' => $request->store_remarks
-        ]);
-        return response()->json(['success' => true, 'message' => 'Payment proof uploaded successfully!']);
     }
 
     public function cancelRequest($id)
@@ -323,9 +340,9 @@ class StoreInventoryController extends Controller
 
             foreach ($request->batches as $batchData) {
                 $batch = ProductBatch::where('id', $batchData['batch_id'])
-                            ->where('store_id', $storeId)
-                            ->lockForUpdate()
-                            ->firstOrFail();
+                    ->where('store_id', $storeId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
                 if ($batch->quantity < $batchData['quantity']) {
                     throw new \Exception("Insufficient quantity in batch " . $batch->batch_number);
@@ -350,8 +367,8 @@ class StoreInventoryController extends Controller
             $storeStock = StoreStock::where('store_id', $storeId)
                 ->where('product_id', $recall->product_id)
                 ->first();
-            
-            if($storeStock) $storeStock->decrement('quantity', $totalDispatched);
+
+            if ($storeStock) $storeStock->decrement('quantity', $totalDispatched);
 
             $recall->update([
                 'dispatched_quantity' => $totalDispatched,
@@ -361,8 +378,4 @@ class StoreInventoryController extends Controller
 
         return back()->with('success', 'Stock dispatched successfully.');
     }
-
-    
-
-  
 }

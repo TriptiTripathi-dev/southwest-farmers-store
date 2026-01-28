@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Models\RecallRequest;
 use App\Models\StoreStock;
-  use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\StockTransaction;
 use App\Models\StoreDetail;
 use App\Models\ProductBatch;
@@ -190,6 +190,33 @@ class StoreRecallController extends Controller
             ->get();
 
         return view('store.stock-control.recall.show', compact('recall', 'batches'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $recall = RecallRequest::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:approved_by_store,rejected',
+            'approved_quantity' => 'nullable|integer|min:0',
+            'remarks' => 'nullable|string|max:500'
+        ]);
+
+        // Logic: Agar approve ho raha hai to input wali qty lo, warna 0
+        $finalApprovedQty = ($request->status == 'approved_by_store')
+            ? ($request->approved_quantity ?? $recall->requested_quantity)
+            : 0;
+
+        $recall->update([
+            'status' => $request->status,
+            'approved_quantity' => $finalApprovedQty,
+            'store_remarks' => $request->remarks,
+            'approved_by_store_user_id' => Auth::id(),
+            // 'updated_at' automatic handle hota hai
+        ]);
+
+        $msg = $request->status == 'approved_by_store' ? 'Approved' : 'Rejected';
+        return redirect()->back()->with('success', "Recall request has been $msg successfully.");
     }
 
     /**
