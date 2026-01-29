@@ -26,6 +26,30 @@ class StoreSalesController extends Controller
         return view('store.sales.pos', compact('categories'));
     }
 
+    // ... inside StoreSalesController class ...
+
+    // Display All Orders History
+    public function orders(Request $request)
+    {
+        $storeId = Auth::user()->store_id;
+
+        $query = Sale::where('store_id', $storeId)
+            ->with(['customer', 'items']) // Eager load relationships
+            ->orderBy('created_at', 'desc');
+
+        // Optional: Simple Search
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('invoice_number', 'like', "%$search%")
+                  ->orWhereHas('customer', function($q) use ($search) {
+                      $q->where('name', 'like', "%$search%");
+                  });
+        }
+
+        $orders = $query->paginate(10);
+
+        return view('store.sales.orders', compact('orders'));
+    }
 
     public function searchProduct(Request $request)
     {
@@ -112,6 +136,7 @@ class StoreSalesController extends Controller
     {
         $request->validate([
             'cart' => 'required|json',
+            'customer_id' => 'required|exists:store_customers,id',
             'subtotal' => 'required|numeric',
             'gst_amount' => 'required|numeric',
             'tax_amount' => 'required|numeric',
@@ -147,7 +172,7 @@ class StoreSalesController extends Controller
                 'tax_amount' => $request->tax_amount,
                 'discount_amount' => $request->discount_amount,
                 'total_amount' => $request->total_amount,
-                'payment_method' => 'cash', // Later add payment method selection
+                'payment_method' => $request->payment_method, // Later add payment method selection
                 'created_by' => Auth::id(),
             ]);
 
