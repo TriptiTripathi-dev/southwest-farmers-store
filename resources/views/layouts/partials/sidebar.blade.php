@@ -152,8 +152,16 @@
                 </li>
 
                 {{-- ORDERS --}}
+               {{-- ORDERS --}}
                 <li>
-                    @php $isOrdersActive = request()->is('orders*'); @endphp
+                    @php
+                        // Check if POS route OR any orders/* route is active
+                        $isPosActive = request()->routeIs('sales.pos');
+                        $isOrdersRoute = request()->is('orders*');
+                        // Parent menu stays open if either is true
+                        $isOrdersActive = $isPosActive || $isOrdersRoute;
+                    @endphp
+                    
                     <a href="#sidebarOrders" data-bs-toggle="collapse"
                         class="tp-link {{ $isOrdersActive ? 'active' : '' }}"
                         aria-expanded="{{ $isOrdersActive ? 'true' : 'false' }}">
@@ -163,18 +171,19 @@
                         <span class="sidebar-text"> Orders </span>
                         <span class="menu-arrow"></span>
                     </a>
+                    
                     <div class="collapse {{ $isOrdersActive ? 'show' : '' }}" id="sidebarOrders">
                         <ul class="nav-second-level">
                             <li>
-                                <a href="{{ route('sales.pos') }}" class="tp-link {{ request()->is('orders/create') ? 'active' : '' }}">
+                                <a href="{{ route('sales.pos') }}" class="tp-link {{ $isPosActive ? 'active' : '' }}">
                                     Create Order
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="tp-link {{ request()->is('orders') && !request()->is('orders/create', 'orders/returns') ? 'active' : '' }}">
-                                    All Orders
-                                </a>
-                            </li>
+    <a href="{{ route('store.sales.orders') }}" class="tp-link {{ request()->routeIs('store.sales.orders') ? 'active' : '' }}">
+        All Orders
+    </a>
+</li>
                             <li>
                                 <a href="#" class="tp-link {{ request()->is('orders/returns') ? 'active' : '' }}">
                                     Returns
