@@ -47,6 +47,10 @@ class StoreRoleController extends Controller
                 
                 // Ab Objects pass karein, IDs nahi
                 $role->syncPermissions($permissions);
+
+                 if($request->permissions) {
+            $role->permissions()->sync($request->permissions);
+        }
             }
 
             DB::commit();

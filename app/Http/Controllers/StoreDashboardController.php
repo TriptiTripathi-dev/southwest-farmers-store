@@ -15,6 +15,7 @@ class StoreDashboardController extends Controller
 {
     public function index(Request $request)
     {
+        set_time_limit(300);
         $user = auth()->user();
         $storeId = $user->store_id;
 
