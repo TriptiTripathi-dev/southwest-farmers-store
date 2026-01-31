@@ -32,12 +32,12 @@ class StoreUser extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-   
+
     public function store()
     {
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
-    
+
 
     // Relationship: Parent (Owner)
     public function parent()
@@ -48,12 +48,39 @@ class StoreUser extends Authenticatable
     // Custom Roles Relationship (Already set up previously)
     public function roles()
     {
-        return $this->morphToMany(
-            StoreRole::class,
-            'model',
+        return $this->belongsToMany(
+            \App\Models\StoreRole::class,
             'store_model_has_roles',
             'model_id',
             'role_id'
-        );
+        )->wherePivot('model_type', self::class);
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            \App\Models\StorePermission::class,
+            'store_model_has_permissions',
+            'model_id',
+            'permission_id'
+        )->wherePivot('model_type', self::class);
+    }
+
+
+    public function hasPermission($permissionName)
+    {
+        // 1. Direct permissions
+        if ($this->permissions->contains('name', $permissionName)) {
+            return true;
+        }
+
+        // 2. Via roles
+        foreach ($this->roles as $role) {
+            if ($role->permissions->contains('name', $permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
