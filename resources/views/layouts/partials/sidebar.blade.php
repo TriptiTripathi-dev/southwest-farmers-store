@@ -306,11 +306,11 @@
                             @endif
 
                             @if($can('view_stock_report'))
-                            <li>
-                                <a href="#" class="tp-link {{ request()->is('reports/stock') ? 'active' : '' }}">
-                                    Stock Report
-                                </a>
-                            </li>
+                          <li>
+                <a href="{{ route('store.reports.stock') }}" class="tp-link {{ request()->routeIs('store.reports.stock') ? 'active' : '' }}">
+                    Stock Report
+                </a>
+            </li>
                             @endif
                         </ul>
                     </div>

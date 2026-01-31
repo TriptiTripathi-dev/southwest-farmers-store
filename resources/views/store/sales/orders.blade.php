@@ -79,9 +79,9 @@
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-secondary" title="View Details">
-                                        <i class="mdi mdi-eye"></i>
-                                    </button>
+                                   <a href="{{ route('store.sales.orders.show', $order->id) }}" class="btn btn-sm btn-outline-secondary" title="View Details">
+    <i class="mdi mdi-eye"></i>
+</a>
                                     <button class="btn btn-sm btn-outline-primary ms-1" title="Print Invoice">
                                         <i class="mdi mdi-printer"></i>
                                     </button>

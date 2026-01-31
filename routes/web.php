@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/general', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
+    Route::get('/reports/stock', [StoreInventoryController::class, 'stockReport'])->name('store.reports.stock');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
     Route::get('/inventory/requests/{id}', [StoreInventoryController::class, 'showRequest'])->name('inventory.requests.show');
     Route::get('/inventory/history/{id}', [StoreInventoryController::class, 'history'])->name('inventory.history');
@@ -126,7 +127,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
-        Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
+       Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
+    
+    // NEW: Show Order Details Route
+    Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
 
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');

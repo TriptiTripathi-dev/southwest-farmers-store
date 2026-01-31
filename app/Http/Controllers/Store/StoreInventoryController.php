@@ -38,6 +38,73 @@ class StoreInventoryController extends Controller
         return view('inventory.index', compact('stocks'));
     }
 
+    public function stockReport(Request $request)
+    {
+        $storeId = Auth::user()->store_id;
+
+        // Base Query
+        $query = StoreStock::where('store_stocks.store_id', $storeId)
+            ->join('products', 'store_stocks.product_id', '=', 'products.id')
+            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+            ->select(
+                'store_stocks.*',
+                'products.product_name',
+                'products.sku',
+                'products.price', // Selling Price
+                'products.cost_price', 
+                'product_categories.name as category_name'
+            );
+
+        // 1. Filter by Category
+        if ($request->has('category') && $request->category != 'all') {
+            $query->where('products.category_id', $request->category);
+        }
+
+        // 2. Filter by Stock Status
+        if ($request->has('status')) {
+            if ($request->status == 'low') {
+                // Low Stock Logic: Qty <= Min Level
+                $query->where('store_stocks.quantity', '>', 0);
+            } elseif ($request->status == 'out') {
+                $query->where('store_stocks.quantity', '=', 0);
+            } elseif ($request->status == 'in') {
+                $query->where('store_stocks.quantity', '>', 0);
+            }
+        }
+
+        // 3. Search (PostgreSQL ILIKE)
+        if ($request->has('search') && $request->search != '') {
+            $term = $request->search;
+            $query->where(function ($q) use ($term) {
+                $q->where('products.product_name', 'ILIKE', "%{$term}%")
+                    ->orWhere('products.sku', 'ILIKE', "%{$term}%");
+            });
+        }
+
+        // Get Data (Pagination)
+        $stocks = $query->orderBy('products.product_name', 'asc')->paginate(15);
+
+        // Summary Calculations (Cards ke liye)
+        $totalItems = StoreStock::where('store_id', $storeId)->count();
+        $totalQty = StoreStock::where('store_id', $storeId)->sum('quantity');
+
+        // Total Value Calculation (Qty * Price)
+        // Note: Accurate value ke liye hume saare records lene honge, pagination nahi
+        $allStocks = StoreStock::where('store_stocks.store_id', $storeId)
+            ->join('products', 'store_stocks.product_id', '=', 'products.id')
+            ->select('store_stocks.quantity', 'products.price')
+            ->get();
+
+        $totalValue = $allStocks->sum(function ($stock) {
+            return $stock->quantity * $stock->price;
+        });
+
+        // Categories for Filter Dropdown
+        $categories = \App\Models\ProductCategory::orderBy('name')->get();
+
+        return view('store.reports.stock', compact('stocks', 'totalItems', 'totalQty', 'totalValue', 'categories'));
+    }
+
     public function requestStock(Request $request)
     {
         $request->validate([

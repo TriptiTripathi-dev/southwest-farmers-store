@@ -51,6 +51,20 @@ class StoreSalesController extends Controller
         return view('store.sales.orders', compact('orders'));
     }
 
+    // ... existing methods ...
+
+    // Show Single Order Details
+    public function showOrder($id)
+    {
+        $storeId = Auth::user()->store_id;
+
+        // Fetch Sale with Relations (Items, Product, Customer)
+        $sale = Sale::where('store_id', $storeId)
+            ->with(['items.product', 'customer'])
+            ->findOrFail($id);
+
+        return view('store.sales.show', compact('sale'));
+    }
     public function searchProduct(Request $request)
     {
         $term = $request->term;
