@@ -21,6 +21,7 @@ use App\Http\Controllers\Store\StaffController;
 use App\Http\Controllers\Store\StoreProductController;
 use App\Http\Controllers\Store\StoreRecallController;
 use App\Http\Controllers\Store\StoreStockControlController;
+use App\Http\Controllers\StoreDashboardController;
 use App\Http\Controllers\Warehouse\ProductController as WarehouseProductController;
 
 Route::middleware('guest')->group(function () {
@@ -43,8 +44,7 @@ Route::get('/pos-test', function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
-    Route::get('/dashboard', fn() => view('dashboard'))
-        ->name('dashboard');
+    Route::get('/dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])
