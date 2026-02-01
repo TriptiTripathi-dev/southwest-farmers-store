@@ -22,9 +22,16 @@ class SupportTicket extends Model
     public function createdBy() { return $this->morphTo(); }
     public function assignedTo() { return $this->belongsTo(WareUser::class, 'assigned_to_id'); }
     public function store() { return $this->belongsTo(StoreDetail::class); }
-    public function messages() { return $this->hasMany(SupportMessage::class); }
-    public function attachments() { return $this->hasMany(SupportAttachment::class); }
-    public function logs() { return $this->hasMany(SupportStatusLog::class); }
+    
+    // FIX: Define foreign key 'ticket_id' explicitly
+    public function messages() { return $this->hasMany(SupportMessage::class, 'ticket_id'); }
+    
+    // FIX: Define foreign key 'ticket_id' explicitly
+    public function attachments() { return $this->hasMany(SupportAttachment::class, 'ticket_id'); }
+    
+    // FIX: Define foreign key 'ticket_id' explicitly
+    public function logs() { return $this->hasMany(SupportStatusLog::class, 'ticket_id'); }
+    
     public function reference() { return $this->morphTo(); }
 
     // Helpers
