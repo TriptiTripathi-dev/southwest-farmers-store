@@ -5,19 +5,29 @@ namespace App\Http\Controllers\Store;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\SupportMessage;
+use App\Models\SupportAttachment; // Added Model
 use App\Mail\SupportTicketCreated;
 use App\Mail\SupportTicketReplied;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class StoreSupportTicketController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = SupportTicket::forStore(Auth::user()->store_id)->latest()->paginate(10);
+        // 1. UPDATE: Added Filtering Logic
+        $query = SupportTicket::forStore(Auth::user()->store_id)->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $tickets = $query->paginate(10)->withQueryString(); // Keep filter params in pagination links
+
         return view('store.support.index', compact('tickets'));
     }
 
@@ -29,10 +39,10 @@ class StoreSupportTicketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'subject' => 'required',
-            'category' => 'required',
-            'priority' => 'required',
-            'description' => 'required'
+            'subject' => 'required|string|max:255',
+            'category' => 'required|string',
+            'priority' => 'required|in:low,medium,high,critical',
+            'description' => 'required|string'
         ]);
 
         // SLA Calculation
@@ -57,7 +67,13 @@ class StoreSupportTicketController extends Controller
         ]);
 
         // Notify Warehouse (Generic Support Email)
-        Mail::to('support@warehouse.com')->send(new SupportTicketCreated($ticket));
+        // Ideally fetch this from a setting or Admin User
+        try {
+            Mail::to('support@warehouse.com')->send(new SupportTicketCreated($ticket));
+        } catch (\Exception $e) {
+            // Log mail failure but don't stop the process
+            \Log::error('Support Email Failed: ' . $e->getMessage());
+        }
 
         return redirect()->route('store.support.index')->with('success', 'Ticket created successfully.');
     }
@@ -67,7 +83,7 @@ class StoreSupportTicketController extends Controller
         $ticket = SupportTicket::forStore(Auth::user()->store_id)
             ->with(['messages' => function($q) {
                 $q->where('is_internal', false); // Hide internal notes
-            }])
+            }, 'messages.attachments']) // 2. UPDATE: Eager load attachments
             ->findOrFail($id);
             
         return view('store.support.show', compact('ticket'));
@@ -75,20 +91,54 @@ class StoreSupportTicketController extends Controller
 
     public function reply(Request $request, $id)
     {
-        $request->validate(['message' => 'required']);
+        $request->validate([
+            'message' => 'required|string',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048' // Validation for files
+        ]);
+
         $ticket = SupportTicket::forStore(Auth::user()->store_id)->findOrFail($id);
 
+        // Create Message
         $msg = SupportMessage::create([
             'ticket_id' => $ticket->id,
             'sender_id' => Auth::id(),
             'sender_type' => get_class(Auth::user()),
             'message' => $request->message,
+            'is_internal' => false
         ]);
+
+        // 3. UPDATE: Handle Attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('support-attachments', 'public');
+                
+                SupportAttachment::create([
+                    'ticket_id' => $ticket->id,
+                    'message_id' => $msg->id,
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_type' => $file->extension(),
+                    'uploaded_by_id' => Auth::id(),
+                    'uploaded_by_type' => get_class(Auth::user()),
+                ]);
+            }
+        }
+
+        // 4. UPDATE: Auto-Reopen Ticket Logic
+        // If ticket was waiting or resolved, and store replies, move it back to open/in_progress
+        if (in_array($ticket->status, ['resolved', 'waiting', 'closed'])) {
+            $ticket->update(['status' => 'in_progress']);
+        }
 
         // Notify Assigned Staff or Warehouse
         $recipient = $ticket->assignedTo->email ?? 'support@warehouse.com';
-        Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
+        
+        try {
+            Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
+        } catch (\Exception $e) {
+             \Log::error('Support Reply Email Failed: ' . $e->getMessage());
+        }
 
-        return back()->with('success', 'Reply sent.');
+        return back()->with('success', 'Reply sent successfully.');
     }
 }
