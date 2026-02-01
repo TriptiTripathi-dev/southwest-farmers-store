@@ -21,6 +21,7 @@ use App\Http\Controllers\Store\StaffController;
 use App\Http\Controllers\Store\StoreProductController;
 use App\Http\Controllers\Store\StoreRecallController;
 use App\Http\Controllers\Store\StoreStockControlController;
+use App\Http\Controllers\Store\StoreSupportTicketController;
 use App\Http\Controllers\StoreDashboardController;
 use App\Http\Controllers\Warehouse\ProductController as WarehouseProductController;
 
@@ -127,10 +128,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
-       Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
-    
-    // NEW: Show Order Details Route
-    Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
+        Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
+
+        // NEW: Show Order Details Route
+        Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
 
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
@@ -155,5 +156,16 @@ Route::middleware('auth')->group(function () {
         Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
         Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
         Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
+
+        Route::controller(StoreSupportTicketController::class)
+            ->prefix('support')
+            ->name('support.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{id}', 'show')->name('show');
+                Route::post('/{id}/reply', 'reply')->name('reply');
+            });
     });
 });
