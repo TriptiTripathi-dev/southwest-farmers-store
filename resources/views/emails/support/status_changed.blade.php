@@ -19,7 +19,7 @@
         <p>Subject: {{ $ticket->subject }}</p>
 
         <br>
-        <a href="{{ route('store.support.show', $ticket->id) }}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Ticket</a>
+        {{-- <a href="{{ route('store.support.show', $ticket->id) }}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Ticket</a> --}}
         
         <p style="margin-top: 20px; color: #777; font-size: 12px;">Warehouse POS System Automation</p>
     </div>
