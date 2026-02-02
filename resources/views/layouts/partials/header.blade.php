@@ -41,7 +41,16 @@
                         </a>
                     </div>
                 </li>
-
+                <li class="dropdown notification-list topbar-dropdown">
+                    <a class="nav-link dropdown-toggle arrow-none" href="{{ route('sales.pos') }}" role="button">
+                        <i class="mdi mdi-cart-outline noti-icon"></i>
+                        @if(isset($cartCount) && $cartCount > 0)
+                        <span class="badge bg-danger rounded-circle noti-icon-badge mb-5">
+                            {{ $cartCount }}
+                        </span>
+                        @endif
+                    </a>
+                </li>
                 {{-- USER PROFILE --}}
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
@@ -82,3 +91,30 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateHeaderCartCount() {
+    // 1. Calculate the sum of quantities
+    let totalQuantity = cart.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+
+    // 2. Find the cart icon in the topbar
+    let $cartIcon = $('i.mdi-cart-outline');
+    let $badge = $('.noti-icon-badge', $cartIcon.parent());
+
+    if (totalQuantity > 0) {
+        if ($badge.length === 0) {
+            $cartIcon.after(`<span class="badge badge-danger rounded-circle noti-icon-badge">${totalQuantity}</span>`);
+        } else {
+            $badge.text(totalQuantity);
+        }
+    } else {
+        $badge.remove();
+    }
+}
+
+// Call this function inside your renderCart() function
+function renderCart() {
+    // ... your existing logic ...
+    updateHeaderCartCount(); // Add this line here
+}
+</script>

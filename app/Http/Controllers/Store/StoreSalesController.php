@@ -14,21 +14,146 @@ use App\Models\StockTransaction;
 use App\Services\StoreStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\Cart;
+use App\Models\CartItem;
 
 
 class StoreSalesController extends Controller
 {
     public function index()
-    {
-        // Fetch Categories for the filter list
-        $categories = ProductCategory::select('id', 'name')->orderBy('name')->get();
-        return view('store.sales.pos', compact('categories'));
+    {  
+         $categories = ProductCategory::select('id', 'name')->orderBy('name')->get();
+
+        // Fetch active cart for logged in user
+        $currentCart = Cart::where('user_id', Auth::id())
+            ->where('store_id', Auth::user()->store_id)
+            ->where('status', 'active')
+            ->with('items.product')
+            ->first();
+        
+        return view('store.sales.pos', compact('categories', 'currentCart'));
     }
 
-    // ... inside StoreSalesController class ...
+    // 1. Add Item to DB Cart
+    public function addToCart(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1'
+        ]);
 
-    // Display All Orders History
+        $storeId = Auth::user()->store_id;
+        $user = Auth::user();
+        $product = Product::find($request->product_id);
+
+        // Get or Create Active Cart
+        $cart = Cart::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'store_id' => $storeId,
+                'status' => 'active'
+            ],
+            ['total_amount' => 0]
+        );
+
+        // Check if item exists in cart
+        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+
+        if ($cartItem) {
+            $cartItem->quantity += $request->quantity;
+            $cartItem->total = $cartItem->quantity * $cartItem->price;
+            $cartItem->save();
+        } else {
+            $cart->items()->create([
+                'product_id' => $product->id,
+                'quantity' => $request->quantity,
+                'price' => $product->price,
+                'total' => $product->price * $request->quantity
+            ]);
+        }
+
+        $this->recalculateCartTotal($cart);
+
+        return response()->json([
+            'success' => true,
+            'cart' => $this->getFormattedCart($cart)
+        ]);
+    }
+
+    // 2. Update Quantity
+    public function updateCart(Request $request)
+    {
+        $cartItem = CartItem::findOrFail($request->item_id);
+
+        if ($request->quantity <= 0) {
+            $cartItem->delete();
+        } else {
+            $cartItem->quantity = $request->quantity;
+            $cartItem->total = $cartItem->quantity * $cartItem->price;
+            $cartItem->save();
+        }
+
+        $this->recalculateCartTotal($cartItem->cart);
+
+        return response()->json([
+            'success' => true,
+            'cart' => $this->getFormattedCart($cartItem->cart)
+        ]);
+    }
+
+    // 3. Remove Item
+    public function removeCartItem(Request $request)
+    {
+        $cartItem = CartItem::findOrFail($request->item_id);
+        $cart = $cartItem->cart;
+        $cartItem->delete();
+
+        $this->recalculateCartTotal($cart);
+
+        return response()->json([
+            'success' => true,
+            'cart' => $this->getFormattedCart($cart)
+        ]);
+    }
+
+    // 4. Clear Cart
+    public function clearCart()
+    {
+        $cart = Cart::where('user_id', Auth::id())
+            ->where('store_id', Auth::user()->store_id)
+            ->where('status', 'active')
+            ->first();
+
+        if ($cart) {
+            $cart->items()->delete();
+            $cart->total_amount = 0;
+            $cart->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Helper: Recalculate Total
+    private function recalculateCartTotal($cart)
+    {
+        $total = $cart->items()->sum('total');
+        $cart->update(['total_amount' => $total]);
+    }
+
+    // Helper: Format Cart for JS
+    private function getFormattedCart($cart)
+    {
+        return $cart->fresh()->items->map(function ($item) {
+            return [
+                'item_id' => $item->id, // CartItem ID (for updates)
+                'id' => $item->product_id, // Product ID
+                'name' => $item->product->product_name,
+                'price' => (float)$item->price,
+                'quantity' => $item->quantity,
+                'max' => $item->product->storeStocks()->where('store_id', Auth::user()->store_id)->sum('quantity'), // Fetch actual stock
+            ];
+        });
+    }
     public function orders(Request $request)
     {
         $storeId = Auth::user()->store_id;
@@ -41,9 +166,9 @@ class StoreSalesController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('invoice_number', 'like', "%$search%")
-                  ->orWhereHas('customer', function($q) use ($search) {
-                      $q->where('name', 'like', "%$search%");
-                  });
+                ->orWhereHas('customer', function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%");
+                });
         }
 
         $orders = $query->paginate(10);

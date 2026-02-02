@@ -129,7 +129,11 @@ Route::middleware('auth')->group(function () {
     });
     Route::prefix('store')->name('store.')->group(function () {
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
-
+        // POS Cart Management
+        Route::post('/pos/add', [StoreSalesController::class, 'addToCart'])->name('sales.cart.add');
+        Route::post('/pos/update', [StoreSalesController::class, 'updateCart'])->name('sales.cart.update');
+        Route::post('/pos/remove', [StoreSalesController::class, 'removeCartItem'])->name('sales.cart.remove');
+        Route::post('/pos/clear', [StoreSalesController::class, 'clearCart'])->name('sales.cart.clear');
         // NEW: Show Order Details Route
         Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');

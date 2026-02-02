@@ -15164,8 +15164,8 @@ body[data-menu-color=dark][data-leftbar-size=condensed] #wrapper .app-sidebar-me
 .notification-list .noti-icon-badge {
   display: inline-block;
   position: absolute;
-  top: 16px;
-  right: 10px;
+  top: 9px;
+  right: -2px;
 }
 
 .notification-list .notification-dropdown-item {
