@@ -129,17 +129,15 @@ Route::middleware('auth')->group(function () {
     });
     Route::prefix('store')->name('store.')->group(function () {
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
-        // POS Cart Management
         Route::post('/pos/add', [StoreSalesController::class, 'addToCart'])->name('sales.cart.add');
         Route::post('/pos/update', [StoreSalesController::class, 'updateCart'])->name('sales.cart.update');
         Route::post('/pos/remove', [StoreSalesController::class, 'removeCartItem'])->name('sales.cart.remove');
         Route::post('/pos/clear', [StoreSalesController::class, 'clearCart'])->name('sales.cart.clear');
-        // NEW: Show Order Details Route
+        Route::get('/sales/daily', [StoreSalesController::class, 'dailySales'])->name('sales.daily');
+        Route::get('/sales/weekly', [StoreSalesController::class, 'weeklySales'])->name('sales.weekly');
         Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
-
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
-        // New Customer Routes
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');

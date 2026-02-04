@@ -34,6 +34,49 @@ class StoreSalesController extends Controller
         return view('store.sales.pos', compact('categories', 'currentCart'));
     }
 
+    public function dailySales(Request $request)
+    {
+        $storeId = Auth::user()->store_id;
+        $date = $request->input('date', date('Y-m-d'));
+
+        // Fetch transactions for the specific date
+        $sales = Sale::where('store_id', $storeId)
+            ->whereDate('created_at', $date)
+            ->with('customer')
+            ->latest()
+            ->paginate(15);
+
+        // Calculate Totals
+        $totalRevenue = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->sum('total_amount');
+        $totalOrders = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->count();
+        $cashSales = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->where('payment_method', 'cash')->sum('total_amount');
+        $digitalSales = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->where('payment_method', '!=', 'cash')->sum('total_amount');
+
+        return view('store.sales.daily', compact('sales', 'totalRevenue', 'totalOrders', 'cashSales', 'digitalSales', 'date'));
+    }
+
+    // 2. Weekly Sales Report
+    public function weeklySales(Request $request)
+    {
+        $storeId = Auth::user()->store_id;
+        
+        // Default to current week (Monday to Sunday)
+        $startOfWeek = $request->input('start_date', now()->startOfWeek()->format('Y-m-d'));
+        $endOfWeek = $request->input('end_date', now()->endOfWeek()->format('Y-m-d'));
+
+        // Group sales by Date
+        $dailyStats = Sale::where('store_id', $storeId)
+            ->whereBetween('created_at', [$startOfWeek . ' 00:00:00', $endOfWeek . ' 23:59:59'])
+            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_sales, COUNT(*) as total_orders, SUM(subtotal) as total_subtotal, SUM(tax_amount) as total_tax')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $totalRevenue = $dailyStats->sum('total_sales');
+        $totalOrders = $dailyStats->sum('total_orders');
+
+        return view('store.sales.weekly', compact('dailyStats', 'totalRevenue', 'totalOrders', 'startOfWeek', 'endOfWeek'));
+    }
     // 1. Add Item to DB Cart
     public function addToCart(Request $request)
     {

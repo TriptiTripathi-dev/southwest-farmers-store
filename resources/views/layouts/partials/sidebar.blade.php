@@ -242,9 +242,14 @@
                 @endif
 
                 {{-- SALES & BILLING --}}
+               {{-- SALES & BILLING --}}
                 @if ($can('view_daily_sales') || $can('view_monthly_sales') || $can('view_tax_summary'))
                     <li>
-                        @php $isSalesActive = request()->is('sales*') && !request()->routeIs('sales.pos'); @endphp
+                        @php 
+                            // Check if any sales route is active to keep menu open
+                            $isSalesActive = request()->routeIs('store.sales.daily') || request()->routeIs('store.sales.weekly'); 
+                        @endphp
+                        
                         <a href="#sidebarSales" data-bs-toggle="collapse"
                             class="tp-link {{ $isSalesActive ? 'active' : '' }}"
                             aria-expanded="{{ $isSalesActive ? 'true' : 'false' }}">
@@ -254,31 +259,23 @@
                             <span class="sidebar-text"> Sales & Billing </span>
                             <span class="menu-arrow"></span>
                         </a>
+                        
                         <div class="collapse {{ $isSalesActive ? 'show' : '' }}" id="sidebarSales">
                             <ul class="nav-second-level">
                                 @if ($can('view_daily_sales'))
                                     <li>
-                                        <a href="#"
-                                            class="tp-link {{ request()->is('sales/daily') ? 'active' : '' }}">
+                                        <a href="{{ route('store.sales.daily') }}"
+                                            class="tp-link {{ request()->routeIs('store.sales.daily') ? 'active' : '' }}">
                                             Daily Sales
                                         </a>
                                     </li>
                                 @endif
 
-                                @if ($can('view_monthly_sales'))
+                                @if ($can('view_monthly_sales')) {{-- Reusing permission for Weekly view if needed --}}
                                     <li>
-                                        <a href="#"
-                                            class="tp-link {{ request()->is('sales/monthly') ? 'active' : '' }}">
-                                            Monthly Sales
-                                        </a>
-                                    </li>
-                                @endif
-
-                                @if ($can('view_tax_summary'))
-                                    <li>
-                                        <a href="#"
-                                            class="tp-link {{ request()->is('sales/tax') ? 'active' : '' }}">
-                                            Tax Summary
+                                        <a href="{{ route('store.sales.weekly') }}"
+                                            class="tp-link {{ request()->routeIs('store.sales.weekly') ? 'active' : '' }}">
+                                            Weekly Sales
                                         </a>
                                     </li>
                                 @endif
