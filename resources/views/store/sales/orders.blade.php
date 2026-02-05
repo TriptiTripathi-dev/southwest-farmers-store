@@ -18,7 +18,7 @@
                     <div class="col-md-4">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i class="mdi mdi-magnify"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0" 
+                            <input type="text" name="search" class="form-control border-start-0"
                                 placeholder="Search by Invoice # or Customer..." value="{{ request('search') }}">
                         </div>
                     </div>
@@ -78,13 +78,16 @@
                                         {{ $order->payment_method }}
                                     </span>
                                 </td>
-                                <td class="text-end pe-4">
-                                   <a href="{{ route('store.sales.orders.show', $order->id) }}" class="btn btn-sm btn-outline-secondary" title="View Details">
-    <i class="mdi mdi-eye"></i>
-</a>
-                                    <button class="btn btn-sm btn-outline-primary ms-1" title="Print Invoice">
-                                        <i class="mdi mdi-printer"></i>
-                                    </button>
+                                <td class="text-end">
+                                    <a href="{{ route('store.sales.orders.show', $order->id) }}" class="btn btn-sm btn-light border me-1" title="View">
+                                        <i class="mdi mdi-eye"></i>
+                                    </a>
+
+                                    <a href="{{ route('store.sales.returns.create', ['invoice' => $order->invoice_number]) }}"
+                                        class="btn btn-sm btn-soft-danger"
+                                        title="Process Return">
+                                        <i class="mdi mdi-keyboard-return"></i>
+                                    </a>
                                 </td>
                             </tr>
                             @empty
@@ -101,7 +104,7 @@
                     </table>
                 </div>
             </div>
-            
+
             <div class="card-footer bg-white py-3">
                 {{ $orders->links() }}
             </div>

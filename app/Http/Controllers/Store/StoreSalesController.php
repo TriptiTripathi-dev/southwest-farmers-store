@@ -34,6 +34,43 @@ class StoreSalesController extends Controller
         return view('store.sales.pos', compact('categories', 'currentCart'));
     }
 
+    // ... inside StoreSalesController class ...
+
+    // SALES REPORT (Dynamic with Filters)
+    public function salesReport(Request $request)
+    {
+        $storeId = Auth::user()->store_id;
+        
+        // Default: Current Month
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $paymentMethod = $request->input('payment_method');
+
+        // Base Query
+        $query = Sale::where('store_id', $storeId)
+                     ->whereDate('created_at', '>=', $startDate)
+                     ->whereDate('created_at', '<=', $endDate);
+
+        // Optional Filter: Payment Method
+        if ($paymentMethod && $paymentMethod !== 'all') {
+            $query->where('payment_method', $paymentMethod);
+        }
+
+        // Calculate Summaries (cloning to prevent query reset)
+        $summaryQuery = clone $query;
+        $totalRevenue = $summaryQuery->sum('total_amount');
+        $totalTax = $summaryQuery->sum('tax_amount'); // or gst_amount depending on your column usage
+        $totalDiscount = $summaryQuery->sum('discount_amount');
+        $totalOrders = $summaryQuery->count();
+
+        // Get Paginated Results
+        $sales = $query->with('customer')->latest()->paginate(20)->withQueryString();
+
+        return view('store.reports.sales', compact(
+            'sales', 'totalRevenue', 'totalTax', 'totalDiscount', 'totalOrders', 
+            'startDate', 'endDate', 'paymentMethod'
+        ));
+    }
     public function dailySales(Request $request)
     {
         $storeId = Auth::user()->store_id;

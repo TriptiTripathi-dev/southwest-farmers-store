@@ -20,6 +20,7 @@ use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
 use App\Http\Controllers\Store\StoreProductController;
 use App\Http\Controllers\Store\StoreRecallController;
+use App\Http\Controllers\Store\StoreReturnController;
 use App\Http\Controllers\Store\StoreStockControlController;
 use App\Http\Controllers\Store\StoreSupportTicketController;
 use App\Http\Controllers\StoreDashboardController;
@@ -128,6 +129,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
+        Route::get('/orders/returns', [StoreReturnController::class, 'index'])->name('sales.returns.index');
+        Route::get('/orders/returns/create', [StoreReturnController::class, 'create'])->name('sales.returns.create');
+        Route::post('/orders/returns', [StoreReturnController::class, 'store'])->name('sales.returns.store');
+        Route::get('/orders/returns/search-invoice', [StoreReturnController::class, 'searchInvoice'])->name('sales.returns.search');
+        Route::get('/reports/sales', [StoreSalesController::class, 'salesReport'])->name('reports.sales');
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
         Route::post('/pos/add', [StoreSalesController::class, 'addToCart'])->name('sales.cart.add');
         Route::post('/pos/update', [StoreSalesController::class, 'updateCart'])->name('sales.cart.update');
