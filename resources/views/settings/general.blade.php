@@ -80,6 +80,22 @@
                             </div>
                         </div>
 
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-muted">Currency Symbol</label>
+                                <input type="text" name="currency" class="form-control form-control-lg bg-light border-0" 
+                                       value="{{ old('currency', $settings->currency) }}" placeholder="e.g. $, £, €">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-muted">VAT Percentage (%)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" max="100" name="vat_percentage" class="form-control form-control-lg bg-light border-0" 
+                                           value="{{ old('vat_percentage', $settings->vat_percentage) }}" placeholder="0.00">
+                                    <span class="input-group-text bg-light border-0 text-muted">%</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row g-4 mb-5">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-muted mb-2">Login Page Logo</label>

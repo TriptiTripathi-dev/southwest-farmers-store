@@ -17,5 +17,7 @@ class StoreSetting extends Model
         'logo',
         'favicon',
         'login_logo',
+        'currency',       // Added
+        'vat_percentage', // Added
     ];
 }

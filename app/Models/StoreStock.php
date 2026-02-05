@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class StoreStock extends Model
 {
     protected $fillable = [
-        'store_id', 'product_id', 'quantity', 'selling_price'
+        'store_id', 
+        'product_id', 
+        'quantity', 
+        'selling_price',
+        'min_stock', // Added
+        'max_stock'  // Added
     ];
 
     public function product()
@@ -15,7 +20,6 @@ class StoreStock extends Model
         return $this->belongsTo(Product::class);
     }
 
-    // Relationship: A stock entry belongs to a Store
     public function store()
     {
         return $this->belongsTo(StoreDetail::class, 'store_id');

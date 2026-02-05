@@ -13,11 +13,8 @@ class GeneralSettingController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        // Fetch or create empty settings for this store
         $settings = StoreSetting::first();
-
-        return view( 'settings.general', compact('settings'));
+        return view('settings.general', compact('settings'));
     }
 
     public function update(Request $request)
@@ -30,23 +27,32 @@ class GeneralSettingController extends Controller
             'app_phone' => 'nullable|string|max:20',
             'support_email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
-            'logo' => 'nullable|image|max:2048', // 2MB Max
+            'logo' => 'nullable|image|max:2048',
             'favicon' => 'nullable|image|max:1024',
             'login_logo' => 'nullable|image|max:2048',
+            // New Validations
+            'currency' => 'nullable|string|max:10',
+            'vat_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $data = $request->only(['app_name', 'app_phone', 'support_email', 'address']);
+        // Add new fields to retrieval
+        $data = $request->only([
+            'app_name', 
+            'app_phone', 
+            'support_email', 
+            'address', 
+            'currency', 
+            'vat_percentage'
+        ]);
 
-        // Helper function for file upload
         $uploadFile = function ($fileKey, $path) use ($request, $settings) {
             if ($request->hasFile($fileKey)) {
-                // Delete old file if exists
                 if ($settings->{$fileKey}) {
                     Storage::disk('public')->delete($settings->{$fileKey});
                 }
                 return $request->file($fileKey)->store($path, 'public');
             }
-            return $settings->{$fileKey}; // Keep existing
+            return $settings->{$fileKey};
         };
 
         $data['logo'] = $uploadFile('logo', 'store/branding');
