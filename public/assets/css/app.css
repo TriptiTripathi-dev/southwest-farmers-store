@@ -14855,6 +14855,7 @@ html[data-bs-theme=dark] .logo-dark {
   background-color: var(--bs-sidebar-item-active-bg);
   transition: all 0.4s;
   border-radius: 0.325rem;
+  color:white !important;
 }
 
 .nav-second-level li a {

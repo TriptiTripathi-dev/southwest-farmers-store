@@ -18,6 +18,17 @@
                         <form class="forms-sample" action="{{ route('store.products.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
 
+                            {{-- NEW: Department Dropdown --}}
+                            <div class="form-group mb-3">
+                                <label>Department <span class="text-danger">*</span></label>
+                                <select name="department_id" class="form-select" required>
+                                    <option value="">Select Department</option>
+                                    @foreach($departments as $dept)
+                                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label>Category <span class="text-danger">*</span></label>
@@ -87,12 +98,10 @@
             var catId = this.value;
             var subSelect = document.getElementById('subcategory_select');
             
-            // Reset Subcategory Dropdown
             subSelect.innerHTML = '<option value="">Loading...</option>';
             subSelect.disabled = true;
 
             if(catId) {
-                // Fetch Subcategories via AJAX
                 fetch("{{ route('store.subcategories.get') }}", {
                     method: 'POST',
                     headers: {

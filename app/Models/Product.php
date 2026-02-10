@@ -11,14 +11,15 @@ class Product extends Model
 
     protected $fillable = [
         'store_id', 
+        'department_id', // <--- YE ADD KIYA HAI
         'category_id', 
         'subcategory_id', 
         'product_name', 
         'sku', 
-        'barcode',       // Added
-        'unit',          // Added
-        'price',         // Fixed (was base_price)
-        'icon',          // Fixed (matches DB column)
+        'barcode',
+        'unit',
+        'price',
+        'icon',
         'description', 
         'is_active'
     ];
@@ -41,6 +42,13 @@ class Product extends Model
     }
 
     // Relationships
+    
+    // <--- YE RELATIONSHIP ADD KI HAI
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
     public function storeStocks()
     {
         return $this->hasMany(StoreStock::class);
@@ -54,5 +62,26 @@ class Product extends Model
     public function subcategory()
     {
         return $this->belongsTo(ProductSubcategory::class);
+    }
+
+
+    public function saleItems()
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
+    public function ingredients()
+    {
+        return $this->hasMany(ProductIngredient::class, 'product_id');
+    }
+
+    public function usedInRecipes()
+    {
+        return $this->hasMany(ProductIngredient::class, 'ingredient_id');
     }
 }

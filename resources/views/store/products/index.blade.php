@@ -84,6 +84,9 @@
                                             @endif
                                         </td>
                                         <td>
+                                            <a href="{{ route('store.products.recipe', $item->id) }}" class="btn btn-sm btn-warning" title="Manage Recipe">
+    <i class="mdi mdi-silverware-variant"></i>
+</a>
                                             <a href="{{ route('inventory.history', $item->id) }}" 
    class="btn btn-sm btn-outline-info me-1" 
    data-bs-toggle="tooltip" title="View History">

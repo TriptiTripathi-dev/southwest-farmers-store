@@ -97,6 +97,16 @@
                                 </a>
                             </li>
                             @endif
+                            <li><a href="{{ route('transfers.index') }}"
+                                    class="tp-link {{ request()->is('inventory/transfers') ? 'active' : '' }}">
+                                    Store To Store Transfers
+                                </a></li>
+                            <li>
+                                <a href="{{ route('store.audits.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.audits.*') ? 'active' : '' }}">
+                                    Stock Audits
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
@@ -241,6 +251,21 @@
                 </li>
                 @endif
 
+                <li>
+                    <a href="{{ route('store.promotions.index') }}"
+                        class="tp-link {{ request()->routeIs('store.promotions.*') ? 'active' : '' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:discount-2"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Promotions </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('store.analytics.index') }}" class="tp-link {{ request()->routeIs('store.analytics.index') ? 'active' : '' }}">
+                        <span class="nav-icon"><iconify-icon icon="tabler:chart-pie"></iconify-icon></span>
+                        <span class="sidebar-text"> Analytics Dashboard </span>
+                    </a>
+                </li>
                 {{-- SALES & BILLING --}}
                 {{-- SALES & BILLING --}}
                 @if ($can('view_daily_sales') || $can('view_monthly_sales') || $can('view_tax_summary'))
@@ -315,11 +340,11 @@
                     <div class="collapse {{ $isReportsActive ? 'show' : '' }}" id="sidebarReports">
                         <ul class="nav-second-level">
                             @if ($can('view_sales_report'))
-                           <li>
-                <a href="{{ route('store.reports.sales') }}" class="tp-link {{ request()->routeIs('store.reports.sales') ? 'active' : '' }}">
-                    Sales Report
-                </a>
-            </li>
+                            <li>
+                                <a href="{{ route('store.reports.sales') }}" class="tp-link {{ request()->routeIs('store.reports.sales') ? 'active' : '' }}">
+                                    Sales Report
+                                </a>
+                            </li>
                             @endif
 
                             @if ($can('view_stock_report'))

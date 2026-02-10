@@ -18,8 +18,11 @@ use App\Http\Controllers\Store\ProductSubcategoryController;
 use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
+use App\Http\Controllers\Store\StoreAuditController;
 use App\Http\Controllers\Store\StoreProductController;
+use App\Http\Controllers\Store\StorePromotionController;
 use App\Http\Controllers\Store\StoreRecallController;
+use App\Http\Controllers\Store\StoreRecipeController;
 use App\Http\Controllers\Store\StoreReturnController;
 use App\Http\Controllers\Store\StoreStockControlController;
 use App\Http\Controllers\Store\StoreSupportTicketController;
@@ -75,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff', StaffController::class);
     Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
-    Route::put('/settings/general', [GeneralSettingController::class, 'update'])->name('settings.update');
+    Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::get('/reports/stock', [StoreInventoryController::class, 'stockReport'])->name('store.reports.stock');
@@ -129,8 +132,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
+        // Audit Routes
+        Route::resource('promotions', StorePromotionController::class);
+        Route::post('/promotions/{id}/status', [StorePromotionController::class, 'updateStatus'])->name('promotions.status');
+        Route::get('/audits', [StoreAuditController::class, 'index'])->name('audits.index');
+        Route::get('/audits/create', [StoreAuditController::class, 'create'])->name('audits.create');
+        Route::post('/audits', [StoreAuditController::class, 'store'])->name('audits.store');
+        Route::get('/audits/{id}', [StoreAuditController::class, 'show'])->name('audits.show');
+        Route::put('/audits/{id}', [StoreAuditController::class, 'update'])->name('audits.update');
         Route::get('/orders/returns', [StoreReturnController::class, 'index'])->name('sales.returns.index');
         Route::get('/orders/returns/create', [StoreReturnController::class, 'create'])->name('sales.returns.create');
+        Route::get('products/{id}/recipe', [StoreRecipeController::class, 'edit'])->name('products.recipe');
+        Route::post('products/{id}/recipe', [StoreRecipeController::class, 'store'])->name('products.recipe.store');
+        Route::delete('recipe/{id}', [StoreRecipeController::class, 'destroy'])->name('products.recipe.destroy');
         Route::post('/orders/returns', [StoreReturnController::class, 'store'])->name('sales.returns.store');
         Route::get('/orders/returns/search-invoice', [StoreReturnController::class, 'searchInvoice'])->name('sales.returns.search');
         Route::get('/reports/sales', [StoreSalesController::class, 'salesReport'])->name('reports.sales');

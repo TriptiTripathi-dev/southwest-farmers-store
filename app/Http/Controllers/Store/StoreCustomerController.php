@@ -13,10 +13,10 @@ class StoreCustomerController extends Controller
 {
    public function index(Request $request)
     {
-        $user = Auth::user();
+        $user = Auth::user()->store_id;
         
         // Ensure we use store_id
-        $query = StoreCustomer::where('store_id', $user->id);
+        $query = StoreCustomer::where('store_id', $user);
 
         // 1. Search Filter
         if ($request->filled('search')) {
@@ -58,9 +58,9 @@ class StoreCustomerController extends Controller
 
     public function show($id)
     {
-        $user = Auth::user();
+        $user = Auth::user()->store_id;
         // Ensure we only show customers belonging to the current store
-        $customer = StoreCustomer::where('id', $id)->where('store_id', $user->id)->firstOrFail();
+        $customer = StoreCustomer::where('id', $id)->where('store_id', $user)->firstOrFail();
         
         return view('customers.show', compact('customer'));
     }
@@ -81,7 +81,7 @@ class StoreCustomerController extends Controller
 
         $data = $request->all();
         // FIXED: Changed $user->id to $user->store_id
-        $data['store_id'] = $user->id;
+        $data['store_id'] = $user->store_id;
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('customers', 'public');
@@ -94,17 +94,17 @@ class StoreCustomerController extends Controller
 
     public function edit($id)
     {
-        $user = Auth::user();
+        $user = Auth::user()->store_id;
         // This was already correct ($user->store_id)
-        $customer = StoreCustomer::where('id', $id)->where('store_id', $user->id)->firstOrFail();
+        $customer = StoreCustomer::where('id', $id)->where('store_id', $user)->firstOrFail();
         return view('customers.edit', compact('customer'));
     }
 
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
+        $user = Auth::user()->store_id;
         // This was already correct ($user->store_id)
-        $customer = StoreCustomer::where('id', $id)->where('store_id', $user->id)->firstOrFail();
+        $customer = StoreCustomer::where('id', $id)->where('store_id', $user)->firstOrFail();
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -132,9 +132,9 @@ class StoreCustomerController extends Controller
 
     public function destroy($id)
     {
-        $user = Auth::user();
+        $user = Auth::user()->store_id;
         // This was already correct ($user->store_id)
-        $customer = StoreCustomer::where('id', $id)->where('store_id', $user->id)->firstOrFail();
+        $customer = StoreCustomer::where('id', $id)->where('store_id', $user)->firstOrFail();
 
         if ($customer->image) {
             Storage::disk('public')->delete($customer->image);

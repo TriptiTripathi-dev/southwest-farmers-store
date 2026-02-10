@@ -20,7 +20,7 @@ class GeneralSettingController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        $settings = StoreSetting::where('store_id', $user->id)->firstOrFail();
+        $settings = StoreSetting::where('store_id', $user->store_id)->firstOrFail();
 
         $request->validate([
             'app_name' => 'required|string|max:255',
@@ -30,12 +30,10 @@ class GeneralSettingController extends Controller
             'logo' => 'nullable|image|max:2048',
             'favicon' => 'nullable|image|max:1024',
             'login_logo' => 'nullable|image|max:2048',
-            // New Validations
             'currency' => 'nullable|string|max:10',
             'vat_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        // Add new fields to retrieval
         $data = $request->only([
             'app_name', 
             'app_phone', 

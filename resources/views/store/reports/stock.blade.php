@@ -1,6 +1,6 @@
 <x-app-layout title="Stock Inventory Report">
     <div class="container-fluid">
-        
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0 fw-bold text-dark">Stock Inventory Report</h4>
             <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
@@ -66,9 +66,9 @@
                         <select name="category" class="form-select">
                             <option value="all">All Categories</option>
                             @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }}
-                                </option>
+                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
@@ -94,6 +94,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-4">Product Name</th>
+                                <th>Department</th>
                                 <th>Category</th>
                                 <th>SKU</th>
                                 <th class="text-center">Current Stock</th>
@@ -105,11 +106,16 @@
                         <tbody>
                             @forelse($stocks as $stock)
                             @php
-                                $stockValue = $stock->quantity * $stock->price;
-                                $minLevel = $stock->min_stock_level ?? 5; // Default 5 if not set
+                            $stockValue = $stock->quantity * $stock->price;
+                            $minLevel = $stock->min_stock_level ?? 5; // Default 5 if not set
                             @endphp
                             <tr>
                                 <td class="ps-4 fw-bold text-dark">{{ $stock->product_name }}</td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                        {{ $stock->product->department->name ?? 'N/A' }}
+                                    </span>
+                                </td>
                                 <td><span class="badge bg-light text-dark border">{{ $stock->category_name ?? 'Uncategorized' }}</span></td>
                                 <td class="text-muted small">{{ $stock->sku }}</td>
                                 <td class="text-center fw-bold">{{ $stock->quantity }}</td>
@@ -117,12 +123,12 @@
                                 <td class="text-end fw-bold text-success">₹{{ number_format($stockValue, 2) }}</td>
                                 <td class="text-center">
                                     @if($stock->quantity == 0)
-                                        <span class="badge bg-danger">Out of Stock</span>
+                                    <span class="badge bg-danger">Out of Stock</span>
                                     @elseif($stock->quantity <= $minLevel)
                                         <span class="badge bg-warning text-dark">Low Stock</span>
-                                    @else
+                                        @else
                                         <span class="badge bg-success">In Stock</span>
-                                    @endif
+                                        @endif
                                 </td>
                             </tr>
                             @empty
