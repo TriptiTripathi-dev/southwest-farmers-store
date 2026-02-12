@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Cart;
 use App\Models\CartItem;
-
+use App\Models\StoreNotification;
 
 class StoreSalesController extends Controller
 {
@@ -429,6 +429,14 @@ class StoreSalesController extends Controller
                     'ware_user_id' => Auth::id(), // Assuming store user
                 ]);
             }
+            StoreNotification::create([
+                'user_id' => Auth::id(),
+                'store_id' => Auth::user()->store_id,
+                'title' => 'New Sale',
+                'message' => "Invoice #{$sale->invoice_number} generated for $" . number_format($sale->total_amount, 2),
+                'type' => 'success',
+                'url' => route('store.sales.orders.show', $sale->id),
+            ]);
 
             DB::commit();
 

@@ -9,6 +9,7 @@ use App\Models\StockAudit;
 use App\Models\StockAuditItem;
 use App\Models\StockTransaction;
 use App\Models\ProductCategory;
+use App\Models\StoreNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -74,6 +75,15 @@ class StoreAuditController extends Controller
                     'cost_price' => $stock->product->cost_price ?? 0
                 ]);
             }
+
+            StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Audit Started',
+            'message' => "Stock Audit #{$audit->audit_number} has been initiated.",
+            'type' => 'warning',
+            'url' => route('store.audits.show', $audit->id),
+        ]);
 
             DB::commit();
             return redirect()->route('store.audits.show', $audit->id);
@@ -151,6 +161,15 @@ class StoreAuditController extends Controller
             } else {
                 $message = 'Progress Saved.';
             }
+
+            StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Audit Finalized',
+            'message' => "Stock Audit #{$audit->audit_number} completed.",
+            'type' => 'success',
+            'url' => route('store.audits.show', $audit->id),
+        ]);
 
             DB::commit();
             return redirect()->route('store.audits.index')->with('success', $message);

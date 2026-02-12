@@ -8,6 +8,7 @@ use App\Models\SupportMessage;
 use App\Models\SupportAttachment; // Added Model
 use App\Mail\SupportTicketCreated;
 use App\Mail\SupportTicketReplied;
+use App\Models\StoreNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -75,6 +76,14 @@ class StoreSupportTicketController extends Controller
             \Log::error('Support Email Failed: ' . $e->getMessage());
         }
 
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Ticket Created',
+            'message' => "Support Ticket #{$ticket->ticket_number} created.",
+            'type' => 'info',
+            'url' => route('store.support.show', $ticket->id),
+        ]);
         return redirect()->route('store.support.index')->with('success', 'Ticket created successfully.');
     }
 
@@ -138,6 +147,15 @@ class StoreSupportTicketController extends Controller
         } catch (\Exception $e) {
              \Log::error('Support Reply Email Failed: ' . $e->getMessage());
         }
+
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Reply Sent',
+            'message' => "You replied to Ticket #{$ticket->ticket_number}.",
+            'type' => 'info',
+            'url' => route('store.support.show', $ticket->id),
+        ]);
 
         return back()->with('success', 'Reply sent successfully.');
     }

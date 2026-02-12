@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Cart;
+use App\Models\StoreNotification;
 use App\View\Composers\SidebarComposer;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
@@ -41,6 +42,24 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('cartCount', $cartCount);
+        });
+        View::composer('layouts.partials.header', function ($view) {
+            if (Auth::check()) {
+                $user = Auth::user();
+
+                $unreadNotifications = StoreNotification::where('user_id', $user->id)
+                    ->unread()
+                    ->latest()
+                    ->take(5)
+                    ->get();
+
+                $unreadCount = StoreNotification::where('user_id', $user->id)
+                    ->unread()
+                    ->count();
+
+                $view->with('headerNotifications', $unreadNotifications)
+                    ->with('headerUnreadCount', $unreadCount);
+            }
         });
         View::composer('layouts.partials.sidebar', SidebarComposer::class);
         Paginator::useBootstrapFive();

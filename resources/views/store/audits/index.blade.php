@@ -2,9 +2,12 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 mb-0">Stock Audits (Physical Count)</h2>
+        
+        @if(Auth::user()->hasPermission('create_audit'))
         <a href="{{ route('store.audits.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Start New Audit
         </a>
+        @endif
     </div>
 
     <div class="card shadow-sm">
@@ -30,9 +33,13 @@
                             </span>
                         </td>
                         <td>{{ $audit->initiated_by }}</td> <td>
-                            <a href="{{ route('store.audits.show', $audit->id) }}" class="btn btn-sm btn-outline-primary">
-                                {{ $audit->status == 'completed' ? 'View Report' : 'Continue Counting' }}
-                            </a>
+                            @if($audit->status == 'completed')
+                                <a href="{{ route('store.audits.show', $audit->id) }}" class="btn btn-sm btn-outline-primary">View Report</a>
+                            @else
+                                @if(Auth::user()->hasPermission('perform_audit'))
+                                <a href="{{ route('store.audits.show', $audit->id) }}" class="btn btn-sm btn-outline-primary">Continue Counting</a>
+                                @endif
+                            @endif
                         </td>
                     </tr>
                     @empty

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Promotion;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\StoreNotification;
 use Illuminate\Support\Facades\Auth;
 
 class StorePromotionController extends Controller
@@ -59,7 +60,15 @@ class StorePromotionController extends Controller
             $data['product_id'] = null;
         }
 
-        Promotion::create($data);
+       $promo = Promotion::create($data);
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Promotion Created',
+            'message' => "Campaign '{$promo->name}' created successfully.",
+            'type' => 'success',
+            'url' => route('store.promotions.index'),
+        ]);
 
         return redirect()->route('store.promotions.index')->with('success', 'Promotion created successfully!');
     }

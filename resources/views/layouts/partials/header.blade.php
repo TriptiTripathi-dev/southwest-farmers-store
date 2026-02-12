@@ -16,29 +16,62 @@
             <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
 
                 {{-- NOTIFICATIONS --}}
-                <li class="dropdown notification-list topbar-dropdown">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
-                        <iconify-icon icon="tabler:bell"
-                            class="fs-20 text-dark align-middle topbar-button"></iconify-icon>
-                        <span class="badge bg-danger rounded-circle noti-icon-badge">5</span>
+                {{-- Notification Dropdown --}}
+                <li class="dropdown d-inline-block d-lg-inline-block">
+                    <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                        <i class="mdi mdi-bell-outline font-size-22"></i>
+                        @if(isset($headerUnreadCount) && $headerUnreadCount > 0)
+                        <span class="badge rounded-pill bg-danger float-end" style="position: absolute; top: 12px; right: 5px; font-size: 10px;">
+                            {{ $headerUnreadCount > 99 ? '99+' : $headerUnreadCount }}
+                        </span>
+                        @endif
                     </a>
-
-                    <div class="dropdown-menu dropdown-menu-end dropdown-xl">
-                        <div class="dropdown-item noti-title">
-                            <h5 class="m-0 fs-16">
-                                Notification
-                                <span class="float-end">
-                                    <iconify-icon icon="tabler:x"
-                                        class="fs-18 text-dark align-middle"></iconify-icon>
-                                </span>
-                            </h5>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg p-0">
+                        <div class="p-3 border-bottom">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h6 class="m-0 fw-bold"> Notifications </h6>
+                                </div>
+                                <div class="col-auto">
+                                    <form action="{{ route('store.notifications.readAll') }}" method="POST">
+                                        @csrf
+                                        <button class="text-reset small btn btn-link p-0 text-decoration-none"> Mark all as read</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="noti-scroll" data-simplebar></div>
-
-                        <a href="#" class="dropdown-item text-center text-dark notify-item notify-all bg-light">
-                            View all
-                        </a>
+                        <div data-simplebar style="max-height: 230px;">
+                            @if(isset($headerNotifications) && $headerNotifications->count() > 0)
+                            @foreach($headerNotifications as $notif)
+                            <a href="{{ route('store.notifications.read', $notif->id) }}" class="text-reset notification-item">
+                                <div class="d-flex align-items-start p-3 border-bottom bg-light">
+                                    <div class="avatar-xs me-3">
+                                        <span class="avatar-title bg-{{ $notif->type == 'error' ? 'danger' : ($notif->type == 'warning' ? 'warning' : 'primary') }} rounded-circle font-size-16">
+                                            <i class="mdi {{ $notif->type == 'error' ? 'mdi-alert-circle-outline' : 'mdi-bell-outline' }}"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h6 class="mt-0 mb-1 font-size-14">{{ $notif->title }}</h6>
+                                        <div class="font-size-12 text-muted">
+                                            <p class="mb-1">{{ Str::limit($notif->message, 50) }}</p>
+                                            <p class="mb-0"><i class="mdi mdi-clock-outline"></i> {{ $notif->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            @endforeach
+                            @else
+                            <div class="p-4 text-center text-muted">
+                                <i class="mdi mdi-bell-sleep-outline fs-1"></i>
+                                <p class="mb-0">No new notifications</p>
+                            </div>
+                            @endif
+                        </div>
+                        <div class="p-2 border-top d-grid">
+                            <a class="btn btn-sm btn-link font-size-14 text-center" href="{{ route('store.notifications.index') }}">
+                                <i class="mdi mdi-arrow-right-circle me-1"></i> View all
+                            </a>
+                        </div>
                     </div>
                 </li>
                 <li class="dropdown notification-list topbar-dropdown">
@@ -93,28 +126,28 @@
 </div>
 
 <script>
-function updateHeaderCartCount() {
-    // 1. Calculate the sum of quantities
-    let totalQuantity = cart.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+    function updateHeaderCartCount() {
+        // 1. Calculate the sum of quantities
+        let totalQuantity = cart.reduce((sum, item) => sum + parseInt(item.quantity), 0);
 
-    // 2. Find the cart icon in the topbar
-    let $cartIcon = $('i.mdi-cart-outline');
-    let $badge = $('.noti-icon-badge', $cartIcon.parent());
+        // 2. Find the cart icon in the topbar
+        let $cartIcon = $('i.mdi-cart-outline');
+        let $badge = $('.noti-icon-badge', $cartIcon.parent());
 
-    if (totalQuantity > 0) {
-        if ($badge.length === 0) {
-            $cartIcon.after(`<span class="badge badge-danger rounded-circle noti-icon-badge">${totalQuantity}</span>`);
+        if (totalQuantity > 0) {
+            if ($badge.length === 0) {
+                $cartIcon.after(`<span class="badge badge-danger rounded-circle noti-icon-badge">${totalQuantity}</span>`);
+            } else {
+                $badge.text(totalQuantity);
+            }
         } else {
-            $badge.text(totalQuantity);
+            $badge.remove();
         }
-    } else {
-        $badge.remove();
     }
-}
 
-// Call this function inside your renderCart() function
-function renderCart() {
-    // ... your existing logic ...
-    updateHeaderCartCount(); // Add this line here
-}
+    // Call this function inside your renderCart() function
+    function renderCart() {
+        // ... your existing logic ...
+        updateHeaderCartCount(); // Add this line here
+    }
 </script>

@@ -19,6 +19,8 @@ use Carbon\Carbon;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StockRequestImport;
+use App\Models\RecallRequest;
+use App\Models\StoreNotification;
 
 class StoreInventoryController extends Controller
 {
@@ -275,6 +277,14 @@ class StoreInventoryController extends Controller
                 'operation' => $request->operation,
                 'reason' => $request->reason,
             ]);
+            StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => $storeId,
+            'title' => 'Stock Adjustment',
+            'message' => "Adjusted stock for Product #{$request->product_id} ({$request->operation} {$request->quantity}).",
+            'type' => 'warning',
+            'url' => route('inventory.adjustments'),
+        ]);
         });
         return back()->with('success', 'Stock adjusted successfully.');
     }
@@ -354,6 +364,16 @@ class StoreInventoryController extends Controller
             'reason_remarks' => $remarks,
             'status' => 'pending_warehouse_approval',
             'initiated_by' => $user->id,
+        ]);
+
+        // [NOTIFICATION]
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Recall Request Created',
+            'message' => "Recall initiated for Batch: {$request->batch_number}.",
+            'type' => 'info',
+            'url' => route('store.stock-control.recall.index'),
         ]);
 
         return redirect()->route('store.stock-control.recall.index')

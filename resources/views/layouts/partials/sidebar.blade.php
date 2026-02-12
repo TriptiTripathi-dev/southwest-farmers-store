@@ -5,11 +5,12 @@
             $logo = asset('assets/images/logo.jpg');
             $settings = \App\Models\StoreSetting::first();
             if ($settings && $settings->logo) {
-            $logo = asset('storage/' . $settings->logo);
+                $logo = asset('storage/' . $settings->logo);
             }
 
             // Helper to check permissions cleanly
             $user = auth()->user();
+            // Since you are not using Spatie's @can, we use your custom hasPermission method
             $can = fn($perm) => $user->hasPermission($perm);
             @endphp
 
@@ -38,6 +39,7 @@
                 <li class="menu-title">Main</li>
 
                 {{-- DASHBOARD --}}
+                @if($can('view_dashboard'))
                 <li>
                     <a href="{{ route('dashboard') }}"
                         class="tp-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -47,17 +49,20 @@
                         <span class="sidebar-text">Dashboard</span>
                     </a>
                 </li>
+                @endif
 
                 <li class="menu-title mt-2">Operations</li>
 
                 {{-- INVENTORY --}}
-                @if ($can('view_inventory') || $can('request_stock') || $can('adjust_stock'))
+                @if ($can('view_inventory') || $can('request_stock') || $can('adjust_stock') || $can('view_transfers') || $can('view_audits'))
                 <li>
                     @php
                     $isInventoryActive = request()->routeIs(
-                    'inventory.index',
-                    'inventory.requests',
-                    'inventory.adjustments',
+                        'inventory.index',
+                        'inventory.requests',
+                        'inventory.adjustments',
+                        'transfers.index',
+                        'store.audits.*'
                     );
                     @endphp
                     <a href="#sidebarInventory" data-bs-toggle="collapse"
@@ -97,25 +102,33 @@
                                 </a>
                             </li>
                             @endif
-                            <li><a href="{{ route('transfers.index') }}"
+
+                            @if ($can('view_transfers'))
+                            <li>
+                                <a href="{{ route('transfers.index') }}"
                                     class="tp-link {{ request()->is('inventory/transfers') ? 'active' : '' }}">
                                     Store To Store Transfers
-                                </a></li>
+                                </a>
+                            </li>
+                            @endif
+
+                            @if ($can('view_audits'))
                             <li>
                                 <a href="{{ route('store.audits.index') }}"
                                     class="tp-link {{ request()->routeIs('store.audits.*') ? 'active' : '' }}">
                                     Stock Audits
                                 </a>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
                 @endif
 
                 {{-- PRODUCTS (Visible if user can view inventory) --}}
-                @if ($can('view_inventory'))
+                @if ($can('view_products') || $can('view_categories') || $can('view_subcategories'))
                 @php
-                $isProductsActive = request()->routeIs('products.*');
+                $isProductsActive = request()->routeIs('products.*') || request()->routeIs('store.products.*');
                 $isCategoryActive = request()->routeIs('store.categories.*');
                 $isSubCategoryActive = request()->routeIs('store.subcategories.*');
                 $allActive = $isProductsActive || $isCategoryActive || $isSubCategoryActive;
@@ -132,25 +145,33 @@
                     </a>
                     <div class="collapse {{ $allActive ? 'show' : '' }}" id="sidebarProducts">
                         <ul class="nav-second-level">
+                            @if($can('view_categories'))
                             <li>
                                 <a class="tp-link {{ $isCategoryActive ? 'active' : '' }}"
                                     href="{{ route('store.categories.index') }}">Categories</a>
                             </li>
+                            @endif
+                            
+                            @if($can('view_subcategories'))
                             <li>
                                 <a class="tp-link {{ $isSubCategoryActive ? 'active' : '' }}"
                                     href="{{ route('store.subcategories.index') }}">Subcategories</a>
                             </li>
+                            @endif
+
+                            @if($can('view_products'))
                             <li>
                                 <a class="tp-link {{ $isProductsActive ? 'active' : '' }}"
                                     href="{{ route('store.products.index') }}">Product List</a>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
                 @endif
 
                 {{-- STOCK CONTROL --}}
-                @if ($can('view_stock_control') || $can('view_stock_valuation') || $can('manage_recall_requests'))
+                @if ($can('view_stock_overview') || $can('view_stock_valuation') || $can('manage_recalls'))
                 <li>
                     <a href="#sidebarStockControl" data-bs-toggle="collapse"
                         class="tp-link {{ request()->routeIs('store.stock-control.*') ? 'active' : '' }}"
@@ -164,7 +185,7 @@
                     <div class="collapse {{ request()->routeIs('store.stock-control.*') ? 'show' : '' }}"
                         id="sidebarStockControl">
                         <ul class="nav-second-level">
-                            @if ($can('view_stock_control'))
+                            @if ($can('view_stock_overview'))
                             <li>
                                 <a href="{{ route('store.stock-control.overview') }}"
                                     class="tp-link {{ request()->routeIs('store.stock-control.overview') ? 'active' : '' }}">
@@ -182,7 +203,7 @@
                             </li>
                             @endif
 
-                            @if ($can('manage_recall_requests'))
+                            @if ($can('manage_recalls'))
                             <li>
                                 <a href="{{ route('store.stock-control.recall.index') }}"
                                     class="tp-link {{ request()->routeIs('store.stock-control.recall.*') ? 'active' : '' }}">
@@ -220,7 +241,7 @@
 
                     <div class="collapse {{ $isOrdersActive ? 'show' : '' }}" id="sidebarOrders">
                         <ul class="nav-second-level">
-                            @if ($can('access_pos') || $can('create_order'))
+                            @if ($can('access_pos'))
                             <li>
                                 <a href="{{ route('sales.pos') }}"
                                     class="tp-link {{ $isPosActive ? 'active' : '' }}">
@@ -251,6 +272,7 @@
                 </li>
                 @endif
 
+                @if($can('view_promotions') || $can('create_promotion'))
                 <li>
                     <a href="{{ route('store.promotions.index') }}"
                         class="tp-link {{ request()->routeIs('store.promotions.*') ? 'active' : '' }}">
@@ -260,15 +282,19 @@
                         <span class="sidebar-text"> Promotions </span>
                     </a>
                 </li>
+                @endif
+
+                @if($can('view_analytics'))
                 <li>
                     <a href="{{ route('store.analytics.index') }}" class="tp-link {{ request()->routeIs('store.analytics.index') ? 'active' : '' }}">
                         <span class="nav-icon"><iconify-icon icon="tabler:chart-pie"></iconify-icon></span>
                         <span class="sidebar-text"> Analytics Dashboard </span>
                     </a>
                 </li>
+                @endif
+
                 {{-- SALES & BILLING --}}
-                {{-- SALES & BILLING --}}
-                @if ($can('view_daily_sales') || $can('view_monthly_sales') || $can('view_tax_summary'))
+                @if ($can('view_daily_sales') || $can('view_weekly_sales'))
                 <li>
                     @php
                     // Check if any sales route is active to keep menu open
@@ -296,7 +322,7 @@
                             </li>
                             @endif
 
-                            @if ($can('view_monthly_sales')) {{-- Reusing permission for Weekly view if needed --}}
+                            @if ($can('view_weekly_sales'))
                             <li>
                                 <a href="{{ route('store.sales.weekly') }}"
                                     class="tp-link {{ request()->routeIs('store.sales.weekly') ? 'active' : '' }}">
@@ -361,7 +387,7 @@
                 @endif
 
                 {{-- Support Module (Store) --}}
-                @if (auth()->user()->hasPermission('raise_ticket'))
+                @if ($can('view_tickets') || $can('raise_ticket'))
                 <li class="menu-title mt-2">Support</li>
                 <li>
                     <a href="#sidebarSupport" data-bs-toggle="collapse"
@@ -376,18 +402,23 @@
                     <div class="collapse {{ request()->routeIs('store.support.*') ? 'show' : '' }}"
                         id="sidebarSupport">
                         <ul class="nav-second-level">
+                            @if ($can('raise_ticket'))
                             <li>
                                 <a href="{{ route('store.support.create') }}"
                                     class="tp-link {{ request()->routeIs('store.support.create') ? 'active' : '' }}">
                                     Raise Ticket
                                 </a>
                             </li>
+                            @endif
+                            
+                            @if ($can('view_tickets'))
                             <li>
                                 <a href="{{ route('store.support.index') }}"
                                     class="tp-link {{ request()->routeIs('store.support.index') ? 'active' : '' }}">
                                     My Tickets
                                 </a>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
@@ -423,8 +454,8 @@
                 @endif
 
                 {{-- ACCESS CONTROL (Roles) --}}
-                @if ($can('manage_staff'))
-                {{-- Restricted to Managers/Admins via manage_staff --}}
+                @if ($can('manage_roles'))
+                {{-- Restricted to Managers/Admins via manage_roles or manage_staff --}}
                 @php
                 $isRoleActive = request()->routeIs('roles.*');
                 $isPermissionActive = request()->routeIs('permissions.*');
@@ -457,7 +488,7 @@
                 <li class="menu-title mt-2">System</li>
 
                 {{-- SETTINGS --}}
-                @if ($can('view_settings') || $can('update_store_settings'))
+                @if ($can('view_settings') || $can('update_settings'))
                 @php
                 $isProfileActive = request()->routeIs('settings.general');
                 $isStoreSettingsActive = request()->routeIs('store.index') || request()->routeIs('store.edit');
@@ -483,7 +514,7 @@
                                     Settings</a></li>
                             @endif
 
-                            @if ($can('update_store_settings'))
+                            @if ($can('update_settings'))
                             <li>
                                 <a href="{{ route('store.index') }}"
                                     class="tp-link {{ $isStoreSettingsActive ? 'active' : '' }}">

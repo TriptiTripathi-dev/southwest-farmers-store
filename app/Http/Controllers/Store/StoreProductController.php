@@ -15,6 +15,7 @@ use App\Exports\StoreProductExport;
 use App\Imports\StoreProductImport;
 use App\Models\StockAdjustment;
 use App\Models\StockTransaction;
+use App\Models\StoreNotification;
 use Carbon\Carbon;
 
 class StoreProductController extends Controller
@@ -101,6 +102,15 @@ class StoreProductController extends Controller
             'selling_price' => $request->selling_price
         ]);
 
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Product Added',
+            'message' => "New product '{$request->product_name}' added to inventory.",
+            'type' => 'success',
+            'url' => route('store.products.index'),
+        ]);
+
         return redirect()->route('store.products.index')->with('success', 'Product created successfully.');
     }
 
@@ -139,6 +149,16 @@ class StoreProductController extends Controller
              $product->update(['price' => $request->selling_price]);
              StoreStock::where('product_id', $product->id)->update(['selling_price' => $request->selling_price]);
         }
+
+        // [NOTIFICATION]
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Product Updated',
+            'message' => "Product '{$product->product_name}' details updated.",
+            'type' => 'info',
+            'url' => route('store.products.index'),
+        ]);
 
         return redirect()->route('store.products.index')->with('success', 'Product updated successfully.');
     }

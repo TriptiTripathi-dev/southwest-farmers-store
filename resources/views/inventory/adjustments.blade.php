@@ -7,9 +7,12 @@
                     <h4 class="h4 fw-bold m-0 text-dark">Stock Adjustments</h4>
                     <p class="text-muted small mb-0 mt-1">Manually correct stock levels (Damage, Theft, Returns)</p>
                 </div>
+                
+                @if(Auth::user()->hasPermission('adjust_stock'))
                 <button class="btn btn-dark rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newAdjustmentModal">
                     <i class="mdi mdi-scale-balance me-2"></i> Make Adjustment
                 </button>
+                @endif
             </div>
 
             <div class="card border-0 shadow-sm rounded-3">
@@ -85,6 +88,7 @@
         </div>
     </div>
 
+    @if(Auth::user()->hasPermission('adjust_stock'))
     <div class="modal fade" id="newAdjustmentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -137,4 +141,5 @@
             </div>
         </div>
     </div>
+    @endif
 </x-app-layout>

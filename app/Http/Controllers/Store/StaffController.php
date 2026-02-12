@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Models\StoreNotification;
 use App\Models\StoreUser;
 use App\Models\StoreRole;
 use Illuminate\Http\Request;
@@ -23,14 +24,14 @@ class StaffController extends Controller
         // FIXED: Case-Insensitive Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 // Use 'ilike' for PostgreSQL case-insensitive search
                 // If using MySQL, 'like' is usually fine, but 'ilike' ensures it works for Postgres users
                 $operator = DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
-                
+
                 $q->where('name', $operator, "%{$search}%")
-                  ->orWhere('email', $operator, "%{$search}%")
-                  ->orWhere('phone', $operator, "%{$search}%");
+                    ->orWhere('email', $operator, "%{$search}%")
+                    ->orWhere('phone', $operator, "%{$search}%");
             });
         }
 
@@ -53,7 +54,7 @@ class StaffController extends Controller
 
         return view('staff.index', compact('staffMembers', 'roles'));
     }
-    
+
     public function updateStatus(Request $request)
     {
         $request->validate([
@@ -63,7 +64,7 @@ class StaffController extends Controller
 
         try {
             $currentUser = Auth::user();
-            
+
             $staff = StoreUser::where('id', $request->id)
                 ->where('parent_id', $currentUser->id)
                 ->firstOrFail();
@@ -72,7 +73,6 @@ class StaffController extends Controller
             $staff->save();
 
             return response()->json(['success' => true, 'message' => 'Status updated successfully']);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error updating status'], 500);
         }
@@ -97,7 +97,7 @@ class StaffController extends Controller
         try {
             DB::beginTransaction();
             $currentUser = Auth::user();
-            
+
             $staff = StoreUser::create([
                 'parent_id' => $currentUser->id,
                 'name' => $request->name,
@@ -110,12 +110,19 @@ class StaffController extends Controller
 
             $role = StoreRole::find($request->role_id);
             if ($role) {
-                $staff->assignRole($role); 
+                $staff->assignRole($role);
             }
 
+            StoreNotification::create([
+                'user_id' => Auth::id(),
+                'store_id' => Auth::user()->store_id,
+                'title' => 'Staff Added',
+                'message' => "New staff member '{$user->name}' added successfully.",
+                'type' => 'info',
+                'url' => route('staff.index'),
+            ]);
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff member created successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Error creating staff: ' . $e->getMessage());
@@ -170,7 +177,6 @@ class StaffController extends Controller
 
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff updated successfully.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Error updating staff: ' . $e->getMessage());
@@ -185,8 +191,17 @@ class StaffController extends Controller
         if ($staff->id === $currentUser->id) {
             return back()->with('error', 'You cannot delete your own account.');
         }
+        $name = $staff->name;
 
         $staff->delete();
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Staff Deleted',
+            'message' => "Staff member '{$name}' was removed.",
+            'type' => 'danger',
+            'url' => route('staff.index'),
+        ]);
         return redirect()->route('staff.index')->with('success', 'Staff deleted successfully.');
     }
 }

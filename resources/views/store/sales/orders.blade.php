@@ -6,12 +6,15 @@
                 <small class="text-muted">Manage and view all customer orders</small>
             </div>
             <div>
+                @if(Auth::user()->hasPermission('create_order') || Auth::user()->hasPermission('access_pos'))
                 <a href="{{ route('sales.pos') }}" class="btn btn-primary">
                     <i class="mdi mdi-plus me-1"></i> Create New Order
                 </a>
+                @endif
             </div>
         </div>
 
+        {{-- Search Form (Unchanged) --}}
         <div class="card mb-4 border-0 shadow-sm">
             <div class="card-body">
                 <form method="GET" action="{{ route('store.sales.orders') }}" class="row g-3 align-items-center">
@@ -78,16 +81,20 @@
                                         {{ $order->payment_method }}
                                     </span>
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end pe-4">
+                                    @if(Auth::user()->hasPermission('view_orders'))
                                     <a href="{{ route('store.sales.orders.show', $order->id) }}" class="btn btn-sm btn-light border me-1" title="View">
                                         <i class="mdi mdi-eye"></i>
                                     </a>
-
+                                    @endif
+                                    
+                                    @if(Auth::user()->hasPermission('process_return'))
                                     <a href="{{ route('store.sales.returns.create', ['invoice' => $order->invoice_number]) }}"
                                         class="btn btn-sm btn-soft-danger"
                                         title="Process Return">
                                         <i class="mdi mdi-keyboard-return"></i>
                                     </a>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

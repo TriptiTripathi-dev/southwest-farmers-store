@@ -17,10 +17,10 @@
 
         {{-- Metrics Logic (Inline for immediate functionality) --}}
         @php
-            $storeId = auth()->user()->store_id;
-            $openCount = \App\Models\SupportTicket::where('store_id', $storeId)->where('status', 'open')->count();
-            $resolvedCount = \App\Models\SupportTicket::where('store_id', $storeId)->where('status', 'resolved')->count();
-            $totalCount = \App\Models\SupportTicket::where('store_id', $storeId)->count();
+        $storeId = auth()->user()->store_id;
+        $openCount = \App\Models\SupportTicket::where('store_id', $storeId)->where('status', 'open')->count();
+        $resolvedCount = \App\Models\SupportTicket::where('store_id', $storeId)->where('status', 'resolved')->count();
+        $totalCount = \App\Models\SupportTicket::where('store_id', $storeId)->count();
         @endphp
 
         {{-- Stats Cards --}}
@@ -94,10 +94,14 @@
                             </select>
                         </div>
                     </form>
-                    
+
+                    {{-- Filter Form --}}
+
+                    @if(Auth::user()->hasPermission('raise_ticket'))
                     <a href="{{ route('store.support.create') }}" class="btn btn-sm btn-primary shadow-sm px-3 d-flex align-items-center">
                         <i class="mdi mdi-plus-circle me-1"></i> Raise Ticket
                     </a>
+                    @endif
                 </div>
             </div>
 
@@ -129,13 +133,13 @@
                             </td>
                             <td>
                                 @php
-                                    $statusColors = [
-                                        'open' => 'success',
-                                        'in_progress' => 'info',
-                                        'waiting' => 'warning',
-                                        'resolved' => 'primary',
-                                        'closed' => 'secondary'
-                                    ];
+                                $statusColors = [
+                                'open' => 'success',
+                                'in_progress' => 'info',
+                                'waiting' => 'warning',
+                                'resolved' => 'primary',
+                                'closed' => 'secondary'
+                                ];
                                 @endphp
                                 <span class="badge bg-{{ $statusColors[$ticket->status] ?? 'secondary' }} bg-opacity-10 text-{{ $statusColors[$ticket->status] ?? 'secondary' }} border border-{{ $statusColors[$ticket->status] ?? 'secondary' }} border-opacity-25 px-2 py-1">
                                     {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}

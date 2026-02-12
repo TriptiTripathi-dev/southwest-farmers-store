@@ -105,7 +105,10 @@
                                 </div>
                             @endif
 
+                            @if(Auth::user()->hasPermission('edit_product'))
                             <button type="submit" class="btn btn-primary text-white me-2">Update Changes</button>
+                            @endif
+                            
                             <a href="{{ route('store.products.index') }}" class="btn btn-light">Cancel</a>
                         </form>
                     </div>

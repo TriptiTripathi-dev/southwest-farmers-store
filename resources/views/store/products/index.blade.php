@@ -8,15 +8,23 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title">Product List</h4>
                             <div>
+                                @if(Auth::user()->hasPermission('import_products'))
                                 <button class="btn btn-success btn-sm text-white me-2" data-bs-toggle="modal" data-bs-target="#importModal">
                                     <i class="mdi mdi-upload"></i> Import
                                 </button>
+                                @endif
+
+                                @if(Auth::user()->hasPermission('export_products'))
                                 <a href="{{ route('store.products.export') }}" class="btn btn-info btn-sm text-white me-2">
                                     <i class="mdi mdi-download"></i> Export
                                 </a>
+                                @endif
+
+                                @if(Auth::user()->hasPermission('create_product'))
                                 <a href="{{ route('store.products.create') }}" class="btn btn-primary btn-sm text-white">
                                     <i class="mdi mdi-plus"></i> Add New
                                 </a>
+                                @endif
                             </div>
                         </div>
 
@@ -55,8 +63,7 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <img src="{{$item->icon ? Storage::url($item->icon) : asset('assets\images\logo.jpg') }}" class="rounded-circle" width="30" height="30" 
-                                                    >
+                                                <img src="{{$item->icon ? Storage::url($item->icon) : asset('assets\images\logo.jpg') }}" class="rounded-circle" width="30" height="30" >
                                                 <div class="ms-3">
                                                     <p class="mb-0 fw-bold">{{ $item->product_name }}</p>
                                                 </div>
@@ -79,37 +86,57 @@
                                             @else
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input status-toggle" type="checkbox" 
-                                                        data-id="{{ $item->id }}" {{ $item->is_active ? 'checked' : '' }}>
+                                                        data-id="{{ $item->id }}" {{ $item->is_active ? 'checked' : '' }}
+                                                        {{ !Auth::user()->hasPermission('edit_product') ? 'disabled' : '' }}>
                                                 </div>
                                             @endif
                                         </td>
                                         <td>
+                                            @if(Auth::user()->hasPermission('manage_recipes'))
                                             <a href="{{ route('store.products.recipe', $item->id) }}" class="btn btn-sm btn-warning" title="Manage Recipe">
-    <i class="mdi mdi-silverware-variant"></i>
-</a>
+                                                <i class="mdi mdi-silverware-variant"></i>
+                                            </a>
+                                            @endif
+
+                                            @if(Auth::user()->hasPermission('view_stock_history'))
                                             <a href="{{ route('inventory.history', $item->id) }}" 
-   class="btn btn-sm btn-outline-info me-1" 
-   data-bs-toggle="tooltip" title="View History">
-    <i class="mdi mdi-history"></i>
-</a>
+                                               class="btn btn-sm btn-outline-info me-1" 
+                                               data-bs-toggle="tooltip" title="View History">
+                                                <i class="mdi mdi-history"></i>
+                                            </a>
+                                            @endif
+
+                                            @if(Auth::user()->hasPermission('view_analytics'))
                                             <a href="{{ route('store.products.analytics', $item->id) }}" class="btn btn-sm btn-info py-1 me-1" title="Analytics">
-    <i class="mdi mdi-chart-bar"></i>
-</a>
+                                                <i class="mdi mdi-chart-bar"></i>
+                                            </a>
+                                            @endif
+
                                             @if($item->store_id != null)
-                                            <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1"><i class="mdi mdi-pencil"></i></a>
+                                                @if(Auth::user()->hasPermission('edit_product'))
+                                                <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1"><i class="mdi mdi-pencil"></i></a>
+                                                @endif
+
+                                                @if(Auth::user()->hasPermission('delete_product'))
                                                 <form action="{{ route('store.products.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
                                                     @csrf @method('DELETE')
                                                     <button type="button" class="btn btn-sm btn-danger py-1 delete-btn"><i class="mdi mdi-trash-can"></i></button>
                                                 </form>
+                                                @endif
                                             @else
-                                            <a disabled class="btn btn-sm btn-primary py-1"><i class="mdi mdi-lock"></i></a>
+                                                @if(Auth::user()->hasPermission('edit_product'))
+                                                <a href="{{ route('store.products.edit', $item->id) }}" class="btn btn-sm btn-primary py-1" title="Edit Selling Price"><i class="mdi mdi-pencil"></i></a>
+                                                @else
+                                                <a disabled class="btn btn-sm btn-primary py-1"><i class="mdi mdi-lock"></i></a>
+                                                @endif
+                                                
                                                 <button disabled class="btn btn-sm btn-secondary py-1" title="Cannot delete Warehouse Product"><i class="mdi mdi-lock"></i></button>
                                             @endif
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">No products found.</td>
+                                        <td colspan="8" class="text-center">No products found.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -137,6 +164,11 @@
                 data: {'status': status, 'id': id, '_token': '{{ csrf_token() }}'},
                 success: function(data) {
                     Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Status updated', showConfirmButton: false, timer: 2000});
+                },
+                error: function() {
+                    // Revert if error
+                    $(this).prop('checked', !status);
+                    Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Update failed', showConfirmButton: false, timer: 2000});
                 }
             });
         });

@@ -1,6 +1,7 @@
 <x-app-layout title="Inter-Store Transfers">
 <div class="container-fluid">
     
+    @if(Auth::user()->hasPermission('create_stock_request'))
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-primary text-white">
             <i class="fas fa-paper-plane me-1"></i> Request Stock
@@ -36,6 +37,7 @@
             </form>
         </div>
     </div>
+    @endif
 
     <div class="row">
         <div class="col-md-6">
@@ -56,10 +58,14 @@
                                     <td class="fw-bold">{{ $t->quantity_sent }}</td>
                                     <td>
                                         @if($t->status == 'pending')
-                                        <form action="{{ route('transfers.dispatch', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to dispatch this stock? It will be deducted immediately.');">
-                                            @csrf
-                                            <button class="btn btn-sm btn-success">Dispatch</button>
-                                        </form>
+                                            @if(Auth::user()->hasPermission('dispatch_transfer'))
+                                            <form action="{{ route('transfers.dispatch', $t->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to dispatch this stock? It will be deducted immediately.');">
+                                                @csrf
+                                                <button class="btn btn-sm btn-success">Dispatch</button>
+                                            </form>
+                                            @else
+                                                <span class="badge bg-secondary">Pending</span>
+                                            @endif
                                         @else
                                             <span class="badge bg-secondary">{{ ucfirst($t->status) }}</span>
                                         @endif
@@ -93,9 +99,13 @@
                                     <td>{{ $t->quantity_sent }}</td>
                                     <td>
                                         @if($t->status == 'dispatched')
+                                            @if(Auth::user()->hasPermission('receive_transfer'))
                                             <button type="button" class="btn btn-sm btn-primary" onclick="openReceiveModal('{{ $t->id }}', '{{ $t->product->product_name }}', {{ $t->quantity_sent }})">
                                                 Receive
                                             </button>
+                                            @else
+                                                <span class="badge bg-info">Dispatched</span>
+                                            @endif
                                         @elseif($t->status == 'pending')
                                             <span class="badge bg-warning text-dark">Pending</span>
                                         @else

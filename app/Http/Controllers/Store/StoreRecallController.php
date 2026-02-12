@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\StockTransaction;
 use App\Models\StoreDetail;
 use App\Models\ProductBatch;
+use App\Models\StoreNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -167,6 +168,16 @@ class StoreRecallController extends Controller
             'reason_remarks' => $request->reason_remarks,
             'status' => 'pending_warehouse_approval',
             'initiated_by' => $user->id,
+        ]);
+
+        // [NOTIFICATION]
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => Auth::user()->store_id,
+            'title' => 'Recall Request Created',
+            'message' => "Recall initiated for Batch: {$request->batch_number}.",
+            'type' => 'info',
+            'url' => route('store.stock-control.recall.index'),
         ]);
 
         return redirect()->route('store.stock-control.recall.index')->with('success', 'Recall request created. Waiting for Warehouse approval.');

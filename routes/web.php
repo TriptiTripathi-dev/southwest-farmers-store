@@ -19,6 +19,7 @@ use App\Http\Controllers\StoreProfileController;
 use App\Http\Controllers\Store\StoreInventoryController;
 use App\Http\Controllers\Store\StaffController;
 use App\Http\Controllers\Store\StoreAuditController;
+use App\Http\Controllers\Store\StoreNotificationController;
 use App\Http\Controllers\Store\StoreProductController;
 use App\Http\Controllers\Store\StorePromotionController;
 use App\Http\Controllers\Store\StoreRecallController;
@@ -64,7 +65,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
     Route::get('/pos', [StoreSalesController::class, 'index'])->name('sales.pos');
-
+    // Notifications
+    Route::get('/notifications', [StoreNotificationController::class, 'index'])->name('store.notifications.index');
+    Route::get('/notifications/read/{id}', [StoreNotificationController::class, 'markRead'])->name('store.notifications.read');
+    Route::post('/notifications/read-all', [StoreNotificationController::class, 'markAllRead'])->name('store.notifications.readAll');
+    Route::post('/notifications/clear', [StoreNotificationController::class, 'clearAll'])->name('store.notifications.clear');
 
     // 2. Transfer Routes
     Route::get('/transfers', [StoreTransferController::class, 'index'])->name('transfers.index');

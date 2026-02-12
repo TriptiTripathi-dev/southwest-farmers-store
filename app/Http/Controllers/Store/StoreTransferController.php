@@ -9,6 +9,7 @@ use App\Models\StoreStock;
 use App\Models\StoreDetail;
 use App\Models\Product; // Added
 use App\Models\StockTransaction;
+use App\Models\StoreNotification;
 use App\Services\StoreStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class StoreTransferController extends Controller
         // Generate a Transfer Number
         $transferNumber = 'TRF-' . strtoupper(Str::random(8));
 
-        StockTransfer::create([
+        $transfer = StockTransfer::create([
             'transfer_number' => $transferNumber,
             'to_store_id' => Auth::user()->store_id,   // Me (Requester)
             'from_store_id' => $request->from_store_id, // Sender
@@ -62,6 +63,16 @@ class StoreTransferController extends Controller
             'quantity_received' => 0,
             'status' => 'pending',
             'created_by' => Auth::id()
+        ]);
+        $storeId = Auth::user()->store_id;
+
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => $storeId,
+            'title' => 'Stock Request Sent',
+            'message' => "Request #{$transfer->transfer_number} for {$request->quantity} units sent.",
+            'type' => 'info',
+            'url' => route('transfers.index'),
         ]);
 
         return back()->with('success', 'Transfer Request Sent!');
@@ -100,6 +111,15 @@ class StoreTransferController extends Controller
             $transfer->update([
                 'status' => 'dispatched',
                 'approved_by' => Auth::id()
+            ]);
+
+            StoreNotification::create([
+                'user_id' => Auth::id(),
+                'store_id' => Auth::user()->store_id,
+                'title' => 'Stock Dispatched',
+                'message' => "Transfer #{$transfer->transfer_number} marked as dispatched.",
+                'type' => 'success',
+                'url' => route('transfers.index'),
             ]);
             
             DB::commit();
@@ -164,6 +184,15 @@ class StoreTransferController extends Controller
                 'reference_id' => $transfer->transfer_number,
                 'remarks' => "Transfer In from Store #" . $transfer->from_store_id,
                 'ware_user_id' => null // Since it's a store user
+            ]);
+
+            StoreNotification::create([
+                'user_id' => Auth::id(),
+                'store_id' => Auth::user()->store_id,
+                'title' => 'Stock Received',
+                'message' => "Received {$request->received_qty} units for Transfer #{$transfer->transfer_number}.",
+                'type' => 'success',
+                'url' => route('transfers.index'),
             ]);
 
             DB::commit();

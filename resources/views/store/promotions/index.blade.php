@@ -2,9 +2,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 mb-0">Promotions & Marketing</h2>
+        @if(Auth::user()->hasPermission('create_promotion'))
         <a href="{{ route('store.promotions.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Create New Campaign
         </a>
+        @endif
     </div>
 
     <div class="card shadow-sm">
@@ -62,19 +64,25 @@
                                 @endif
                             </td>
                             <td>
+                                @if(Auth::user()->hasPermission('edit_promotion'))
                                 <form action="{{ route('store.promotions.status', $promo->id) }}" method="POST">
                                     @csrf
                                     <button class="btn btn-sm btn-{{ $promo->is_active ? 'success' : 'secondary' }}" style="min-width: 80px;">
                                         {{ $promo->is_active ? 'Active' : 'Inactive' }}
                                     </button>
                                 </form>
+                                @else
+                                    <span class="badge bg-{{ $promo->is_active ? 'success' : 'secondary' }}">{{ $promo->is_active ? 'Active' : 'Inactive' }}</span>
+                                @endif
                             </td>
                             <td>
+                                @if(Auth::user()->hasPermission('delete_promotion'))
                                 <form action="{{ route('store.promotions.destroy', $promo->id) }}" method="POST" onsubmit="return confirm('Delete this promotion?');">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
