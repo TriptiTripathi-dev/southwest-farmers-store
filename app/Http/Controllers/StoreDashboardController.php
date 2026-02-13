@@ -27,8 +27,8 @@ class StoreDashboardController extends Controller
 
         // --- 2. KPI METRICS ---
 
-        // A. Sales & Revenue (Requires 'view_daily_sales' or 'view_monthly_sales')
-        if ($user->hasPermission('view_daily_sales') || $user->hasPermission('view_monthly_sales')) {
+        // A. Sales & Revenue (Requires 'view_sales_report' or 'view_monthly_sales')
+        if ($user->hasPermission('view_sales_report')) {
             $data['total_revenue'] = Sale::where('store_id', $storeId)
                 ->whereBetween('created_at', [$start, $end])
                 ->sum('total_amount');
@@ -46,8 +46,8 @@ class StoreDashboardController extends Controller
             $data['revenue_growth'] = $this->calculateTrend($data['total_revenue'], $prevRevenue);
         }
 
-        // B. Inventory Health (Requires 'check_stock_levels')
-        if ($user->hasPermission('check_stock_levels')) {
+        // B. Inventory Health (Requires 'adjust_stock')
+        if ($user->hasPermission('adjust_stock')) {
             $data['low_stock_count'] = StoreStock::where('store_id', $storeId)
                 ->where('quantity', '<', 10) // Threshold can be dynamic
                 ->count();
@@ -67,7 +67,7 @@ class StoreDashboardController extends Controller
         // --- 3. CHARTS DATA ---
 
         // Chart A: Sales Trend (Area Chart)
-        if ($user->hasPermission('view_daily_sales')) {
+        if ($user->hasPermission('view_sales_report')) {
             $salesTrend = Sale::where('store_id', $storeId)
                 ->whereBetween('created_at', [$start, $end])
                 ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total')
@@ -80,7 +80,7 @@ class StoreDashboardController extends Controller
         }
 
         // Chart B: Top Selling Products (Donut/Bar)
-        if ($user->hasPermission('view_reports') || $user->hasPermission('view_daily_sales')) {
+        if ($user->hasPermission('view_reports') || $user->hasPermission('view_sales_report')) {
             $topProducts = SaleItem::join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->join('products', 'sale_items.product_id', '=', 'products.id')
                 ->where('sales.store_id', $storeId)

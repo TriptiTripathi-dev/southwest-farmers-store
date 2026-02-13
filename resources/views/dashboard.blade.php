@@ -29,7 +29,7 @@
         <div class="row g-3 mb-4">
 
             {{-- Metric: Total Revenue --}}
-            @if(auth()->user()->hasPermission('view_daily_sales'))
+            @if(auth()->user()->hasPermission('view_sales_report'))
             <div class="col-6 col-xl-3">
                 <div class="card border-0 shadow-sm h-100 stats-card">
                     <div class="card-body">
@@ -78,7 +78,7 @@
             @endif
 
             {{-- Metric: Low Stock --}}
-            @if(auth()->user()->hasPermission('check_stock_levels'))
+            @if(auth()->user()->hasPermission('view_stock_report'))
             <div class="col-6 col-xl-3">
                 <div class="card border-0 shadow-sm h-100 stats-card">
                     <div class="card-body">
@@ -127,7 +127,7 @@
         <div class="row g-4 mb-4">
             
             {{-- Sales Trend Chart --}}
-            @if(auth()->user()->hasPermission('view_daily_sales') && isset($data['chart_sales']))
+            @if(auth()->user()->hasPermission('view_sales_report') && isset($data['chart_sales']))
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white py-3 border-0">
@@ -141,7 +141,7 @@
             @endif
 
             {{-- Top Products --}}
-            @if((auth()->user()->hasPermission('view_daily_sales') || auth()->user()->hasPermission('view_reports')) && isset($data['top_products']))
+            @if((auth()->user()->hasPermission('view_sales_report') || auth()->user()->hasPermission('view_analytics')) && isset($data['top_products']))
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white py-3 border-0">
@@ -225,7 +225,7 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
-        @if(auth()->user()->hasPermission('view_daily_sales') && isset($data['chart_sales']))
+        @if(auth()->user()->hasPermission('view_sales_report') && isset($data['chart_sales']))
         // Sales Trend Chart
         var salesOptions = {
             series: [{
@@ -260,7 +260,7 @@
         new ApexCharts(document.querySelector("#salesTrendChart"), salesOptions).render();
         @endif
 
-        @if((auth()->user()->hasPermission('view_daily_sales') || auth()->user()->hasPermission('view_reports')) && isset($data['top_products']) && count($data['top_products']) > 0)
+        @if((auth()->user()->hasPermission('view_sales_report') || auth()->user()->hasPermission('view_analytics')) && isset($data['top_products']) && count($data['top_products']) > 0)
         // Top Products Pie
         var pieOptions = {
             series: @json($data['top_products']->pluck('qty')),

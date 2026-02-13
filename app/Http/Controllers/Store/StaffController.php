@@ -108,19 +108,22 @@ class StaffController extends Controller
                 'is_active' => $request->has('is_active') ? 1 : 0,
             ]);
 
-            $role = StoreRole::find($request->role_id);
-            if ($role) {
-                $staff->assignRole($role);
-            }
+            // --- FIX START ---
+            // Explicitly pass 'model_type' in the array
+            $staff->roles()->sync([
+                $request->role_id => ['model_type' => get_class($staff)]
+            ]);
+            // --- FIX END ---
 
             StoreNotification::create([
                 'user_id' => Auth::id(),
                 'store_id' => Auth::user()->store_id,
                 'title' => 'Staff Added',
-                'message' => "New staff member '{$user->name}' added successfully.",
+                'message' => "New staff member '{$staff->name}' added successfully.",
                 'type' => 'info',
                 'url' => route('staff.index'),
             ]);
+
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff member created successfully.');
         } catch (\Exception $e) {
@@ -135,6 +138,7 @@ class StaffController extends Controller
         $staff = StoreUser::where('id', $id)->where('parent_id', $currentUser->id)->firstOrFail();
         $roles = StoreRole::where('name', '!=', 'Super Admin')->get();
         $currentRoleId = $staff->store_role_id ?? $staff->roles->first()?->id;
+        dd($currentRoleId);
 
         return view('staff.edit', compact('staff', 'roles', 'currentRoleId'));
     }
@@ -172,7 +176,7 @@ class StaffController extends Controller
 
             $role = StoreRole::find($request->role_id);
             if ($role) {
-                $staff->syncRoles([$role]);
+                $staff->roles()->sync([$role]);
             }
 
             DB::commit();

@@ -6,6 +6,7 @@
             $settings = \App\Models\StoreSetting::first();
             if ($settings && $settings->logo) {
                 $logo = asset('storage/' . $settings->logo);
+                
             }
 
             // Helper to check permissions cleanly

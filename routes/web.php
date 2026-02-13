@@ -53,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
+          Route::resource('staff', StaffController::class);
+    Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
+   
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])
@@ -80,9 +83,7 @@ Route::middleware('auth')->group(function () {
         ->name('store.update-status');
     Route::resource('roles', StoreRoleController::class);
     Route::resource('permissions', StorePermissionController::class);
-    Route::resource('staff', StaffController::class);
-    Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
-    Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
+   Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
