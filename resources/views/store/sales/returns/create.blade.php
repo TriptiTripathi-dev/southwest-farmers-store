@@ -1,191 +1,234 @@
 <x-app-layout title="Process Return">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <!-- Header Section -->
-                <div class="mb-4">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <a href="{{ route('store.sales.returns.index') }}" class="text-muted">
-                            <i class="mdi mdi-arrow-left"></i>
-                        </a>
-                        <h2 class="mb-0 fw-bold">Process Customer Return</h2>
-                    </div>
-                    <p class="text-muted mb-0">Search for an invoice and process return items</p>
-                </div>
+    @push('styles')
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Subtle transition for quantity input */
+        .qty-input { transition: border-color 0.2s, box-shadow 0.2s; }
+        .qty-input:focus { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+    </style>
+    @endpush
 
-                <!-- Invoice Search Card -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body p-4">
-                        <div class="d-flex gap-2 align-items-end">
-                            <div class="flex-grow-1">
-                                <label class="form-label fw-bold text-dark mb-2">
-                                    <i class="mdi mdi-file-search-outline me-2"></i>Search Invoice
-                                </label>
-                                <input type="text" id="invoiceInput" class="form-control form-control-lg border-2" 
-                                       placeholder="Enter Invoice Number (e.g. INV-20260131-0001)"
-                                       autocomplete="off">
-                                <small class="text-muted d-block mt-2">
-                                    <i class="mdi mdi-information-outline me-1"></i>Enter the original invoice number to retrieve the sale details
-                                </small>
+    <div class="content-wrapper">
+        <div class="container-fluid px-3 px-md-4 py-4">
+            
+            <div class="row justify-content-center">
+                <div class="col-12 col-xl-10">
+                    
+                    {{-- HEADER SECTION --}}
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <a href="{{ route('store.sales.returns.index') }}" class="btn btn-white border shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Back to Returns">
+                                <i class="mdi mdi-arrow-left fs-5 text-dark"></i>
+                            </a>
+                            <div>
+                                <h4 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                                    <i class="mdi mdi-keyboard-return text-danger me-2"></i>Process Customer Return
+                                </h4>
+                                <p class="text-muted small mb-0 mt-1">Search for an invoice to select and refund items</p>
                             </div>
-                            <button class="btn btn-primary btn-lg px-5" type="button" onclick="searchInvoice()">
-                                <i class="mdi mdi-magnify me-2"></i>Search
+                        </div>
+                    </div>
+
+                    {{-- SEARCH CARD --}}
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-12 col-md-9">
+                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1 mb-2">
+                                        <i class="mdi mdi-file-search-outline text-primary me-1"></i>Search Invoice
+                                    </label>
+                                    <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden">
+                                        <span class="input-group-text bg-light border-end-0 text-muted px-3"><i class="mdi mdi-magnify"></i></span>
+                                        <input type="text" id="invoiceInput" class="form-control bg-light border-start-0 py-3 fs-6" 
+                                            placeholder="Enter Invoice Number (e.g. INV-20260131-0001)" autocomplete="off">
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        <i class="mdi mdi-information-outline me-1"></i>Enter the original invoice number to retrieve sale details.
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <button class="btn btn-primary btn-lg w-100 fw-bold shadow-sm rounded-3 py-3" type="button" onclick="searchInvoice()">
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- RETURN FORM (Hidden Initially) --}}
+                    <form id="returnForm" method="POST" action="{{ route('store.sales.returns.store') }}" style="display:none;" class="animate__animated animate__fadeIn">
+                        @csrf
+                        <input type="hidden" name="sale_id" id="saleId">
+                        <input type="hidden" name="customer_id" id="customerId">
+                        <input type="hidden" name="total_refund" id="totalRefundInput">
+
+                        {{-- SALE INFORMATION CARD --}}
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                            <div class="card-header bg-light border-bottom p-4">
+                                <h6 class="mb-0 fw-bold text-dark">
+                                    <i class="mdi mdi-receipt-text-outline me-2 text-primary"></i>Sale Information
+                                </h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-12 col-md-6 border-end-md">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px;">
+                                                <i class="mdi mdi-account-outline text-primary fs-3"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block fw-bold text-uppercase letter-spacing-1 mb-1">Customer</small>
+                                                <h6 class="mb-0 fw-bold text-dark fs-5" id="custName">-</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="bg-success bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px;">
+                                                <i class="mdi mdi-calendar-outline text-success fs-3"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block fw-bold text-uppercase letter-spacing-1 mb-1">Sale Date</small>
+                                                <h6 class="mb-0 fw-bold text-dark fs-5" id="saleDate">-</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- RETURN ITEMS CARD --}}
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                            <div class="card-header bg-light border-bottom p-4 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-dark">
+                                    <i class="mdi mdi-package-variant-outline me-2 text-info"></i>Items to Return
+                                </h6>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-1">Set quantity to 0 to skip</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive custom-scrollbar">
+                                    <table class="table table-hover align-middle mb-0 text-nowrap">
+                                        <thead class="bg-white">
+                                            <tr>
+                                                <th class="ps-4 py-3 text-muted small fw-bold text-uppercase border-bottom">Product Details</th>
+                                                <th class="py-3 text-muted small fw-bold text-uppercase border-bottom text-center">Orig. Qty</th>
+                                                <th class="py-3 text-muted small fw-bold text-uppercase border-bottom">Unit Price</th>
+                                                <th class="py-3 text-muted small fw-bold text-uppercase border-bottom" style="width: 150px;">Return Qty</th>
+                                                <th class="text-end pe-4 py-3 text-muted small fw-bold text-uppercase border-bottom">Refund Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemsTable">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            {{-- RETURN REASON CARD --}}
+                            <div class="col-12 col-lg-6">
+                                <div class="card border-0 shadow-sm rounded-4 h-100">
+                                    <div class="card-header bg-light border-bottom p-4">
+                                        <h6 class="mb-0 fw-bold text-dark">
+                                            <i class="mdi mdi-comment-text-outline me-2 text-warning"></i>Return Details
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-4 d-flex flex-column">
+                                        <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1 mb-2">Return Reason / Note</label>
+                                        <textarea name="reason" class="form-control bg-light border-0 shadow-sm flex-grow-1 p-3" style="resize: none;"
+                                            placeholder="Specify the reason for return (e.g., Defective product, Wrong size, Changed mind)"></textarea>
+                                        <div class="form-text mt-2">
+                                            <i class="mdi mdi-information-outline me-1"></i>Providing details helps track store return patterns.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- SUMMARY CARD --}}
+                            <div class="col-12 col-lg-6">
+                                <div class="card border-0 shadow-lg rounded-4 h-100" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+                                    <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-between">
+                                        
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-6">
+                                                <div class="p-3 bg-white border rounded-3 shadow-sm text-center">
+                                                    <span class="d-block text-muted small fw-bold text-uppercase mb-1">Items Selected</span>
+                                                    <span class="fs-4 fw-black text-info" id="itemsCount">0</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="p-3 bg-white border rounded-3 shadow-sm text-center">
+                                                    <span class="d-block text-muted small fw-bold text-uppercase mb-1">Total Units</span>
+                                                    <span class="fs-4 fw-black text-secondary" id="totalUnits">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-muted fw-semibold">Subtotal Refund</span>
+                                            <span class="fw-bold text-dark" id="subtotalDisplay">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <span class="text-muted fw-semibold">Tax Refund Included</span>
+                                            <span class="fw-bold text-dark" id="taxDisplay">$0.00</span>
+                                        </div>
+
+                                        <div class="border-top border-2 border-danger border-opacity-25 pt-4">
+                                            <div class="d-flex justify-content-between align-items-end">
+                                                <span class="fs-5 fw-bold text-muted text-uppercase letter-spacing-1">Total Refund</span>
+                                                <span class="display-6 fw-black text-danger" id="totalRefundDisplay">$0.00</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ACTION BUTTONS --}}
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-5 border-top pt-4">
+                            <a href="{{ route('store.sales.returns.create') }}" class="btn btn-light border btn-lg rounded-pill fw-bold shadow-sm px-5 order-2 order-sm-1 text-muted">
+                                <i class="mdi mdi-refresh me-2"></i>Clear Search
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold shadow-sm flex-grow-1 order-1 order-sm-2 d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-check-circle-outline me-2 fs-5"></i>Confirm Return & Refund
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </form>
 
-                <!-- Return Form (Hidden Initially) -->
-                <form id="returnForm" method="POST" action="{{ route('store.sales.returns.store') }}" style="display:none;">
-                    @csrf
-                    <input type="hidden" name="sale_id" id="saleId">
-                    <input type="hidden" name="customer_id" id="customerId">
-                    <input type="hidden" name="total_refund" id="totalRefundInput">
-
-                    <!-- Sale Information Card -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light border-bottom py-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="mdi mdi-receipt-text-outline me-2 text-primary"></i>Sale Information
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="bg-primary bg-opacity-20 p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                            <i class="mdi mdi-account-outline text-primary fs-5"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Customer</small>
-                                            <h6 class="mb-0 fw-bold" id="custName">-</h6>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="bg-success bg-opacity-20 p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                            <i class="mdi mdi-calendar-outline text-success fs-5"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Sale Date</small>
-                                            <h6 class="mb-0 fw-bold" id="saleDate">-</h6>
-                                        </div>
-                                    </div>
+                    {{-- EMPTY STATE (Visible Initially) --}}
+                    <div id="emptyState" class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body text-center py-5">
+                            <div class="mb-4">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                    <i class="mdi mdi-file-search-outline display-4 text-muted opacity-50"></i>
                                 </div>
                             </div>
+                            <h5 class="text-dark fw-bold mb-2">No Invoice Selected</h5>
+                            <p class="text-muted mb-0">Search for an invoice number above to fetch order details and process a return.</p>
                         </div>
                     </div>
-
-                    <!-- Return Items Card -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light border-bottom py-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="mdi mdi-package-variant-outline me-2 text-info"></i>Items to Return
-                            </h6>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4 fw-bold text-uppercase small">Product</th>
-                                        <th class="fw-bold text-uppercase small">Original Qty</th>
-                                        <th class="fw-bold text-uppercase small">Unit Price</th>
-                                        <th class="fw-bold text-uppercase small">Return Qty</th>
-                                        <th class="text-end fw-bold text-uppercase small pe-4">Refund Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="itemsTable">
-                                    <!-- Populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Return Reason Card -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light border-bottom py-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="mdi mdi-comment-text-outline me-2 text-warning"></i>Return Details
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <label class="form-label fw-bold text-dark mb-3">Return Reason / Note</label>
-                            <textarea name="reason" class="form-control border-2" rows="3" 
-                                    placeholder="Specify the reason for return (e.g., Defective product, Wrong size, Changed mind, Damaged packaging)"></textarea>
-                            <small class="text-muted d-block mt-2">
-                                <i class="mdi mdi-information-outline me-1"></i>Provide details to help track return patterns
-                            </small>
-                        </div>
-                    </div>
-
-                    <!-- Summary Card -->
-                    <div class="card border-0 shadow-lg mb-4 bg-gradient">
-                        <div class="card-body p-4">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-muted">Items Selected:</span>
-                                        <span class="badge bg-info" id="itemsCount">0</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-muted">Total Units:</span>
-                                        <span class="badge bg-secondary" id="totalUnits">0</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 border-start">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-muted">Subtotal:</span>
-                                        <span class="fw-bold" id="subtotalDisplay">$0.00</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">Tax Included:</span>
-                                        <span class="fw-bold" id="taxDisplay">$0.00</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border-top pt-3 mt-3">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fs-5 fw-bold text-dark">Total Refund:</span>
-                                    <span class="fs-3 fw-bold text-danger" id="totalRefundDisplay">$0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-3 mb-4">
-                        <button type="submit" class="btn btn-danger btn-lg fw-bold flex-grow-1">
-                            <i class="mdi mdi-check-circle-outline me-2"></i>Confirm Return
-                        </button>
-                        <a href="{{ route('store.sales.returns.create') }}" class="btn btn-outline-secondary btn-lg fw-bold">
-                            <i class="mdi mdi-refresh me-2"></i>Clear
-                        </a>
-                    </div>
-                </form>
-
-                <!-- Empty State (Hidden Initially) -->
-                <div id="emptyState" class="card border-0 shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <div class="mb-4">
-                            <i class="mdi mdi-magnify-off display-1 text-muted"></i>
-                        </div>
-                        <h5 class="text-muted fw-bold">No Invoice Selected</h5>
-                        <p class="text-muted mb-0">Search for an invoice number above to get started</p>
-                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 
-@push('scripts')
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let currentTaxRate = 0;
         let saleItems = []; // Store items for calculation
 
         function searchInvoice() {
             let inv = document.getElementById('invoiceInput').value.trim();
-            if(!inv) return Swal.fire('Error', 'Please enter invoice number', 'error');
+            if(!inv) return Swal.fire({toast: true, position: 'top-end', icon: 'warning', title: 'Please enter invoice number', showConfirmButton: false, timer: 2000});
 
             let btn = document.querySelector('button[onclick="searchInvoice()"]');
             let originalText = btn.innerHTML;
@@ -225,30 +268,30 @@
                         let taxPerUnit = unitPrice * currentTaxRate;
 
                         html += `
-                        <tr>
+                        <tr class="bg-white border-bottom">
                             <td class="ps-4">
                                 <div class="fw-bold text-dark">${item.product.product_name}</div>
-                                <small class="text-muted d-block">#${item.product_id}</small>
+                                <div class="text-muted font-monospace small mt-1"><i class="mdi mdi-barcode me-1"></i>${item.product.sku}</div>
                                 <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
                             </td>
-                            <td>
-                                <span class="badge bg-light text-dark border border-2">
-                                    ${item.quantity} ${item.quantity > 1 ? 'units' : 'unit'}
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                                    ${item.quantity} ${item.quantity > 1 ? 'Units' : 'Unit'}
                                 </span>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark">$${unitPrice.toFixed(2)}</div>
-                                <small class="text-success d-block">+ $${taxPerUnit.toFixed(2)} tax</small>
+                                <div class="fw-bold text-dark fs-6">$${unitPrice.toFixed(2)}</div>
+                                <small class="text-success fw-medium">+ $${taxPerUnit.toFixed(2)} tax</small>
                             </td>
                             <td>
-                                <input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input text-center border-2 fw-bold" 
+                                <input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input text-center bg-light border-0 shadow-sm rounded-3 py-2 fw-bold text-danger fs-6" 
                                     min="0" max="${item.quantity}" value="0" 
                                     data-unit-price="${unitPrice}"
                                     data-product-name="${item.product.product_name}"
                                     oninput="calcTotal()">
                             </td>
                             <td class="text-end pe-4">
-                                <span class="fw-bold text-danger item-total">$0.00</span>
+                                <span class="fw-black text-danger fs-5 item-total">$0.00</span>
                             </td>
                         </tr>`;
                     });
@@ -259,7 +302,7 @@
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     console.error(err);
-                    Swal.fire('Error', 'Something went wrong', 'error');
+                    Swal.fire('Error', 'Something went wrong while fetching the invoice', 'error');
                 });
         }
 
@@ -277,7 +320,7 @@
                 if(qty > max) { 
                     input.value = max; 
                     qty = max; 
-                    Swal.fire('Limit Reached', `Cannot return more than ${max} unit(s) of "${input.dataset.productName}"`, 'warning'); 
+                    Swal.fire({toast: true, position: 'top-end', icon: 'warning', title: `Max ${max} units allowed for "${input.dataset.productName}"`, showConfirmButton: false, timer: 3000}); 
                 }
                 
                 let unitPrice = parseFloat(input.dataset.unitPrice);
@@ -318,9 +361,10 @@
         // Allow Enter key to search
         document.getElementById('invoiceInput').addEventListener('keypress', function(e) {
             if(e.key === 'Enter') {
+                e.preventDefault();
                 searchInvoice();
             }
         });
     </script>
-@endpush
+    @endpush
 </x-app-layout>

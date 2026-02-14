@@ -8,7 +8,8 @@
                     <h4 class="fw-bold m-0 text-dark">Stock Requests</h4>
                     <p class="text-muted small mb-0 mt-1">Manage inventory replenishment from warehouse</p>
                 </div>
-                <div class="d-flex gap-2">
+                {{-- FIX: Added flex-wrap so buttons don't overflow on small screens --}}
+                <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-success btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="mdi mdi-file-excel"></i> Import
                     </button>
@@ -19,7 +20,8 @@
             </div>
 
             {{-- TABS --}}
-            <ul class="nav nav-tabs mb-4 border-bottom-0">
+            {{-- FIX: Added flex-nowrap and overflow-auto so tabs can be swiped horizontally on mobile --}}
+            <ul class="nav nav-tabs mb-4 border-bottom-0 flex-nowrap overflow-auto pb-1" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
                 <li class="nav-item">
                     <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold border-bottom-0' : '' }}"
                        href="{{ route('inventory.requests', ['status' => 'pending']) }}">
@@ -44,11 +46,12 @@
 
             {{-- MAIN CONTENT CARD --}}
             <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                {{-- FIX: Made the header responsive. Stacks on mobile, inline on desktop --}}
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <h6 class="mb-0 fw-bold">Request List</h6>
-                    <form method="GET" action="{{ route('inventory.requests') }}" class="d-flex gap-2">
+                    <form method="GET" action="{{ route('inventory.requests') }}" class="d-flex w-100 w-md-auto justify-content-md-end">
                         <input type="hidden" name="status" value="{{ request('status', 'pending') }}">
-                        <div class="input-group input-group-sm" style="width: 250px;">
+                        <div class="input-group input-group-sm w-100" style="max-width: 100%; width: 250px;">
                             <input type="text" name="search" class="form-control" placeholder="Search ID or Product..." value="{{ request('search') }}">
                             <button class="btn btn-outline-secondary" type="submit"><i class="mdi mdi-magnify"></i></button>
                         </div>
@@ -57,7 +60,8 @@
 
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        {{-- FIX: Added text-nowrap to prevent columns from squishing on mobile --}}
+                        <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4 py-3 text-muted small fw-bold">REQ ID</th>
@@ -174,7 +178,7 @@
         </div>
     </div>
 
-    {{-- IMPORT MODAL (Same as before) --}}
+    {{-- IMPORT MODAL --}}
     <div class="modal fade" id="importModal" tabindex="-1">
         <div class="modal-dialog">
             <form action="{{ route('inventory.requests.import') }}" method="POST" enctype="multipart/form-data" class="modal-content">

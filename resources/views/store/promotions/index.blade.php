@@ -76,13 +76,12 @@
                                 @endif
                             </td>
                             <td>
-                                @if(Auth::user()->hasPermission('delete_promotion'))
+                             
                                 <form action="{{ route('store.promotions.destroy', $promo->id) }}" method="POST" onsubmit="return confirm('Delete this promotion?');">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>
                                 </form>
-                                @endif
                             </td>
                         </tr>
                         @empty
