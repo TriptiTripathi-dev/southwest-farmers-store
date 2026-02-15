@@ -30,13 +30,32 @@
             color: var(--pos-text);
         }
 
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
 
         .pos-wrapper {
             height: calc(100vh - 70px);
@@ -45,30 +64,47 @@
 
         /* DESKTOP LAYOUT */
         @media (min-width: 992px) {
-            .pos-wrapper { display: flex; }
-            .left-panel { flex: 1; border-right: 1px solid var(--pos-border); }
-            .right-panel { width: 380px; box-shadow: -5px 0 15px rgba(0,0,0,0.08); }
+            .pos-wrapper {
+                display: flex;
+            }
+
+            .left-panel {
+                flex: 1;
+                border-right: 1px solid var(--pos-border);
+            }
+
+            .right-panel {
+                width: 380px;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.08);
+            }
         }
 
         /* MOBILE LAYOUT */
         @media (max-width: 991px) {
-            .left-panel { width: 100%; }
-            .right-panel { display: none; }
-            .floating-cart-btn { 
-                position: fixed; 
-                bottom: 20px; 
-                left: 50%; 
-                transform: translateX(-50%); 
-                z-index: 1040; 
-                width: calc(100% - 32px); 
+            .left-panel {
+                width: 100%;
+            }
+
+            .right-panel {
+                display: none;
+            }
+
+            .floating-cart-btn {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1040;
+                width: calc(100% - 32px);
                 max-width: 500px;
             }
         }
 
-        .left-panel, .right-panel { 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
+        .left-panel,
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         /* HEADER */
@@ -76,11 +112,13 @@
             background: white;
             border-bottom: 1.5px solid var(--pos-border);
             padding: 12px 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         @media (min-width: 768px) {
-            .pos-header { padding: 16px 24px; }
+            .pos-header {
+                padding: 16px 24px;
+            }
         }
 
         .store-icon {
@@ -211,14 +249,14 @@
             text-transform: uppercase;
         }
 
-        .badge-in-stock { 
-            background-color: #dcfce7; 
-            color: #166534; 
+        .badge-in-stock {
+            background-color: #dcfce7;
+            color: #166534;
         }
 
-        .badge-low-stock { 
-            background-color: #fee2e2; 
-            color: #991b1b; 
+        .badge-low-stock {
+            background-color: #fee2e2;
+            color: #991b1b;
         }
 
         /* CART ITEMS */
@@ -306,8 +344,15 @@
         }
 
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25); }
-            50% { box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35); }
+
+            0%,
+            100% {
+                box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25);
+            }
+
+            50% {
+                box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35);
+            }
         }
 
         .btn-pay:hover:not(:disabled) {
@@ -376,7 +421,7 @@
         .offcanvas-bottom {
             border-radius: 20px 20px 0 0 !important;
             max-height: 85vh !important;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1) !important;
         }
 
         .offcanvas-header {
@@ -408,15 +453,22 @@
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(100px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* MODALS */
         .modal-content {
             border: none;
             border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
         }
 
         .modal-header {
@@ -425,7 +477,9 @@
             background: white;
         }
 
-        .modal-body { padding: 20px; }
+        .modal-body {
+            padding: 20px;
+        }
 
         .form-control-custom {
             border: 1.5px solid var(--pos-border);
@@ -449,8 +503,14 @@
             padding: 16px;
         }
 
-        .invoice-logo { max-height: 50px; }
-        .success-icon-anim { font-size: 4rem; color: var(--pos-primary); }
+        .invoice-logo {
+            max-height: 50px;
+        }
+
+        .success-icon-anim {
+            font-size: 4rem;
+            color: var(--pos-primary);
+        }
 
         /* DISCOUNT INPUT */
         .discount-input {
@@ -471,16 +531,18 @@
         }
 
         /* TOTALS */
-        .totals-label { 
-            color: var(--pos-muted); 
+        .totals-label {
+            color: var(--pos-muted);
             font-weight: 600;
             font-size: 12px;
         }
-        .totals-value { 
-            color: var(--pos-text); 
+
+        .totals-value {
+            color: var(--pos-text);
             font-weight: 700;
             font-size: 12px;
         }
+
         .grand-total-value {
             font-size: 28px;
             font-weight: 900;
@@ -488,11 +550,33 @@
         }
 
         @media print {
-            @page { size: 80mm auto; margin: 0; }
-            body * { visibility: hidden; }
-            #invoiceContent, #invoiceContent * { visibility: visible; }
-            #invoiceContent { position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm; }
-            .modal-footer, .btn-close, .d-print-none { display: none !important; }
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            body * {
+                visibility: hidden;
+            }
+
+            #invoiceContent,
+            #invoiceContent * {
+                visibility: visible;
+            }
+
+            #invoiceContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                padding: 5mm;
+            }
+
+            .modal-footer,
+            .btn-close,
+            .d-print-none {
+                display: none !important;
+            }
         }
     </style>
     @endpush
@@ -763,7 +847,7 @@
                                 <input type="text" name="address" class="form-control form-control-custom">
                             </div>
                         </div>
-                        
+
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Due Amount</label>
@@ -800,7 +884,7 @@
                             <small class="text-muted">{{ Auth::user()->store->address ?? '123 Main St, New York, NY' }}</small>
                         </div>
                         <hr>
-                        
+
                         <div class="d-flex justify-content-between mb-2 small">
                             <span class="text-muted">Invoice No:</span>
                             <span class="fw-bold" id="modalInvoiceNo">#0000</span>
@@ -855,7 +939,7 @@
     <input type="hidden" id="paymentMethod" value="cash">
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         @php
         $cartArray = [];
@@ -864,6 +948,7 @@
                 $cartArray[] = [
                     'item_id' => $item->id,
                     'id' => $item->product_id,
+                    'product_id' => $item->product_id, // Added for reliable mapping
                     'name' => $item->product->product_name,
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
@@ -884,15 +969,18 @@
         // HELPER TO FIX JSON OBJECT vs ARRAY ISSUE
         function preserveMaxStock(newCart) {
             if (!newCart) return [];
-            // If PHP unset an item, newCart becomes an object. We force it back to an array.
             let parsedCart = Array.isArray(newCart) ? newCart : Object.values(newCart);
             
             let maxMap = {};
-            cart.forEach(i => { if(i.max !== undefined) maxMap[i.id] = i.max; });
+            cart.forEach(i => { 
+                let pId = i.product_id || i.id;
+                if(i.max !== undefined) maxMap[pId] = i.max; 
+            });
             
             parsedCart.forEach(i => {
-                if (maxMap[i.id] !== undefined && i.max === undefined) {
-                    i.max = maxMap[i.id];
+                let pId = i.product_id || i.id;
+                if (maxMap[pId] !== undefined && i.max === undefined) {
+                    i.max = maxMap[pId];
                 }
             });
             return parsedCart;
@@ -908,7 +996,6 @@
                 loadProducts($(this).val());
             });
 
-            // RE-ADDED IMAGE PREVIEW EVENT
             document.querySelector('[name="image"]')?.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 const preview = document.getElementById('imagePreview');
@@ -1080,8 +1167,10 @@
         function addToCart(id, name, price, maxStock) {
             if (maxStock <= 0) return Swal.fire('Out of Stock', 'Unavailable.', 'error');
 
-            // NEW: Stock Limit Check on Add
-            let existingItem = cart.find(i => i.id == id);
+            // Find item safely
+            let existingItem = cart.find(i => i.product_id == id || i.id == id);
+            
+            // Check limits immediately
             if (existingItem && (existingItem.quantity + 1) > maxStock) {
                 return Swal.fire({
                     toast: true, position: 'top-end', icon: 'error', 
@@ -1089,17 +1178,40 @@
                 });
             }
 
+            // OPTIMISTIC UPDATE: Fixes the fast-click race condition 
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ 
+                    item_id: 'temp_' + id, 
+                    id: id, 
+                    product_id: id, 
+                    name: name, 
+                    price: price, 
+                    quantity: 1, 
+                    max: maxStock 
+                });
+            }
+            renderCart();
+
+            // Background Request
             $.ajax({
                 url: "{{ route('store.sales.cart.add') }}",
                 method: "POST",
                 data: { _token: csrfToken, product_id: id, quantity: 1 },
                 success: function(res) {
                     let maxMap = {};
-                    cart.forEach(i => { if(i.max !== undefined) maxMap[i.id] = i.max; });
+                    cart.forEach(i => { 
+                        let pId = i.product_id || i.id;
+                        if(i.max !== undefined) maxMap[pId] = i.max; 
+                    });
                     maxMap[id] = maxStock;
 
                     cart = preserveMaxStock(res.cart);
-                    cart.forEach(i => { if(maxMap[i.id] !== undefined) i.max = maxMap[i.id]; });
+                    cart.forEach(i => { 
+                        let pId = i.product_id || i.id;
+                        if(maxMap[pId] !== undefined) i.max = maxMap[pId]; 
+                    });
                     
                     renderCart();
                     const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 800 });
@@ -1147,8 +1259,8 @@
             $('#mobileCartItems').html(html);
             updateTotals(subtotal);
             $('#mobileItemCount').text(totalItems);
-            let total = subtotal + (subtotal * TAX_RATE);
-            $('#mobileTotal').text('$' + total.toFixed(2));
+            let total = subtotal + (subtotal * TAX_RATE) - Math.max(0, parseFloat($('#discountInput').val() || $('#discountInputMobile').val() || 0));
+            $('#mobileTotal').text('$' + Math.max(0, total).toFixed(2));
         }
 
         function updateTotals(subtotal) {
@@ -1174,19 +1286,25 @@
             let item = cart[index];
             let newQty = item.quantity + change;
             
-            // NEW: If quantity drops below 1, remove it
             if (newQty < 1) {
                 removeFromCart(index);
                 return;
             }
 
-            // NEW: Stock Limit Check on Quantity Change
+            // Limit check
             if (change > 0 && item.max !== undefined && newQty > item.max) {
                 return Swal.fire({
                     toast: true, position: 'top-end', icon: 'error', 
                     title: 'Stock limit exceeded', showConfirmButton: false, timer: 1500
                 });
             }
+
+            // OPTIMISTIC UPDATE
+            item.quantity = newQty;
+            renderCart();
+
+            // Ignore temporary items that haven't registered to DB yet
+            if(String(item.item_id).startsWith('temp_')) return;
 
             $.ajax({
                 url: "{{ route('store.sales.cart.update') }}",
@@ -1201,10 +1319,20 @@
 
         function removeFromCart(index) {
             let item = cart[index];
+            if(!item) return;
+
+            let itemId = item.item_id;
+            
+            // OPTIMISTIC UPDATE
+            cart.splice(index, 1);
+            renderCart();
+
+            if(String(itemId).startsWith('temp_')) return;
+
             $.ajax({
                 url: "{{ route('store.sales.cart.remove') }}",
                 method: "POST",
-                data: { _token: csrfToken, item_id: item.item_id },
+                data: { _token: csrfToken, item_id: itemId },
                 success: function(res) {
                     cart = preserveMaxStock(res.cart);
                     renderCart();
@@ -1342,10 +1470,12 @@
                             localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
                             renderHeldCarts();
                             renderCart();
+                            
+                            // Re-add to backend session
                             hold.items.forEach(item => {
                                 $.post("{{ route('store.sales.cart.add') }}", {
                                     _token: csrfToken,
-                                    product_id: item.id,
+                                    product_id: item.product_id || item.id,
                                     quantity: item.quantity
                                 });
                             });
@@ -1401,7 +1531,6 @@
                     });
                     $('#modalInvoiceItems').html(modalItemsHtml);
 
-                    // Close mobile offcanvas
                     let offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('cartOffcanvas'));
                     if (offcanvas) offcanvas.hide();
 

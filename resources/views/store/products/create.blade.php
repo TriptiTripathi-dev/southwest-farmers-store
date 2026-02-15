@@ -1,4 +1,16 @@
 <x-app-layout title="Add New Product">
+    @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        /* Fix for Select2 height inside Bootstrap forms */
+        .select2-container--bootstrap-5 .select2-selection--single {
+            height: calc(2.25rem + 2px); /* Standard Bootstrap form-control height */
+            padding: 0.375rem 0.75rem;
+        }
+    </style>
+    @endpush
+
     <div class="content-wrapper">
         <div class="row justify-content-center">
             <div class="col-md-8 grid-margin stretch-card">
@@ -21,7 +33,7 @@
                             {{-- NEW: Department Dropdown --}}
                             <div class="form-group mb-3">
                                 <label>Department <span class="text-danger">*</span></label>
-                                <select name="department_id" class="form-select" required>
+                                <select name="department_id" id="department_select" class="form-select select2-enable" required>
                                     <option value="">Select Department</option>
                                     @foreach($departments as $dept)
                                         <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -32,7 +44,7 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label>Category <span class="text-danger">*</span></label>
-                                    <select name="category_id" id="category_select" class="form-select" required>
+                                    <select name="category_id" id="category_select" class="form-select select2-enable" required>
                                         <option value="">Select Category</option>
                                         @foreach($categories as $cat)
                                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -41,7 +53,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label>Subcategory</label>
-                                    <select name="subcategory_id" id="subcategory_select" class="form-select">
+                                    <select name="subcategory_id" id="subcategory_select" class="form-select select2-enable">
                                         <option value="">Select Category First</option>
                                     </select>
                                 </div>
@@ -93,13 +105,25 @@
     </div>
 
     @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        document.getElementById('category_select').addEventListener('change', function() {
+        $(document).ready(function() {
+            // Initialize Select2 on elements with the class 'select2-enable'
+            $('.select2-enable').select2({
+                theme: 'bootstrap-5',
+                width: '100%' // Ensure it takes full width of the container
+            });
+        });
+
+        // Use jQuery for the change event to ensure compatibility with Select2
+        $('#category_select').on('change', function() {
             var catId = this.value;
-            var subSelect = document.getElementById('subcategory_select');
+            var subSelect = $('#subcategory_select'); // jQuery object
             
-            subSelect.innerHTML = '<option value="">Loading...</option>';
-            subSelect.disabled = true;
+            subSelect.html('<option value="">Loading...</option>').trigger('change');
+            subSelect.prop('disabled', true);
 
             if(catId) {
                 fetch("{{ route('store.subcategories.get') }}", {
@@ -112,25 +136,24 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    subSelect.innerHTML = '<option value="">Select Subcategory</option>';
+                    subSelect.html('<option value="">Select Subcategory</option>');
                     if(data.length > 0) {
                         data.forEach(sub => {
-                            var option = document.createElement('option');
-                            option.value = sub.id;
-                            option.text = sub.name;
-                            subSelect.appendChild(option);
+                            subSelect.append(new Option(sub.name, sub.id));
                         });
-                        subSelect.disabled = false;
+                        subSelect.prop('disabled', false);
                     } else {
-                        subSelect.innerHTML = '<option value="">No subcategories found</option>';
+                        subSelect.html('<option value="">No subcategories found</option>');
                     }
+                    // Inform Select2 that the DOM has changed
+                    subSelect.trigger('change');
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    subSelect.innerHTML = '<option value="">Error fetching data</option>';
+                    subSelect.html('<option value="">Error fetching data</option>').trigger('change');
                 });
             } else {
-                subSelect.innerHTML = '<option value="">Select Category First</option>';
+                subSelect.html('<option value="">Select Category First</option>').trigger('change');
             }
         });
     </script>

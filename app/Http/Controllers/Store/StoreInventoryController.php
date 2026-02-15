@@ -32,8 +32,8 @@ class StoreInventoryController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('product', function ($q) use ($search) {
-                $q->where('product_name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+                $q->where('product_name', 'ilike', "%{$search}%")
+                    ->orWhere('sku', 'ilike', "%{$search}%"); // Changed 'like' to 'ilike' here
             });
         }
         $stocks = $query->latest()->paginate(15);
@@ -53,7 +53,7 @@ class StoreInventoryController extends Controller
                 'products.product_name',
                 'products.sku',
                 'products.price', // Selling Price
-                'products.cost_price', 
+                'products.cost_price',
                 'product_categories.name as category_name'
             );
 
@@ -256,37 +256,50 @@ class StoreInventoryController extends Controller
             'operation' => 'required|in:add,subtract',
             'reason' => 'nullable|string|max:255',
         ]);
+
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
-        DB::transaction(function () use ($request, $user, $storeId) {
-            $stock = StoreStock::firstOrNew(['store_id' => $storeId, 'product_id' => $request->product_id]);
-            if ($request->operation === 'add') {
-                $stock->quantity = ($stock->quantity ?? 0) + $request->quantity;
-            } else {
-                if (($stock->quantity ?? 0) < $request->quantity) {
-                    throw new \Exception("Insufficient stock.");
+
+        try {
+            DB::transaction(function () use ($request, $user, $storeId) {
+                $stock = StoreStock::firstOrNew(['store_id' => $storeId, 'product_id' => $request->product_id]);
+
+                if ($request->operation === 'add') {
+                    $stock->quantity = ($stock->quantity ?? 0) + $request->quantity;
+                } else {
+                    if (($stock->quantity ?? 0) < $request->quantity) {
+                        // Throw exception to be caught below
+                        throw new \Exception("Insufficient stock. Only " . ($stock->quantity ?? 0) . " unit(s) available.");
+                    }
+                    $stock->quantity -= $request->quantity;
                 }
-                $stock->quantity -= $request->quantity;
-            }
-            $stock->save();
-            StockAdjustment::create([
-                'store_id' => $storeId,
-                'product_id' => $request->product_id,
-                'user_id' => $user->id,
-                'quantity' => $request->quantity,
-                'operation' => $request->operation,
-                'reason' => $request->reason,
-            ]);
-            StoreNotification::create([
-            'user_id' => Auth::id(),
-            'store_id' => $storeId,
-            'title' => 'Stock Adjustment',
-            'message' => "Adjusted stock for Product #{$request->product_id} ({$request->operation} {$request->quantity}).",
-            'type' => 'warning',
-            'url' => route('inventory.adjustments'),
-        ]);
-        });
-        return back()->with('success', 'Stock adjusted successfully.');
+
+                $stock->save();
+
+                StockAdjustment::create([
+                    'store_id' => $storeId,
+                    'product_id' => $request->product_id,
+                    'user_id' => $user->id,
+                    'quantity' => $request->quantity,
+                    'operation' => $request->operation,
+                    'reason' => $request->reason,
+                ]);
+
+                StoreNotification::create([
+                    'user_id' => Auth::id(),
+                    'store_id' => $storeId,
+                    'title' => 'Stock Adjustment',
+                    'message' => "Adjusted stock for Product #{$request->product_id} ({$request->operation} {$request->quantity}).",
+                    'type' => 'warning',
+                    'url' => route('inventory.adjustments'),
+                ]);
+            });
+
+            return back()->with('success', 'Stock adjusted successfully.');
+        } catch (\Exception $e) {
+            // CATCH THE ERROR AND SEND IT BACK TO BLADE
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function history($id)

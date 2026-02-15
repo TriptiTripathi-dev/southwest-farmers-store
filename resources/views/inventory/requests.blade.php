@@ -1,4 +1,9 @@
 <x-app-layout title="Stock Requests">
+    @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    @endpush
+
     <div class="content-wrapper">
         <div class="container-fluid">
 
@@ -158,7 +163,8 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Product <span class="text-danger">*</span></label>
-                        <select name="product_id" class="form-select" required>
+                        {{-- Added ID for Select2 --}}
+                        <select name="product_id" id="productSearchSelect" class="form-select" required style="width: 100%;">
                             <option value="">Select Product...</option>
                             @foreach($products as $product)
                                 <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->sku }})</option>
@@ -236,8 +242,21 @@
     </div>
 
     @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
     <script>
+        $(document).ready(function() {
+            // Initialize Select2 on the Product dropdown
+            $('#productSearchSelect').select2({
+                theme: 'bootstrap-5',
+                placeholder: "Search product name or SKU...",
+                allowClear: true,
+                dropdownParent: $('#newRequestModal') // Crucial for Bootstrap modals
+            });
+        });
+
         function openPaymentModal(id) {
             document.getElementById('payment_req_id').value = id;
             new bootstrap.Modal(document.getElementById('paymentModal')).show();
