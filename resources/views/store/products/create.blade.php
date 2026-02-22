@@ -76,8 +76,8 @@
                                     <input type="number" step="0.01" name="selling_price" class="form-control border-success fw-bold" placeholder="0.00" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label>Barcode (Optional)</label>
-                                    <input type="text" name="barcode" class="form-control">
+                                    <label>UPC Code <span class="text-danger">*</span></label>
+                                    <input type="text" name="barcode" class="form-control" placeholder="Enter UPC" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label>Unit</label>

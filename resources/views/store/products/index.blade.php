@@ -83,6 +83,7 @@
                                             <img src="{{$item->icon ? Storage::url($item->icon) : asset('assets/images/logo.jpg') }}" 
                                                  class="rounded-circle border shadow-sm" width="40" height="40" style="object-fit: cover;">
                                             <div class="ms-3">
+                                                <div class="small text-muted font-monospace">UPC: {{ $item->barcode ?: 'N/A' }}</div>
                                                 <p class="mb-0 fw-bold text-dark">{{ $item->product_name }}</p>
                                             </div>
                                         </div>
@@ -126,6 +127,10 @@
                                                 <i class="mdi mdi-history fs-6"></i>
                                             </a>
                                             @endif
+
+                                            <a href="{{ route('store.products.location-inventory', $item->id) }}" class="btn btn-sm btn-light border shadow-sm text-dark" data-bs-toggle="tooltip" title="Location Inventory">
+                                                <i class="mdi mdi-map-marker-radius fs-6"></i>
+                                            </a>
 
                                             @if(Auth::user()->hasPermission('view_analytics'))
                                             <a href="{{ route('store.products.analytics', $item->id) }}" class="btn btn-sm btn-light border shadow-sm text-primary" data-bs-toggle="tooltip" title="Analytics">

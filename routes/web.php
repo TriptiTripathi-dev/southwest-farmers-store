@@ -29,9 +29,11 @@ use App\Http\Controllers\Store\StoreStockControlController;
 use App\Http\Controllers\Store\StoreSupportTicketController;
 use App\Http\Controllers\StoreDashboardController;
 use App\Http\Controllers\Warehouse\ProductController as WarehouseProductController;
+use App\Http\Controllers\Website\ProductController as WebsiteProductController;
+use App\Http\Controllers\Website\CartController;
 
 Route::middleware('guest')->group(function () {
-    Route::get('/', fn() => redirect()->route('login'));
+   
     Route::get('/login', [LoginController::class, 'showLoginForm'])
         ->name('login');
     Route::post('/login', [LoginController::class, 'login']);
@@ -44,6 +46,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
         ->name('password.update');
 });
+// Public-facing website module routes
+Route::prefix('')->name('website.')->group(function () {
+    Route::get('products', [WebsiteProductController::class, 'index'])->name('products.index');
+    Route::get('products/{product}', [WebsiteProductController::class, 'show'])->name('products.show');
+
+    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('cart', [CartController::class, 'store'])->name('cart.store');
+});
+
 Route::get('/pos-test', function () {
     return view('pos-test');
 });
@@ -87,6 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
+    Route::post('/inventory/request/generate-po', [StoreInventoryController::class, 'generateWarehousePo'])->name('inventory.request.generate-po');
     Route::get('/reports/stock', [StoreInventoryController::class, 'stockReport'])->name('store.reports.stock');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
     Route::get('/inventory/requests/{id}', [StoreInventoryController::class, 'showRequest'])->name('inventory.requests.show');
@@ -169,6 +181,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');
+        Route::get('products/{id}/location-inventory', [StoreProductController::class, 'locationInventory'])->name('products.location-inventory');
         Route::get('categories/{id}/analytics', [ProductCategoryController::class, 'analytics'])->name('categories.analytics');
         Route::get('subcategories/{id}/analytics', [ProductSubcategoryController::class, 'analytics'])->name('subcategories.analytics');
         Route::resource('categories', ProductCategoryController::class)->except('show');
@@ -197,3 +210,7 @@ Route::middleware('auth')->group(function () {
             });
     });
 });
+// routes/web.php ke bottom mein:
+
+// Load Website Module Routes
+require __DIR__.'/website.php';

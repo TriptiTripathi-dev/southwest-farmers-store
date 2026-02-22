@@ -27,6 +27,20 @@ class StoreDetail extends Model
         'is_active',
         'store_user_id'
     ];
+
+    public function setStoreNameAttribute($value)
+    {
+        $name = trim((string) $value);
+        if ($name === '') {
+            $this->attributes['store_name'] = $name;
+            return;
+        }
+
+        $this->attributes['store_name'] = str_starts_with($name, 'SWF - ')
+            ? $name
+            : 'SWF - ' . $name;
+    }
+
      public function user()
     {
         return $this->belongsTo(StoreUser::class, 'store_user_id');

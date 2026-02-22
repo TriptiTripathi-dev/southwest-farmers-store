@@ -15,6 +15,12 @@
                 </div>
                 {{-- FIX: Added flex-wrap so buttons don't overflow on small screens --}}
                 <div class="d-flex flex-wrap gap-2">
+                    <form action="{{ route('inventory.request.generate-po') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-dark btn-sm">
+                            <i class="mdi mdi-auto-fix me-1"></i> Generate a PO to the Warehouse
+                        </button>
+                    </form>
                     <button type="button" class="btn btn-success btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="mdi mdi-file-excel"></i> Import
                     </button>
@@ -83,7 +89,8 @@
                                     <td class="ps-4 fw-bold">#{{ $req->id }}</td>
                                     <td>
                                         <div class="fw-semibold text-dark">{{ $req->product->product_name }}</div>
-                                        <div class="small text-muted font-monospace">{{ $req->product->sku }}</div>
+                                        <div class="small text-muted font-monospace">UPC: {{ $req->product->barcode ?: 'N/A' }}</div>
+                                        <div class="small text-muted font-monospace">SKU: {{ $req->product->sku }}</div>
                                     </td>
                                     <td class="text-center">
                                         <span class="fw-bold">{{ $req->requested_quantity }}</span> 
@@ -167,13 +174,17 @@
                         <select name="product_id" id="productSearchSelect" class="form-select" required style="width: 100%;">
                             <option value="">Select Product...</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->sku }})</option>
+                                <option value="{{ $product->id }}">{{ $product->barcode ?: 'N/A' }} - {{ $product->product_name }} ({{ $product->sku }})</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Quantity <span class="text-danger">*</span></label>
                         <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Reason for Quantity <span class="text-danger">*</span></label>
+                        <textarea name="store_remarks" class="form-control" rows="2" required placeholder="Why this quantity is needed"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

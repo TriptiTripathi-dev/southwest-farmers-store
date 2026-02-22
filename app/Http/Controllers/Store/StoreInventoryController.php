@@ -28,16 +28,23 @@ class StoreInventoryController extends Controller
     {
         $user = Auth::user();
         $query = StoreStock::where('store_id', $user->store_id)
-            ->with('product');
+            ->with(['product.category', 'product.subcategory']);
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('product', function ($q) use ($search) {
                 $q->where('product_name', 'ilike', "%{$search}%")
-                    ->orWhere('sku', 'ilike', "%{$search}%"); // Changed 'like' to 'ilike' here
+                    ->orWhere('sku', 'ilike', "%{$search}%")
+                    ->orWhere('barcode', 'ilike', "%{$search}%");
             });
         }
         $stocks = $query->latest()->paginate(15);
-        return view('inventory.index', compact('stocks'));
+        $inTransitByProduct = StockRequest::where('store_id', $user->store_id)
+            ->where('status', StockRequest::STATUS_DISPATCHED)
+            ->select('product_id', DB::raw('SUM(COALESCE(fulfilled_quantity, requested_quantity)) as qty'))
+            ->groupBy('product_id')
+            ->pluck('qty', 'product_id');
+
+        return view('inventory.index', compact('stocks', 'inTransitByProduct'));
     }
 
     public function stockReport(Request $request)
@@ -112,15 +119,117 @@ class StoreInventoryController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'store_remarks' => 'required|string|max:500',
         ]);
+
         $user = Auth::user();
+        $storeId = $user->store_id;
+        $productId = (int) $request->product_id;
+        $requestedQty = (int) $request->quantity;
+
+        $stock = StoreStock::where('store_id', $storeId)
+            ->where('product_id', $productId)
+            ->first();
+
+        if (! $stock) {
+            return back()->with('error', 'This product is not mapped to your store inventory yet.');
+        }
+
+        $hasOpenRequest = StockRequest::where('store_id', $storeId)
+            ->where('product_id', $productId)
+            ->whereIn('status', [StockRequest::STATUS_PENDING, StockRequest::STATUS_DISPATCHED])
+            ->exists();
+
+        if ($hasOpenRequest) {
+            return back()->with('error', 'An open request already exists for this product (pending or in transit).');
+        }
+
+        $inTransitQty = $this->getInTransitQuantity($storeId, $productId);
+        $availableQty = (int) $stock->quantity + $inTransitQty;
+        $maxStock = (int) ($stock->max_stock ?? 0);
+
+        if ($maxStock > 0) {
+            $allowedQty = max(0, $maxStock - $availableQty);
+
+            if ($allowedQty <= 0) {
+                return back()->with('error', 'Order blocked. You already have enough stock available (current + in transit).');
+            }
+
+            if ($requestedQty > $allowedQty) {
+                return back()->with('error', "Requested quantity exceeds allowed need. Max allowed right now is {$allowedQty}.");
+            }
+        }
+
         StockRequest::create([
-            'store_id' => $user->store_id,
-            'product_id' => $request->product_id,
-            'requested_quantity' => $request->quantity,
-            'status' => 'pending',
+            'store_id' => $storeId,
+            'product_id' => $productId,
+            'requested_quantity' => $requestedQty,
+            'status' => StockRequest::STATUS_PENDING,
+            'store_remarks' => trim((string) $request->store_remarks),
         ]);
+
         return back()->with('success', 'Stock requisition sent to Warehouse successfully!');
+    }
+
+    public function generateWarehousePo()
+    {
+        $storeId = Auth::user()->store_id;
+        $stocks = StoreStock::where('store_id', $storeId)
+            ->whereColumn('quantity', '<=', 'min_stock')
+            ->where('max_stock', '>', 0)
+            ->get(['product_id', 'quantity', 'max_stock']);
+
+        if ($stocks->isEmpty()) {
+            return back()->with('error', 'No items are currently below minimum stock.');
+        }
+
+        $created = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($stocks, $storeId, &$created, &$skipped) {
+            foreach ($stocks as $stock) {
+                $hasOpenRequest = StockRequest::where('store_id', $storeId)
+                    ->where('product_id', $stock->product_id)
+                    ->whereIn('status', [StockRequest::STATUS_PENDING, StockRequest::STATUS_DISPATCHED])
+                    ->exists();
+
+                if ($hasOpenRequest) {
+                    $skipped++;
+                    continue;
+                }
+
+                $inTransitQty = $this->getInTransitQuantity($storeId, (int) $stock->product_id);
+                $availableQty = (int) $stock->quantity + $inTransitQty;
+                $targetMax = (int) $stock->max_stock;
+                $requestedQty = max(0, $targetMax - $availableQty);
+
+                if ($requestedQty <= 0) {
+                    $skipped++;
+                    continue;
+                }
+
+                StockRequest::create([
+                    'store_id' => $storeId,
+                    'product_id' => $stock->product_id,
+                    'requested_quantity' => $requestedQty,
+                    'status' => StockRequest::STATUS_PENDING,
+                    'store_remarks' => 'Auto-generated by "Generate a PO to the Warehouse" (max-min replenish).',
+                ]);
+
+                $created++;
+            }
+        });
+
+        if ($created === 0) {
+            return back()->with('error', 'No new PO lines were generated. Existing open requests or sufficient in-transit stock prevented creation.');
+        }
+
+        $message = "Generated {$created} PO line(s) to warehouse.";
+        if ($skipped > 0) {
+            $message .= " Skipped {$skipped} item(s) due to open requests or sufficient available stock.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function downloadSampleCsv()
@@ -165,7 +274,7 @@ class StoreInventoryController extends Controller
         $completedCount = StockRequest::where('store_id', $storeId)->where('status', 'completed')->count();
         $rejectedCount = StockRequest::where('store_id', $storeId)->where('status', 'rejected')->count();
         $products = Product::where('is_active', true)
-            ->select('id', 'product_name', 'sku', 'unit')
+            ->select('id', 'product_name', 'sku', 'barcode', 'unit')
             ->orderBy('product_name')
             ->get();
         return view('inventory.requests', compact(
@@ -176,6 +285,14 @@ class StoreInventoryController extends Controller
             'completedCount',
             'rejectedCount'
         ));
+    }
+
+    private function getInTransitQuantity(int $storeId, int $productId): int
+    {
+        return (int) StockRequest::where('store_id', $storeId)
+            ->where('product_id', $productId)
+            ->where('status', StockRequest::STATUS_DISPATCHED)
+            ->sum(DB::raw('COALESCE(fulfilled_quantity, requested_quantity)'));
     }
 
     public function showRequest($id)

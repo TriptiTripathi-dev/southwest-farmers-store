@@ -37,12 +37,12 @@ class AutoRestock extends Command
             }
 
             // 3. Calculate Order Quantity
-            // Logic: "Suppose my max 6". We order the max_stock amount.
-            // Option A: Order exactly the Max Stock value (e.g., Order 6 units)
-            $qtyToOrder = $stock->max_stock; 
-
-            // Option B (Alternative): Fill UP TO max stock
-            // $qtyToOrder = $stock->max_stock - $stock->quantity;
+            // Replenish up to max stock considering what is already in transit.
+            $inTransitQty = (int) StockRequest::where('store_id', $stock->store_id)
+                ->where('product_id', $stock->product_id)
+                ->where('status', 'dispatched')
+                ->sum(DB::raw('COALESCE(fulfilled_quantity, requested_quantity)'));
+            $qtyToOrder = max(0, $stock->max_stock - ($stock->quantity + $inTransitQty));
 
             if ($qtyToOrder > 0) {
                 StockRequest::create([

@@ -16,7 +16,11 @@ use App\Imports\StoreProductImport;
 use App\Models\StockAdjustment;
 use App\Models\StockTransaction;
 use App\Models\StoreNotification;
+use App\Models\ProductBatch;
+use App\Models\StockRequest;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StoreProductController extends Controller
 {
@@ -73,6 +77,7 @@ class StoreProductController extends Controller
         $request->validate([
             'product_name' => 'required|string|max:255',
             'sku' => 'required|unique:products,sku',
+            'barcode' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id', // <--- VALIDATION ADD KI
             'category_id' => 'required',
             'selling_price' => 'required|numeric',
@@ -128,8 +133,13 @@ class StoreProductController extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
+        $oldPrice = (float) $product->price;
 
         if ($product->store_id != null) {
+            $request->validate([
+                'barcode' => 'required|string|max:255',
+            ]);
+
             $product->update($request->only([
                 'product_name',
                 'description',
@@ -146,8 +156,27 @@ class StoreProductController extends Controller
         }
 
         if ($product->store_id != null && $request->has('selling_price')) {
-             $product->update(['price' => $request->selling_price]);
-             StoreStock::where('product_id', $product->id)->update(['selling_price' => $request->selling_price]);
+             $newPrice = (float) $request->selling_price;
+             $product->update(['price' => $newPrice]);
+             StoreStock::where('product_id', $product->id)->update(['selling_price' => $newPrice]);
+
+            if (abs($oldPrice - $newPrice) > 0.0001 && Schema::hasTable('price_history')) {
+                DB::table('price_history')->insert([
+                    'product_id' => $product->id,
+                    'old_price' => $oldPrice,
+                    'new_price' => $newPrice,
+                    'old_margin' => $product->margin_percent,
+                    'new_margin' => $product->margin_percent,
+                    'changed_by' => Auth::id(),
+                    'changed_at' => now(),
+                    'effective_from' => now()->toDateString(),
+                    'effective_to' => null,
+                    'reason' => 'Manual price update from Store Product edit screen',
+                    'change_type' => 'manual',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         // [NOTIFICATION]
@@ -319,6 +348,34 @@ class StoreProductController extends Controller
             'locations',
             'totalSold',
             'avgDaily'
+        ));
+    }
+
+    public function locationInventory($id)
+    {
+        $product = Product::findOrFail($id);
+
+        $locationStocks = StoreStock::with('store')
+            ->where('product_id', $product->id)
+            ->orderBy('store_id')
+            ->get();
+
+        $inTransitByStore = StockRequest::where('product_id', $product->id)
+            ->where('status', StockRequest::STATUS_DISPATCHED)
+            ->select('store_id', DB::raw('SUM(COALESCE(fulfilled_quantity, requested_quantity)) as qty'))
+            ->groupBy('store_id')
+            ->pluck('qty', 'store_id');
+
+        // Proxy for warehouse quantity: total warehouse batch stock (store_id NULL).
+        $warehouseQty = (float) ProductBatch::where('product_id', $product->id)
+            ->whereNull('store_id')
+            ->sum('quantity');
+
+        return view('store.products.location-inventory', compact(
+            'product',
+            'locationStocks',
+            'inTransitByStore',
+            'warehouseQty'
         ));
     }
 

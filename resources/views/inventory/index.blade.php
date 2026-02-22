@@ -37,9 +37,10 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4 py-3 text-muted small fw-bold">PRODUCT</th>
-                                    <th class="py-3 text-muted small fw-bold">SKU</th>
                                     <th class="py-3 text-muted small fw-bold">CATEGORY</th>
+                                    <th class="py-3 text-muted small fw-bold">SUBCATEGORY</th>
                                     <th class="py-3 text-muted small fw-bold">QUANTITY</th>
+                                    <th class="py-3 text-muted small fw-bold">IN TRANSIT</th>
                                     <th class="py-3 text-muted small fw-bold">STATUS</th>
                                     <th class="pe-4 py-3 text-end text-muted small fw-bold">LAST UPDATED</th>
                                 </tr>
@@ -53,13 +54,11 @@
                                                 <i class="mdi mdi-cube-outline text-primary fs-4"></i>
                                             </div>
                                             <div>
+                                                <small class="d-block text-muted font-monospace">UPC: {{ $stock->product->barcode ?: 'N/A' }}</small>
                                                 <h6 class="mb-0 fw-semibold text-dark">{{ $stock->product->product_name }}</h6>
-                                                <small class="text-muted">{{ $stock->product->unit }}</small>
+                                                <small class="text-muted">{{ $stock->product->unit }} | SKU: {{ $stock->product->sku ?? '-' }}</small>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="font-monospace text-muted">{{ $stock->product->sku ?? '-' }}</span>
                                     </td>
                                     <td>
                                         <span class="badge bg-info bg-opacity-10 text-info px-2 py-1">
@@ -67,10 +66,21 @@
                                         </span>
                                     </td>
                                     <td>
+                                        <span class="badge bg-light text-dark border">
+                                            {{ $stock->product->subcategory->name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <span class="h6 mb-0 fw-bold">{{ $stock->quantity }}</span>
                                     </td>
                                     <td>
-                                        @if($stock->quantity > 10)
+                                        <span class="h6 mb-0 fw-bold text-primary">{{ (int) ($inTransitByProduct[$stock->product_id] ?? 0) }}</span>
+                                    </td>
+                                    <td>
+                                        @php $inTransitQty = (int) ($inTransitByProduct[$stock->product_id] ?? 0); @endphp
+                                        @if($stock->quantity <= 0 && $inTransitQty > 0)
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info px-3 rounded-pill">In Transit</span>
+                                        @elseif($stock->quantity > 10)
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 rounded-pill">In Stock</span>
                                         @elseif($stock->quantity > 0)
                                             <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 rounded-pill">Low Stock</span>
@@ -84,7 +94,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="text-muted">
                                             <i class="mdi mdi-package-variant-closed fs-1 d-block mb-2 opacity-50"></i>
                                             <p class="mb-0">No stock found in your inventory.</p>

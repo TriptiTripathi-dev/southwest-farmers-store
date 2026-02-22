@@ -581,16 +581,29 @@
     </style>
     @endpush
 
+    @php
+        $brandLogo = asset('assets/images/logo.jpg');
+        $brandName = 'Home Food Distributors';
+        $settings = \App\Models\StoreSetting::first();
+        if ($settings) {
+            if (!empty($settings->logo)) {
+                $brandLogo = asset('storage/' . $settings->logo);
+            }
+            if (!empty($settings->app_name)) {
+                $brandName = $settings->app_name;
+            }
+        }
+    @endphp
+
     <div class="pos-wrapper">
         <div class="left-panel">
             <div class="pos-header">
                 <div class="row align-items-center g-2 g-md-3">
                     <div class="col-auto">
-                        <div class="store-icon">
-                            <i class="mdi mdi-storefront"></i>
-                        </div>
+                        <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="rounded border bg-white p-1" style="width: 44px; height: 44px; object-fit: contain;">
                     </div>
                     <div class="col flex-grow-1 min-w-0">
+                        <small class="text-primary fw-bold d-block">{{ $brandName }}</small>
                         <h5 class="mb-0 fw-bold text-dark" style="font-size: 15px;">{{ Auth::user()->store->store_name ?? 'GreenPOS (USA)' }}</h5>
                         <small class="text-muted d-block">{{ Auth::user()->store->address ?? 'Store Panel' }}</small>
                     </div>
@@ -717,6 +730,14 @@
                         </div>
                     </div>
                 </div>
+                <div id="cardAuthPanelDesktop" class="d-none mb-3">
+                    <div class="d-flex align-items-center justify-content-between bg-light rounded-3 px-2 py-2">
+                        <small class="fw-bold text-muted" id="cardAuthStatusDesktop">Card not authorized</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="openCardAuthModal()">
+                            Authorize Card
+                        </button>
+                    </div>
+                </div>
 
                 <div class="row g-2">
                     <div class="col-auto">
@@ -782,6 +803,14 @@
                         <div class="payment-method-btn text-center" onclick="selectPayment('check', this)">
                             <i class="mdi mdi-checkbook" style="font-size: 16px;"></i> Check
                         </div>
+                    </div>
+                </div>
+                <div id="cardAuthPanelMobile" class="d-none mb-3">
+                    <div class="d-flex align-items-center justify-content-between bg-light rounded-3 px-2 py-2">
+                        <small class="fw-bold text-muted" id="cardAuthStatusMobile">Card not authorized</small>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="openCardAuthModal()">
+                            Authorize Card
+                        </button>
                     </div>
                 </div>
 
@@ -936,6 +965,36 @@
         </div>
     </div>
 
+    <div class="modal fade" id="cardAuthModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary">Card Authorization</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Authorization Result</label>
+                        <select class="form-select form-control-custom" id="cardAuthResult">
+                            <option value="approved">Approved</option>
+                            <option value="declined">Declined</option>
+                            <option value="partial">Partial Approval</option>
+                        </select>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label fw-bold small">Approved Amount</label>
+                        <input type="number" min="0" step="0.01" class="form-control form-control-custom" id="cardApprovedAmount" placeholder="0.00">
+                    </div>
+                    <small class="text-muted">Partial approval is rejected. Approved amount must match order total.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="submitCardAuthorization()">Save Authorization</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <input type="hidden" id="paymentMethod" value="cash">
 
     @push('scripts')
@@ -965,6 +1024,11 @@
         let heldCarts = JSON.parse(localStorage.getItem('heldCarts')) || [];
 
         const TAX_RATE = 0.08;
+        let cardAuthState = {
+            attempted: false,
+            status: null,
+            approvedAmount: 0
+        };
 
         // HELPER TO FIX JSON OBJECT vs ARRAY ISSUE
         function preserveMaxStock(newCart) {
@@ -990,6 +1054,7 @@
             renderCart();
             loadProducts();
             renderHeldCarts();
+            updateCardAuthUI();
             $('#productSearch').focus();
 
             $('#productSearch').on('keyup', function() {
@@ -1148,6 +1213,7 @@
                                 <div class="product-card" onclick="addToCart(${p.product_id}, '${safeName}', ${p.price}, ${p.quantity})">
                                     <div class="product-img" style="background-image: url('${img}');"></div>
                                     <div class="product-content">
+                                        <small class="text-muted font-monospace">UPC: ${p.barcode || 'N/A'}</small>
                                         <div class="product-name" title="${p.product_name}">${p.product_name}</div>
                                         <span class="badge-stock ${badgeClass}">${badgeText}</span>
                                         <div class="product-footer">
@@ -1360,6 +1426,7 @@
                             $('#customerSearch, #customerSearchMobile').val('');
                             $('#selectedCustomerId, #selectedCustomerIdMobile').val('');
                             $('#discountInput, #discountInputMobile').val(0);
+                            resetCardAuthorization();
                         }
                     });
                 }
@@ -1370,6 +1437,137 @@
             $('.payment-method-btn').removeClass('active');
             $(element).addClass('active');
             $('#paymentMethod').val(method);
+            updateCardAuthUI();
+        }
+
+        function updateCardAuthUI() {
+            const isCard = $('#paymentMethod').val() === 'card';
+            $('#cardAuthPanelDesktop, #cardAuthPanelMobile').toggleClass('d-none', !isCard);
+
+            let statusText = 'Card not authorized';
+            if (cardAuthState.attempted && cardAuthState.status) {
+                if (cardAuthState.status === 'approved') {
+                    statusText = `Authorized: $${Number(cardAuthState.approvedAmount || 0).toFixed(2)}`;
+                } else if (cardAuthState.status === 'partial') {
+                    statusText = `Partial approval: $${Number(cardAuthState.approvedAmount || 0).toFixed(2)} (Rejected)`;
+                } else {
+                    statusText = 'Card declined';
+                }
+            }
+
+            $('#cardAuthStatusDesktop').text(statusText);
+            $('#cardAuthStatusMobile').text(statusText);
+        }
+
+        function resetCardAuthorization() {
+            cardAuthState = { attempted: false, status: null, approvedAmount: 0 };
+            updateCardAuthUI();
+        }
+
+        function openCardAuthModal() {
+            if ($('#paymentMethod').val() !== 'card') {
+                return;
+            }
+
+            const currentTotal = parseFloat($('#grandTotal').text().replace('$', '')) || 0;
+            $('#cardAuthResult').val('approved');
+            $('#cardApprovedAmount').val(currentTotal.toFixed(2));
+
+            const modalEl = document.getElementById('cardAuthModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        function submitCardAuthorization() {
+            const status = $('#cardAuthResult').val();
+            const approvedAmount = parseFloat($('#cardApprovedAmount').val() || 0);
+
+            cardAuthState = {
+                attempted: true,
+                status: status,
+                approvedAmount: approvedAmount
+            };
+
+            updateCardAuthUI();
+
+            const modalEl = document.getElementById('cardAuthModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            if (status !== 'approved') {
+                showCardFailureOptions(
+                    status === 'partial'
+                        ? 'Insufficient funds. Full amount required.'
+                        : 'Card declined. Choose another payment method.'
+                );
+            } else {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Card authorized',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        }
+
+        function switchToCashAfterCardFailure() {
+            const cashButton = $('.payment-method-btn').filter(function() {
+                return $(this).text().toLowerCase().includes('cash');
+            }).first();
+
+            if (cashButton.length) {
+                selectPayment('cash', cashButton[0]);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: 'Switched to cash',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        }
+
+        function cancelSaleAfterCardFailure() {
+            $.ajax({
+                url: "{{ route('store.sales.cart.clear') }}",
+                method: "POST",
+                data: { _token: csrfToken },
+                success: function() {
+                    cart = [];
+                    renderCart();
+                    $('#customerSearch, #customerSearchMobile').val('');
+                    $('#selectedCustomerId, #selectedCustomerIdMobile').val('');
+                    $('#discountInput, #discountInputMobile').val(0);
+                    resetCardAuthorization();
+                    selectPayment('cash', $('.payment-method-btn').filter(function() {
+                        return $(this).text().toLowerCase().includes('cash');
+                    }).first()[0]);
+                }
+            });
+        }
+
+        function showCardFailureOptions(message) {
+            Swal.fire({
+                title: 'Card Authorization Failed',
+                text: message || 'Card declined. Choose another payment method.',
+                icon: 'error',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Try Again',
+                denyButtonText: 'Switch to Cash',
+                cancelButtonText: 'Cancel Sale'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    openCardAuthModal();
+                } else if (result.isDenied) {
+                    switchToCashAfterCardFailure();
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    cancelSaleAfterCardFailure();
+                }
+            });
         }
 
         function holdCart() {
@@ -1405,6 +1603,7 @@
                             $('#customerSearch, #customerSearchMobile').val('');
                             $('#selectedCustomerId, #selectedCustomerIdMobile').val('');
                             $('#discountInput, #discountInputMobile').val(0);
+                            resetCardAuthorization();
                             Swal.fire({ icon: 'success', title: 'Held', timer: 1500, showConfirmButton: false });
                         }
                     });
@@ -1501,29 +1700,55 @@
             let total = parseFloat($('#grandTotal').text().replace('$', ''));
             let discount = parseFloat($('#discountInput').val() || $('#discountInputMobile').val() || 0);
             let custId = $('#selectedCustomerId').val() || $('#selectedCustomerIdMobile').val();
+            let paymentMethod = $('#paymentMethod').val();
+
+            if (paymentMethod === 'card') {
+                if (!cardAuthState.attempted) {
+                    btn.prop('disabled', false);
+                    openCardAuthModal();
+                    return;
+                }
+
+                if (cardAuthState.status !== 'approved') {
+                    btn.prop('disabled', false);
+                    showCardFailureOptions(
+                        cardAuthState.status === 'partial'
+                            ? 'Insufficient funds. Full amount required.'
+                            : 'Card declined. Choose another payment method.'
+                    );
+                    return;
+                }
+            }
+
+            const payload = {
+                _token: csrfToken,
+                cart: JSON.stringify(cart),
+                customer_id: custId,
+                payment_method: paymentMethod,
+                status: 'completed',
+                subtotal: sub,
+                tax_amount: tax,
+                gst_amount: tax,
+                discount_amount: discount,
+                total_amount: total
+            };
+
+            if (paymentMethod === 'card') {
+                payload.card_auth_status = cardAuthState.status;
+                payload.card_approved_amount = cardAuthState.approvedAmount;
+            }
 
             $.ajax({
                 url: "{{ route('store.sales.checkout') }}",
                 method: "POST",
-                data: {
-                    _token: csrfToken,
-                    cart: JSON.stringify(cart),
-                    customer_id: custId,
-                    payment_method: $('#paymentMethod').val(),
-                    status: 'completed',
-                    subtotal: sub,
-                    tax_amount: tax,
-                    gst_amount: tax,
-                    discount_amount: discount,
-                    total_amount: total
-                },
+                data: payload,
                 success: function(res) {
                     $('#modalInvoiceNo').text(res.invoice);
                     $('#modalAmount').text('$' + total.toFixed(2));
                     $('#modalSubtotal').text('$' + sub.toFixed(2));
                     $('#modalTax').text('$' + tax.toFixed(2));
                     $('#modalDiscount').text('-$' + discount.toFixed(2));
-                    $('#modalPaymentMode').text($('#paymentMethod').val().toUpperCase());
+                    $('#modalPaymentMode').text(paymentMethod.toUpperCase());
 
                     let modalItemsHtml = '';
                     cart.forEach(item => {
@@ -1547,12 +1772,26 @@
                             $('#customerSearch, #customerSearchMobile').val('');
                             $('#selectedCustomerId, #selectedCustomerIdMobile').val('');
                             $('#discountInput, #discountInputMobile').val(0);
+                            resetCardAuthorization();
+                            selectPayment('cash', $('.payment-method-btn').filter(function() {
+                                return $(this).text().toLowerCase().includes('cash');
+                            }).first()[0]);
                             loadProducts();
                         }
                     });
                 },
                 error: function(err) {
-                    Swal.fire('Failed', err.responseJSON?.message || 'Error', 'error');
+                    const response = err.responseJSON || {};
+
+                    if (response.error_code === 'CARD_DECLINED' || response.error_code === 'PARTIAL_AUTH_DECLINED') {
+                        cardAuthState.attempted = true;
+                        cardAuthState.status = response.error_code === 'CARD_DECLINED' ? 'declined' : 'partial';
+                        updateCardAuthUI();
+                        showCardFailureOptions(response.message);
+                        return;
+                    }
+
+                    Swal.fire('Failed', response.message || 'Error', 'error');
                 },
                 complete: function() {
                     btn.prop('disabled', false);

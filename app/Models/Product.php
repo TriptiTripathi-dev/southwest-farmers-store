@@ -19,10 +19,35 @@ class Product extends Model
         'barcode',
         'unit',
         'price',
+        'cost_price',
+        'margin_percent',
+        'pack_size',
+        'box_weight',
+        'shelf_life_days',
+        'promotion_price',
+        'promotion_start_date',
+        'promotion_end_date',
         'icon',
         'description', 
         'is_active'
     ];
+
+    protected $casts = [
+        'price' => 'float',
+        'cost_price' => 'float',
+        'margin_percent' => 'float',
+        'box_weight' => 'float',
+        'promotion_price' => 'float',
+        'promotion_start_date' => 'datetime',
+        'promotion_end_date' => 'datetime',
+        'taxable' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
+    public function getUpcCodeAttribute(): ?string
+    {
+        return $this->barcode;
+    }
 
     // Helper to check if Global
     public function getIsGlobalAttribute()

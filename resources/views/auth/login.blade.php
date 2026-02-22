@@ -10,9 +10,13 @@
     
     // Check if store user is logged in and has a custom favicon
      $login_logo = asset('assets/images/logo.jpg');
+        $brand_name = 'Home Food Distributors';
         $settings = \App\Models\StoreSetting::first();
         if($settings && $settings->login_logo) {
             $login_logo = asset('storage/' . $settings->login_logo);
+        }
+        if($settings && $settings->app_name) {
+            $brand_name = $settings->app_name;
         }
 
 @endphp
@@ -41,9 +45,9 @@
 
                                 {{-- Optional: Add welcome text or illustration on left side --}}
                                 <div class="text-center text-lg-start">
-                                    <h2 class="fw-bold text-dark mb-3 d-none d-lg-block">Store POS</h2>
+                                    <h2 class="fw-bold text-dark mb-3 d-none d-lg-block">{{ $brand_name }}</h2>
                                     <p class="text-muted fs-15 d-none d-lg-block">
-                                        Manage your store operations efficiently with our comprehensive point of sale system.
+                                        Manage store and warehouse operations with {{ $brand_name }}.
                                     </p>
                                 </div>
                             </div>
@@ -57,7 +61,7 @@
                                         Welcome Back
                                     </h3>
                                     <p class="text-muted fs-14 mb-0">
-                                        Please sign in to continue to <strong>Store POS</strong>.
+                                        Please sign in to continue to <strong>{{ $brand_name }}</strong>.
                                     </p>
                                 </div>
 
@@ -153,7 +157,7 @@
 
                                 {{-- Optional: Additional links --}}
                                 <div class="text-center text-muted mt-4">
-                                    <small>© {{ date('Y') }} Store POS. All rights reserved.</small>
+                                    <small>&copy; {{ date('Y') }} {{ $brand_name }}. All rights reserved.</small>
                                 </div>
 
                             </div>
@@ -217,3 +221,4 @@
         }
     </style>
 </x-guest-layout>
+

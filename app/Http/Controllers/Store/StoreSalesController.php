@@ -287,6 +287,7 @@ class StoreSalesController extends Controller
                 'store_stocks.quantity',
                 'products.product_name',
                 'products.sku',
+                'products.barcode',
                 'products.price',
                 'products.icon',
                 'product_categories.name as category_name'
@@ -356,6 +357,7 @@ class StoreSalesController extends Controller
         $request->validate([
             'cart' => 'required|json',
             'customer_id' => 'required|exists:store_customers,id',
+            'payment_method' => 'required|in:cash,card,check,upi,bank_transfer',
             'subtotal' => 'required|numeric',
             'gst_amount' => 'required|numeric',
             'tax_amount' => 'required|numeric',
@@ -366,6 +368,39 @@ class StoreSalesController extends Controller
         $cart = json_decode($request->cart, true);
         if (empty($cart)) {
             return response()->json(['message' => 'Cart is empty'], 400);
+        }
+
+        $paymentMethod = strtolower((string) $request->payment_method);
+        $totalAmount = round((float) $request->total_amount, 2);
+
+        // Card authorization guardrails:
+        // - Declined transactions are rejected.
+        // - Partial approvals are rejected.
+        // - Approved amount must exactly match order total.
+        if ($paymentMethod === 'card') {
+            $request->validate([
+                'card_auth_status' => 'required|in:approved,declined,partial',
+                'card_approved_amount' => 'required|numeric|min:0',
+            ]);
+
+            $cardAuthStatus = strtolower((string) $request->card_auth_status);
+            $cardApprovedAmount = round((float) $request->card_approved_amount, 2);
+
+            if ($cardAuthStatus === 'declined') {
+                return response()->json([
+                    'message' => 'Card declined. Choose another payment method.',
+                    'error_code' => 'CARD_DECLINED',
+                    'allow_switch_to_cash' => true,
+                ], 422);
+            }
+
+            if ($cardAuthStatus === 'partial' || $cardApprovedAmount < $totalAmount || abs($cardApprovedAmount - $totalAmount) > 0.009) {
+                return response()->json([
+                    'message' => 'Insufficient funds. Full amount required.',
+                    'error_code' => 'PARTIAL_AUTH_DECLINED',
+                    'allow_switch_to_cash' => true,
+                ], 422);
+            }
         }
 
         $storeId = Auth::user()->store_id;
@@ -391,7 +426,7 @@ class StoreSalesController extends Controller
                 'tax_amount' => $request->tax_amount,
                 'discount_amount' => $request->discount_amount,
                 'total_amount' => $request->total_amount,
-                'payment_method' => $request->payment_method, // Later add payment method selection
+                'payment_method' => $paymentMethod,
                 'created_by' => Auth::id(),
             ]);
 

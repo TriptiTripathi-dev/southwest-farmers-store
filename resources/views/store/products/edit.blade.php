@@ -174,8 +174,8 @@
                                                     <input type="text" name="unit" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3" value="{{ $product->unit }}" {{ !$product->store_id ? 'readonly' : '' }}>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Barcode</label>
-                                                    <input type="text" name="barcode" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3 font-monospace" value="{{ $product->barcode }}" {{ !$product->store_id ? 'readonly' : '' }}>
+                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">UPC Code</label>
+                                                    <input type="text" name="barcode" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3 font-monospace" value="{{ $product->barcode }}" {{ !$product->store_id ? 'readonly' : '' }} {{ $product->store_id ? 'required' : '' }}>
                                                 </div>
                                             </div>
                                         </div>

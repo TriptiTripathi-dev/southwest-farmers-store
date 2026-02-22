@@ -1,6 +1,19 @@
 <div class="topbar-custom">
     <div class="container-fluid">
         <div class="d-flex justify-content-between">
+            @php
+                $brandLogo = asset('assets/images/logo.jpg');
+                $brandName = 'Home Food Distributors';
+                $settings = \App\Models\StoreSetting::first();
+                if ($settings) {
+                    if (!empty($settings->logo)) {
+                        $brandLogo = asset('storage/' . $settings->logo);
+                    }
+                    if (!empty($settings->app_name)) {
+                        $brandName = $settings->app_name;
+                    }
+                }
+            @endphp
 
             {{-- LEFT --}}
             <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
@@ -9,6 +22,10 @@
                         <iconify-icon icon="tabler:align-left"
                             class="fs-20 align-middle text-dark topbar-button"></iconify-icon>
                     </button>
+                </li>
+                <li class="ms-2 d-flex align-items-center">
+                    <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="rounded border bg-white p-1 me-2" style="width: 34px; height: 34px; object-fit: contain;">
+                    <span class="fw-bold text-dark d-none d-md-inline">{{ $brandName }}</span>
                 </li>
             </ul>
 
