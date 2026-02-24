@@ -140,7 +140,7 @@
                     <div class="col-12 text-center py-5">
                         <div class="bg-white p-5 rounded-4 shadow-sm inline-block">
                             <i class="mdi mdi-package-variant-closed fs-1 text-muted"></i>
-                            <h4 class="mt-4 fw-bold text-dark">No products found</h4>
+                            <h4 class="mt-4 fw-bold text-dark">No product found</h4>
                             <p class="text-muted">Try adjusting your filters or check back later.</p>
                         </div>
                     </div>
