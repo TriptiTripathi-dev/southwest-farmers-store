@@ -15,49 +15,74 @@ class AutoRestock extends Command
 
     public function handle()
     {
-        // 1. Find stocks where quantity is below or equal to min_stock
-        // AND where max_stock is set (greater than 0)
+        $today = now()->format('l'); // Current day name (e.g., Monday)
+        
+        // 1. Find all stocks that are low and have a max_stock set
         $lowStocks = StoreStock::whereColumn('quantity', '<=', 'min_stock')
             ->where('max_stock', '>', 0)
-            ->get();
+            ->with('product') // Eager load product for unit_cost
+            ->get()
+            ->groupBy('store_id');
 
-        $count = 0;
+        $orderCount = 0;
 
-        foreach ($lowStocks as $stock) {
+        foreach ($lowStocks as $storeId => $items) {
             
-            // 2. Check if there is already a PENDING request for this product/store
-            // We don't want to create duplicate requests if the admin hasn't approved the previous one yet.
-            $existingRequest = StockRequest::where('store_id', $stock->store_id)
-                ->where('product_id', $stock->product_id)
-                ->whereIn('status', ['pending', 'dispatched']) // Don't order if one is on the way
-                ->exists();
-
-            if ($existingRequest) {
+            // 2. Check Store Schedule
+            $schedule = \App\Models\StoreOrderSchedule::where('store_id', $storeId)->first();
+            if ($schedule && $schedule->expected_day !== $today) {
+                // Skip if it's not the scheduled day (e.g., skip Tuesday if it's Monday)
                 continue;
             }
 
-            // 3. Calculate Order Quantity
-            // Replenish up to max stock considering what is already in transit.
-            $inTransitQty = (int) StockRequest::where('store_id', $stock->store_id)
-                ->where('product_id', $stock->product_id)
-                ->where('status', 'dispatched')
-                ->sum(DB::raw('COALESCE(fulfilled_quantity, requested_quantity)'));
-            $qtyToOrder = max(0, $stock->max_stock - ($stock->quantity + $inTransitQty));
+            // 3. Check for existing PENDING or APPROVED orders for this store
+            $existingPO = \App\Models\StorePurchaseOrder::where('store_id', $storeId)
+                ->whereIn('status', ['pending', 'approved', 'dispatched'])
+                ->exists();
 
-            if ($qtyToOrder > 0) {
-                StockRequest::create([
-                    'store_id' => $stock->store_id,
-                    'product_id' => $stock->product_id,
-                    'requested_quantity' => $qtyToOrder,
-                    'status' => 'pending',
-                    'store_remarks' => 'Auto-generated: Low Stock Alert',
-                ]);
-                
-                $count++;
+            if ($existingPO) {
+                // Don't create another order if one is already in progress
+                continue;
             }
+
+            // 4. Create the multi-item Purchase Order
+            DB::transaction(function () use ($storeId, $items, &$orderCount) {
+                $po = \App\Models\StorePurchaseOrder::create([
+                    'store_id' => $storeId,
+                    'po_number' => \App\Models\StorePurchaseOrder::generatePONumber($storeId),
+                    'status' => 'pending',
+                    'store_remarks' => 'Auto-generated based on low stock levels and ' . now()->format('l') . ' schedule.',
+                ]);
+
+                foreach ($items as $stock) {
+                    // Calculate replenishment quantity considering in-transit
+                    $inTransitQty = (int) \App\Models\StockRequest::where('store_id', $storeId)
+                        ->where('product_id', $stock->product_id)
+                        ->whereIn('status', ['pending', 'approved', 'dispatched'])
+                        ->sum('requested_quantity');
+                    
+                    $qtyToOrder = max(0, $stock->max_stock - ($stock->quantity + $inTransitQty));
+
+                    if ($qtyToOrder > 0) {
+                        $po->items()->create([
+                            'product_id' => $stock->product_id,
+                            'quantity' => $qtyToOrder,
+                            'unit_cost' => $stock->product->cost_price ?? 0,
+                            'total_cost' => $qtyToOrder * ($stock->product->cost_price ?? 0),
+                        ]);
+                    }
+                }
+
+                if ($po->items()->count() > 0) {
+                    $po->calculateTotals();
+                    $orderCount++;
+                } else {
+                    $po->delete(); // Nothing to order for this store
+                }
+            });
         }
 
-        $this->info("Successfully generated $count auto-stock requests.");
-        Log::info("AutoRestock Run: Generated $count requests.");
+        $this->info("Successfully generated $orderCount Purchase Orders.");
+        Log::info("AutoRestock Run: Generated $orderCount POs for " . $today);
     }
 }

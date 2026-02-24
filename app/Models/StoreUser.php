@@ -7,9 +7,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class StoreUser extends Authenticatable
 {
-    use Notifiable, SoftDeletes, HasRoles;
+    use Notifiable, SoftDeletes, HasRoles, HasFactory;
 
     protected $table = 'store_users';
     protected $guard_name = 'store_user';

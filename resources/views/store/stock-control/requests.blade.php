@@ -1,121 +1,178 @@
-<x-app-layout title="Request Stock">
+<x-app-layout title="Purchase Orders">
 
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-cart-plus text-primary me-2"></i> Request Stock
+                <i class="mdi mdi-file-document text-primary me-2"></i> Purchase Orders
             </h4>
-            <small class="text-muted">Request new stock from warehouse</small>
+            <small class="text-muted">Manage store purchase orders and stock requests</small>
         </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
-            <i class="mdi mdi-plus me-1"></i> New Request
-        </button>
-    </div>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover table-bordered align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Product</th>
-                        <th>Requested Qty</th>
-                        <th>Status</th>
-                        <th>Reason</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($requests as $request)
-                        <tr>
-                            <td>#{{ $request->id }}</td>
-                            <td>{{ $request->product->product_name }}</td>
-                            <td>{{ $request->requested_quantity }}</td>
-                            <td>
-                                <span class="badge bg-{{ $request->status == 'pending' ? 'warning' : ($request->status == 'completed' ? 'success' : 'danger') }}">
-                                    {{ ucwords($request->status) }}
-                                </span>
-                            </td>
-                            <td>{{ ucwords($request->reason) }}</td>
-                            <td>{{ $request->created_at->format('d M Y') }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center py-4 text-muted">No stock requests found</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-            {{ $requests->links() }}
+        <div class="d-flex gap-2">
+            <form action="{{ route('store.stock-control.generate-replenishment') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-outline-primary fw-bold px-4 rounded-pill shadow-sm">
+                    <i class="mdi mdi-auto-fix me-1"></i> Replenish from Warehouse
+                </button>
+            </form>
+            <a href="{{ route('store.stock-control.requests.create') }}" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">
+                <i class="mdi mdi-plus me-1"></i> Create New PO
+            </a>
         </div>
     </div>
 
-    <!-- New Request Modal -->
-    <div class="modal fade" id="newRequestModal">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">New Stock Request</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body p-3">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search Request #..." value="{{ request('search') }}">
                 </div>
-                <form action="{{ route('store.stock-control.requests.store') }}" method="POST" class="needs-validation" novalidate>
-                    @csrf
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Product <span class="text-danger">*</span></label>
-                                <select name="product_id" class="form-select" required>
-                                    <option value="">Select Product</option>
-                                    @foreach(\App\Models\Product::where('is_active', true)->get() as $p)
-                                        <option value="{{ $p->id }}">{{ $p->product_name }} ({{ $p->sku ?? 'N/A' }})</option>
-                                    @endforeach
-                                </select>
-                                <div class="invalid-feedback">Select a product</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                <input type="number" name="quantity" class="form-control" min="1" required>
-                                <div class="invalid-feedback">Enter quantity</div>
-                            </div>
-                        </div>
-                        <div class="mb-3 mt-3">
-                            <label class="form-label">Reason <span class="text-danger">*</span></label>
-                            <select name="reason" class="form-select" required>
-                                <option value="">Select Reason</option>
-                                <option value="low_stock">Low Stock</option>
-                                <option value="urgent_sale">Urgent Sale</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <div class="invalid-feedback">Select reason</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="mdi mdi-send me-1"></i> Send Request
-                        </button>
-                    </div>
-                </form>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="dispatched" {{ request('status') == 'dispatched' ? 'selected' : '' }}>Dispatched</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="mdi mdi-filter me-1"></i> Filter
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ route('store.stock-control.requests') }}" class="btn btn-outline-secondary w-100">
+                        <i class="mdi mdi-refresh me-1"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PO List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Request #</th>
+                            <th>Date</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Total Items</th>
+                            <th class="text-end">Total Amount</th>
+                            <th>Requested By</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($requests as $request)
+                            <tr class="cursor-pointer" onclick="window.location='{{ route('store.stock-control.requests.show', $request->id) }}'">
+                                <td class="ps-4">
+                                    <span class="font-monospace fw-bold text-primary">{{ $request->request_number ?? 'REQ-' . str_pad($request->id, 3, '0', STR_PAD_LEFT) }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ $request->created_at->format('d M Y') }}</small>
+                                    <br><small class="text-muted">{{ $request->created_at->format('h:i A') }}</small>
+                                </td>
+                                <td class="text-center">
+                                    @if($request->status == 'pending')
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="mdi mdi-clock-outline me-1"></i>Pending
+                                        </span>
+                                    @elseif($request->status == 'dispatched')
+                                        <span class="badge bg-info">
+                                            <i class="mdi mdi-truck-delivery me-1"></i>Dispatched
+                                        </span>
+                                    @elseif($request->status == 'completed')
+                                        <span class="badge bg-success">
+                                            <i class="mdi mdi-check-circle me-1"></i>Completed
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger">
+                                            <i class="mdi mdi-close-circle me-1"></i>Rejected
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                        {{ $request->total_items ?? $request->items->count() ?? 0 }} items
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold text-success">
+                                    ₹{{ number_format($request->total_amount ?? $request->items->sum('total_cost') ?? 0, 2) }}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ $request->requestedBy->name ?? 'N/A' }}</small>
+                                </td>
+                                <td class="text-center" onclick="event.stopPropagation()">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ route('store.stock-control.requests.show', $request->id) }}" class="btn btn-outline-primary" title="View Details">
+                                            <i class="mdi mdi-eye"></i>
+                                        </a>
+                                        @if($request->status == 'pending')
+                                            <a href="{{ route('store.stock-control.requests.edit', $request->id) }}" class="btn btn-outline-warning" title="Edit">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" onclick="cancelPO({{ $request->id }})" title="Cancel">
+                                                <i class="mdi mdi-close"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="mdi mdi-file-document-outline mb-2 fs-1"></i>
+                                    <p>No purchase orders found</p>
+                                    <a href="{{ route('store.stock-control.requests.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="mdi mdi-plus me-1"></i> Create First PO
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
+        @if($requests->hasPages())
+            <div class="card-footer bg-white border-top">
+                {{ $requests->links() }}
+            </div>
+        @endif
     </div>
 
 </div>
 
 @push('scripts')
 <script>
-document.querySelectorAll('.needs-validation').forEach(form => {
-    form.addEventListener('submit', e => {
-        if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        form.classList.add('was-validated');
-    }, false);
+function cancelPO(id) {
+    if (confirm('Are you sure you want to cancel this purchase order?')) {
+        fetch(`/store/stock-control/requests/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to cancel PO');
+            }
+        });
+    }
+}
+
+// Add cursor pointer style
+document.querySelectorAll('.cursor-pointer').forEach(row => {
+    row.style.cursor = 'pointer';
 });
 </script>
 @endpush

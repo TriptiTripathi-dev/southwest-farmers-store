@@ -12,12 +12,20 @@ return [
             'driver' => 'session',
             'provider' => 'store_users',
         ],
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'customers',
+        ],
     ],
 
     'providers' => [
         'store_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\StoreUser::class,
+        ],
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Customer::class,
         ],
     ],
 

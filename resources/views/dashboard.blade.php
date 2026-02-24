@@ -13,6 +13,16 @@
                 </p>
             </div>
 
+            @if(isset($data['order_schedule']))
+                <div class="alert alert-info border-0 shadow-sm p-3 mb-0 d-flex align-items-center rounded-3 bg-white" style="border-left: 4px solid #0dcaf0 !important;">
+                    <i class="mdi mdi-calendar-clock fs-4 text-info me-3"></i>
+                    <div>
+                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Next Expected Order Day</small>
+                        <span class="fw-bold text-dark">{{ $data['order_schedule']->expected_day }}</span>
+                    </div>
+                </div>
+            @endif
+
             <form method="GET" class="d-flex align-items-center gap-2 bg-white p-2 rounded-3 shadow-sm border">
                 <div class="input-group input-group-sm">
                     <input type="date" name="start_date" class="form-control border-0 bg-light" value="{{ $start->format('Y-m-d') }}">

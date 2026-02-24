@@ -10,6 +10,7 @@ use App\Models\Sale;
 use App\Models\StoreStock;
 use App\Models\StockRequest;
 use App\Models\SaleItem;
+use App\Models\StoreOrderSchedule;
 
 class StoreDashboardController extends Controller
 {
@@ -104,6 +105,9 @@ class StoreDashboardController extends Controller
                 ->limit(6)
                 ->get();
         }
+
+        // D. Order Schedule
+        $data['order_schedule'] = StoreOrderSchedule::where('store_id', $storeId)->first();
 
         return view('dashboard', compact('data', 'start', 'end'));
     }

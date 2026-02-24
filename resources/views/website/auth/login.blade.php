@@ -25,7 +25,7 @@
                                     <p class="text-muted">Enter your email and password to access your account.</p>
                                 </div>
 
-                                <form method="POST" action="{{ route('login') }}">
+                                <form method="POST" action="{{ route('website.login.post') }}">
                                     @csrf
 
                                     <div class="form-floating mb-4">
@@ -62,9 +62,8 @@
                                         Login to Account
                                     </button>
 
-                                    <p class="text-center text-muted mb-0">
                                         Don't have an account? 
-                                        <a href="{{ route('register') }}" class="text-theme fw-bold text-decoration-none">Sign up here</a>
+                                        <a href="{{ route('website.register') }}" class="text-theme fw-bold text-decoration-none">Sign up here</a>
                                     </p>
                                 </form>
                             </div>

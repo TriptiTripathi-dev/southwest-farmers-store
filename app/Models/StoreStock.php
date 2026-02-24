@@ -7,12 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class StoreStock extends Model
 {
     protected $fillable = [
-        'store_id', 
-        'product_id', 
-        'quantity', 
+        'store_id',
+        'product_id',
+        'quantity',
+        'in_transit_qty',
+        'status',
         'selling_price',
-        'min_stock', // Added
-        'max_stock'  // Added
+        'min_stock',
+        'max_stock'
+    ];
+
+    protected $casts = [
+        'quantity' => 'integer',
+        'in_transit_qty' => 'integer',
     ];
 
     public function product()
