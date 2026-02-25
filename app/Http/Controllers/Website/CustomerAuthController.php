@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
+use App\Models\StoreCustomer;
+use App\Models\StoreDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class CustomerAuthController extends Controller
 {
     // ─── Login ─────────────────────────────────────────────────────────
 
-    public function showLogin()
+    public function showLoginForm()
     {
         if (Auth::guard('customer')->check()) {
             return redirect()->route('website.dashboard');
@@ -30,17 +32,18 @@ class CustomerAuthController extends Controller
 
         if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            // Try to redirect to intended or dashboard
             return redirect()->intended(route('website.dashboard'));
         }
 
         return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
+            'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
     }
 
     // ─── Register ───────────────────────────────────────────────────────
 
-    public function showRegister()
+    public function showRegistrationForm()
     {
         if (Auth::guard('customer')->check()) {
             return redirect()->route('website.dashboard');
@@ -50,41 +53,38 @@ class CustomerAuthController extends Controller
 
     public function register(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'max:255', 'unique:customers,email'],
-            'phone'         => ['nullable', 'string', 'max:20'],
-            'gender'        => ['nullable', 'in:male,female,other'],
-            'date_of_birth' => ['nullable', 'date', 'before:today'],
-            'address'       => ['nullable', 'string', 'max:500'],
-            'city'          => ['nullable', 'string', 'max:100'],
-            'state'         => ['nullable', 'string', 'max:100'],
-            'zip_code'      => ['nullable', 'string', 'max:20'],
-            'country'       => ['nullable', 'string', 'max:100'],
+            'email'         => ['required', 'email', 'max:255', 'unique:store_customers,email'],
+            'phone'         => ['required', 'string', 'max:20'],
             'password'      => ['required', 'confirmed', Password::min(8)],
+            'address'       => ['nullable', 'string'],
+            'area'          => ['nullable', 'string', 'max:255'],
         ]);
 
-        $customer = Customer::create([
-            'name'          => $data['name'],
-            'email'         => $data['email'],
-            'phone'         => $data['phone'] ?? null,
-            'gender'        => $data['gender'] ?? null,
-            'date_of_birth' => $data['date_of_birth'] ?? null,
-            'address'       => $data['address'] ?? null,
-            'city'          => $data['city'] ?? null,
-            'state'         => $data['state'] ?? null,
-            'zip_code'      => $data['zip_code'] ?? null,
-            'country'       => $data['country'] ?? 'India',
-            'password'      => Hash::make($data['password']),
+        // Default to the first active store
+        $store = StoreDetail::where('is_active', true)->first();
+        $store_id = $store ? $store->id : 1;
+
+        $customer = StoreCustomer::create([
+            'store_id'   => $store_id,
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'phone'      => $request->phone,
+            'address'    => $request->address,
+            'area'       => $request->area,
+            'party_type' => 'Retail',
+            'is_active'  => true,
         ]);
 
         Auth::guard('customer')->login($customer);
 
         return redirect()->route('website.dashboard')
-            ->with('success', 'Welcome, ' . $customer->name . '! Your account has been created.');
+            ->with('success', 'Account created successfully! Welcome to FreshStore.');
     }
 
-    // ─── Dashboard / Account ─────────────────────────────────────────────
+    // ─── Dashboard ──────────────────────────────────────────────────────
 
     public function dashboard()
     {
@@ -97,8 +97,10 @@ class CustomerAuthController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('customer')->logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('website.home')->with('success', 'You have been logged out.');
     }
 }

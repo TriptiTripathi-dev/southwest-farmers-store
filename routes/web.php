@@ -30,36 +30,10 @@ use App\Http\Controllers\Warehouse\ProductController as WarehouseProductControll
 use App\Http\Controllers\Website\ProductController as WebsiteProductController;
 use App\Http\Controllers\Website\CartController;
 
-<<<<<<< HEAD
 // Redundant guest group removed (handled by auth.php)
 // Public-facing website module routes
 // Redundant website group removed (all website routes are in website.php)
-=======
-Route::middleware('guest')->group(function () {
-   
-    Route::get('/login', [LoginController::class, 'showLoginForm'])
-        ->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
-        ->name('password.request');
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
-        ->name('password.email');
-    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
-        ->name('password.reset');
-    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
-        ->name('password.update');
-});
 
-// Public-facing website module routes
-Route::prefix('')->name('website.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Website\HomeController::class, 'index'])->name('home');
-    Route::get('products', [WebsiteProductController::class, 'index'])->name('products.index');
-    Route::get('products/{product}', [WebsiteProductController::class, 'show'])->name('products.show');
-
-    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('cart', [CartController::class, 'store'])->name('cart.store');
-});
->>>>>>> 5e8809c65468bc3c7646316a77ffd6c2b7272310
 
 
 Route::get('/pos-test', function () {
