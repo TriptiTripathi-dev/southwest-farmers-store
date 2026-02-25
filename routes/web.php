@@ -24,14 +24,43 @@ use App\Http\Controllers\Store\StoreRecipeController;
 use App\Http\Controllers\Store\StoreReturnController;
 use App\Http\Controllers\Store\StoreStockControlController;
 use App\Http\Controllers\Store\StoreSupportTicketController;
+use App\Http\Controllers\Store\StoreOrderController;
 use App\Http\Controllers\StoreDashboardController;
 use App\Http\Controllers\Warehouse\ProductController as WarehouseProductController;
 use App\Http\Controllers\Website\ProductController as WebsiteProductController;
 use App\Http\Controllers\Website\CartController;
 
+<<<<<<< HEAD
 // Redundant guest group removed (handled by auth.php)
 // Public-facing website module routes
 // Redundant website group removed (all website routes are in website.php)
+=======
+Route::middleware('guest')->group(function () {
+   
+    Route::get('/login', [LoginController::class, 'showLoginForm'])
+        ->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
+        ->name('password.update');
+});
+
+// Public-facing website module routes
+Route::prefix('')->name('website.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Website\HomeController::class, 'index'])->name('home');
+    Route::get('products', [WebsiteProductController::class, 'index'])->name('products.index');
+    Route::get('products/{product}', [WebsiteProductController::class, 'show'])->name('products.show');
+
+    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('cart', [CartController::class, 'store'])->name('cart.store');
+});
+>>>>>>> 5e8809c65468bc3c7646316a77ffd6c2b7272310
+
 
 Route::get('/pos-test', function () {
     return view('pos-test');
@@ -85,6 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/requests/import', [StoreInventoryController::class, 'importStockRequests'])->name('inventory.requests.import');
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
+    Route::post('/stocks/convert', [StoreInventoryController::class, 'convertWeight'])->name('inventory.convert');
 
     // STOCK CONTROL MODULE - All Routes
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
@@ -93,12 +123,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/overview/data', [StoreStockControlController::class, 'overviewData'])->name('overview.data');
         Route::patch('recall/{id}/update-status', [StoreRecallController::class, 'updateStatus'])
             ->name('recall.update-status');
-        // Request Stock
+        // Request Stock (PO)
         Route::get('/requests', [StoreStockControlController::class, 'requests'])->name('requests');
-        Route::post('/requests', [StoreStockControlController::class, 'storeRequest'])->name('requests.store');
+        Route::get('/requests/create', [StoreStockControlController::class, 'create'])->name('requests.create');
+        Route::post('/requests/store', [StoreStockControlController::class, 'store'])->name('requests.store');
+        Route::post('/requests/generate-replenishment', [StoreStockControlController::class, 'generateReplenishment'])->name('generate-replenishment');
+        Route::get('/requests/{id}', [StoreStockControlController::class, 'show'])->name('requests.show');
+        Route::delete('/requests/{id}', [StoreStockControlController::class, 'destroy'])->name('requests.destroy');
+        Route::get('/requests/search-products', [StoreStockControlController::class, 'searchProducts'])->name('search-products');
 
-        // Pending Received
         Route::get('/received', [StoreStockControlController::class, 'received'])->name('received');
+        Route::get('/requests/{id}/receive', [StoreStockControlController::class, 'receive'])->name('requests.receive');
         Route::post('/received/{id}/confirm', [StoreStockControlController::class, 'confirmReceived'])->name('received.confirm');
 
         // Low Stock & Reorder
@@ -184,6 +219,25 @@ Route::middleware('auth')->group(function () {
                 Route::get('/{id}', 'show')->name('show');
                 Route::post('/{id}/reply', 'reply')->name('reply');
             });
+
+        // NEW: Phase 3 Store Purchase Orders
+        Route::prefix('purchase-orders')->name('orders.')->group(function () {
+            Route::get('/', [StoreOrderController::class, 'index'])->name('index');
+            Route::get('/data', [StoreOrderController::class, 'getOrders'])->name('data');
+            Route::get('/{id}', [StoreOrderController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [StoreOrderController::class, 'edit'])->name('edit');
+            Route::post('/{id}/update', [StoreOrderController::class, 'update'])->name('update');
+            Route::get('/{id}/receive', [StoreOrderController::class, 'receive'])->name('receive');
+            Route::post('/{id}/confirm', [StoreOrderController::class, 'confirmReceive'])->name('confirm-receive');
+        });
+
+        // NEW: Phase 3 Stock Level Management (Triggers for Warehouse Auto-Gen)
+        Route::prefix('inventory')->name('inventory.')->group(function () {
+            Route::get('/stock-levels', [StoreOrderController::class, 'stockLevels'])->name('stock-levels');
+            Route::get('/stock-levels/data', [StoreOrderController::class, 'getStockLevelsData'])->name('stock-levels.data');
+            Route::post('/stock-levels/update', [StoreOrderController::class, 'updateStockLevels'])->name('stock-levels.update');
+            Route::get('/visibility/{product_id?}', [StoreOrderController::class, 'globalVisibility'])->name('visibility');
+        });
     });
 });
 // routes/web.php ke bottom mein:

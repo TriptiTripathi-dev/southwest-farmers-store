@@ -61,12 +61,40 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
+                                    <label>SKU / UPC <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="mdi mdi-barcode"></i></span>
+                                        <input type="text" name="sku" class="form-control font-monospace" placeholder="e.g. 012345678905" required>
+                                    </div>
+                                    <small class="text-muted">Unique code - will display first everywhere</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
                                     <label>Product Name <span class="text-danger">*</span></label>
                                     <input type="text" name="product_name" class="form-control" placeholder="e.g. Fresh Samosa" required>
                                 </div>
+                            </div>
+
                                 <div class="col-md-6 mb-3">
-                                    <label>SKU (Unique Code) <span class="text-danger">*</span></label>
-                                    <input type="text" name="sku" class="form-control" placeholder="e.g. STR-001" required>
+                                    <label>Barcode (Optional)</label>
+                                    <input type="text" name="barcode" class="form-control" placeholder="Internal barcode">
+                                </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label>Unit Type <span class="text-danger">*</span></label>
+                                    <select name="unit_type" id="unit_type" class="form-select" required>
+                                        <option value="units" selected>Units (pcs, boxes, etc.)</option>
+                                        <option value="weight">Weight-based (lbs, kg)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Unit <span class="text-danger">*</span></label>
+                                    <input type="text" name="unit" class="form-control" placeholder="pcs, kg, box" value="pcs" required>
+                                </div>
+                                <div class="col-md-4 mb-3" id="weight_options_container" style="display: none;">
+                                    <label>Weight Options (lbs)</label>
+                                    <input type="text" name="weight_options" class="form-control" placeholder="e.g. 10,20,50" data-role="tagsinput">
+                                    <small class="text-muted">Comma-separated values</small>
                                 </div>
                             </div>
 
@@ -76,12 +104,17 @@
                                     <input type="number" step="0.01" name="selling_price" class="form-control border-success fw-bold" placeholder="0.00" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label>UPC Code <span class="text-danger">*</span></label>
-                                    <input type="text" name="barcode" class="form-control" placeholder="Enter UPC" required>
+                                    <label>Lead Time (Days)</label>
+                                    <input type="number" name="lead_time_days" class="form-control" placeholder="e.g. 30" min="0">
+                                    <small class="text-muted">For international supply</small>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label>Unit</label>
-                                    <input type="text" name="unit" class="form-control" placeholder="pcs, kg, box" value="pcs">
+                                    <div class="form-check mt-4">
+                                        <input type="checkbox" name="requires_expiration" class="form-check-input" id="requires_expiration" value="1">
+                                        <label class="form-check-label" for="requires_expiration">
+                                            Requires Expiration Date
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -154,6 +187,15 @@
                 });
             } else {
                 subSelect.html('<option value="">Select Category First</option>').trigger('change');
+            }
+        });
+
+        // Toggle weight options based on unit type
+        $('#unit_type').on('change', function() {
+            if (this.value === 'weight') {
+                $('#weight_options_container').slideDown();
+            } else {
+                $('#weight_options_container').slideUp();
             }
         });
     </script>

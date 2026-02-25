@@ -903,14 +903,23 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body text-center p-4" id="invoiceContent">
-                    <img src="{{ asset('assets/images/logo.jpg') }}" alt="Logo" class="invoice-logo mb-3" onerror="this.style.display='none'">
+                    <div class="mb-4 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-1">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 28px; height: 28px;">
+                                <i class="mdi mdi-home-variant text-white fs-14"></i>
+                            </div>
+                            <span class="fw-bold text-dark fs-18 text-uppercase tracking-wider">Home Food</span>
+                        </div>
+                        <span class="d-block text-muted fs-12 fw-medium text-uppercase tracking-widest mt-n1">Distributors</span>
+                    </div>
+
                     <div class="mb-3 d-print-none" style="color: #10b981;"><i class="mdi mdi-check-circle" style="font-size: 4rem;"></i></div>
                     <h3 class="fw-bold text-dark d-print-none mb-4">Payment Successful!</h3>
 
                     <div class="invoice-box text-start">
                         <div class="text-center mb-3">
-                            <h6 class="fw-bold text-dark mb-1">{{ Auth::user()->store->store_name ?? 'US Retail Store' }}</h6>
-                            <small class="text-muted">{{ Auth::user()->store->address ?? '123 Main St, New York, NY' }}</small>
+                            <h6 class="fw-bold text-dark mb-1">SWF - {{ Auth::user()->store->store_name ?? 'Location' }}</h6>
+                            <small class="text-muted">{{ Auth::user()->store->address ?? 'USA Retail Store' }}</small>
                         </div>
                         <hr>
 
@@ -1175,6 +1184,13 @@
             });
         });
 
+        function roundToNine(price) {
+            // Requirement 9.2: Retail price rounding rule (.9)
+            // Defaulting to "Always round up to next .9" as often preferred in retail
+            let val = parseFloat(price);
+            return Math.floor(val) + 0.9;
+        }
+
         function selectCustomer(id, name, phone) {
             $('#selectedCustomerId').val(id);
             $('#customerSearch').val(name + ' (' + phone + ')');
@@ -1208,17 +1224,23 @@
                             let badgeText = p.quantity == 0 ? 'Out of Stock' : (p.quantity <= 5 ? 'Low: ' + p.quantity : p.quantity + ' In Stock');
                             let img = p.image ? `/storage/${p.image}` : `https://placehold.co/200x200/ecfdf5/10b981?text=${p.product_name.charAt(0)}`;
                             let safeName = p.product_name.replace(/'/g, "\\'");
+                            let upcCode = p.sku || 'N/A';
+                            
+                            // Apply Rounding Rule
+                            let displayPrice = roundToNine(p.price);
                             
                             html += `<div class="col-6 col-sm-4 col-lg-3">
-                                <div class="product-card" onclick="addToCart(${p.product_id}, '${safeName}', ${p.price}, ${p.quantity})">
+                                <div class="product-card" onclick="addToCart(${p.product_id}, '${safeName}', ${displayPrice}, ${p.quantity})">
                                     <div class="product-img" style="background-image: url('${img}');"></div>
                                     <div class="product-content">
-                                        <small class="text-muted font-monospace">UPC: ${p.barcode || 'N/A'}</small>
+                                        <div class="text-muted small font-monospace mb-1" style="font-size: 0.7rem;">
+                                            <i class="mdi mdi-barcode"></i> ${p.barcode || 'N/A'}
+                                        </div>
                                         <div class="product-name" title="${p.product_name}">${p.product_name}</div>
                                         <span class="badge-stock ${badgeClass}">${badgeText}</span>
                                         <div class="product-footer">
-                                            <small class="text-muted">${p.sku}</small>
-                                            <span class="product-price">$${parseFloat(p.price).toFixed(2)}</span>
+                                            <small class="text-muted">SKU: ${p.sku}</small>
+                                            <span class="product-price">$${displayPrice.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1256,6 +1278,7 @@
                     price: price, 
                     quantity: 1, 
                     max: maxStock 
+                    // NoRounding in addToCart call because pricing comes from loadProducts which is already rounded
                 });
             }
             renderCart();
@@ -1277,6 +1300,8 @@
                     cart.forEach(i => { 
                         let pId = i.product_id || i.id;
                         if(maxMap[pId] !== undefined) i.max = maxMap[pId]; 
+                        // Ensure cart items use rounded price
+                        i.price = roundToNine(i.price);
                     });
                     
                     renderCart();
@@ -1301,13 +1326,14 @@
 
             let html = '';
             cart.forEach((item, index) => {
-                subtotal += item.price * item.quantity;
+                let roundedPrice = roundToNine(item.price);
+                subtotal += roundedPrice * item.quantity;
                 totalItems += item.quantity;
                 
                 html += `<div class="cart-item">
                     <div class="cart-item-info flex-grow-1">
                         <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">$${item.price.toFixed(2)} x ${item.quantity}</div>
+                        <div class="cart-item-price">$${roundedPrice.toFixed(2)} x ${item.quantity}</div>
                     </div>
                     <div class="qty-control">
                         <button class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
@@ -1315,7 +1341,7 @@
                         <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                     </div>
                     <div class="text-end ms-2" style="min-width: 60px;">
-                        <div class="fw-bold small">$${(item.price * item.quantity).toFixed(2)}</div>
+                        <div class="fw-bold small">$${(roundedPrice * item.quantity).toFixed(2)}</div>
                         <i class="mdi mdi-delete-outline text-danger cursor-pointer" style="font-size: 14px;" onclick="removeFromCart(${index})"></i>
                     </div>
                 </div>`;
@@ -1692,6 +1718,66 @@
 
         function processCheckout() {
             if (cart.length === 0) return Swal.fire('Empty', 'Add items', 'error');
+            
+            let paymentMethod = $('#paymentMethod').val();
+            
+            if (paymentMethod === 'card') {
+                simulateCardPayment();
+            } else {
+                finalizeCheckout();
+            }
+        }
+
+        function simulateCardPayment() {
+            Swal.fire({
+                title: 'Processing Card...',
+                text: 'Waiting for authorization',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    
+                    // Simulate card processing (random failure for Requirement 1.1)
+                    setTimeout(() => {
+                        const isSuccess = Math.random() > 0.3; // 70% success rate for demo
+                        
+                        if (isSuccess) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Authorized!',
+                                text: 'Card payment approved.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                finalizeCheckout();
+                            });
+                        } else {
+                            // Requirement 1.1: Fallback to cash options
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Card Declined',
+                                text: 'Authorization failed. Choose another payment method.',
+                                showCancelButton: true,
+                                showDenyButton: true,
+                                confirmButtonText: 'Try Again',
+                                denyButtonText: 'Switch to Cash',
+                                cancelButtonText: 'Cancel Sale',
+                                confirmButtonColor: '#2563eb',
+                                denyButtonColor: '#10b981',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    simulateCardPayment(); // Try Again
+                                } else if (result.isDenied) {
+                                    // Switch to Cash fallback
+                                    finalizeCheckout('cash');
+                                }
+                            });
+                        }
+                    }, 2000);
+                }
+            });
+        }
+
+        function finalizeCheckout(overrideMethod = null) {
             let btn = $('#payBtn, #mobilePayBtn');
             btn.prop('disabled', true);
 
@@ -1700,9 +1786,9 @@
             let total = parseFloat($('#grandTotal').text().replace('$', ''));
             let discount = parseFloat($('#discountInput').val() || $('#discountInputMobile').val() || 0);
             let custId = $('#selectedCustomerId').val() || $('#selectedCustomerIdMobile').val();
-            let paymentMethod = $('#paymentMethod').val();
+            let method = overrideMethod || $('#paymentMethod').val();
 
-            if (paymentMethod === 'card') {
+            if (method === 'card') {
                 if (!cardAuthState.attempted) {
                     btn.prop('disabled', false);
                     openCardAuthModal();
@@ -1724,7 +1810,7 @@
                 _token: csrfToken,
                 cart: JSON.stringify(cart),
                 customer_id: custId,
-                payment_method: paymentMethod,
+                payment_method: method,
                 status: 'completed',
                 subtotal: sub,
                 tax_amount: tax,
@@ -1733,7 +1819,7 @@
                 total_amount: total
             };
 
-            if (paymentMethod === 'card') {
+            if (method === 'card') {
                 payload.card_auth_status = cardAuthState.status;
                 payload.card_approved_amount = cardAuthState.approvedAmount;
             }
@@ -1748,11 +1834,11 @@
                     $('#modalSubtotal').text('$' + sub.toFixed(2));
                     $('#modalTax').text('$' + tax.toFixed(2));
                     $('#modalDiscount').text('-$' + discount.toFixed(2));
-                    $('#modalPaymentMode').text(paymentMethod.toUpperCase());
+                    $('#modalPaymentMode').text(method.toUpperCase());
 
                     let modalItemsHtml = '';
                     cart.forEach(item => {
-                        modalItemsHtml += `<tr><td>${item.name}</td><td class="text-end">${item.quantity}</td><td class="text-end fw-bold">$${(item.price * item.quantity).toFixed(2)}</td></tr>`;
+                        modalItemsHtml += `<tr><td>${item.name}</td><td class="text-end">${item.quantity}</td><td class="text-end fw-bold">$${(roundToNine(item.price) * item.quantity).toFixed(2)}</td></tr>`;
                     });
                     $('#modalInvoiceItems').html(modalItemsHtml);
 

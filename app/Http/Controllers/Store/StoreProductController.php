@@ -75,27 +75,38 @@ class StoreProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'sku' => 'required|string|max:50|unique:products,sku',
             'product_name' => 'required|string|max:255',
-            'sku' => 'required|unique:products,sku',
             'barcode' => 'required|string|max:255',
-            'department_id' => 'required|exists:departments,id', // <--- VALIDATION ADD KI
+            'department_id' => 'required|exists:departments,id', 
             'category_id' => 'required',
+            'unit_type' => 'required|in:units,weight',
             'selling_price' => 'required|numeric',
         ]);
 
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
+        // Process weight options if weight-based
+        $weightOptions = null;
+        if ($request->unit_type === 'weight' && $request->filled('weight_options')) {
+            $weightOptions = array_map('trim', explode(',', $request->weight_options));
+        }
+
         $product = Product::create([
             'store_id' => $storeId,
-            'department_id' => $request->department_id, // <--- SAVE KIYA
+            'department_id' => $request->department_id,
             'category_id' => $request->category_id,
             'subcategory_id' => $request->subcategory_id,
-            'product_name' => $request->product_name,
             'sku' => $request->sku,
+            'product_name' => $request->product_name,
             'barcode' => $request->barcode,
             'unit' => $request->unit ?? 'pcs',
+            'unit_type' => $request->unit_type,
+            'weight_options' => $weightOptions,
             'price' => $request->selling_price,
+            'lead_time_days' => $request->lead_time_days,
+            'requires_expiration' => $request->has('requires_expiration'),
             'icon' => $request->hasFile('image') ? $request->file('image')->store('products', 'public') : null,
             'is_active' => true
         ]);
@@ -140,15 +151,30 @@ class StoreProductController extends Controller
                 'barcode' => 'required|string|max:255',
             ]);
 
+            // Process weight options if weight-based
+            $weightOptions = null;
+            if ($request->unit_type === 'weight' && $request->filled('weight_options')) {
+                $weightOptions = array_map('trim', explode(',', $request->weight_options));
+            }
+
             $product->update($request->only([
                 'product_name',
                 'description',
-                'department_id', // <--- UPDATE KIYA
+                'department_id',
                 'category_id',
                 'subcategory_id',
                 'unit',
                 'barcode'
             ]));
+
+            // Update new fields
+            $product->update([
+                'sku' => $request->sku,
+                'unit_type' => $request->unit_type,
+                'weight_options' => $weightOptions,
+                'lead_time_days' => $request->lead_time_days,
+                'requires_expiration' => $request->has('requires_expiration'),
+            ]);
 
             if ($request->hasFile('image')) {
                 $product->update(['icon' => $request->file('image')->store('products', 'public')]);

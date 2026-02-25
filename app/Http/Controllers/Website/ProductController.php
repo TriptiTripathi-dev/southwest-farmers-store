@@ -32,4 +32,38 @@ class ProductController extends Controller
 
         return view('website.products.show', compact('product'));
     }
+
+    /**
+     * Display a POS-style product page for the website.
+     */
+    public function pos(Request $request)
+    {
+        $categories = \App\Models\ProductCategory::select('id', 'name', 'code')->orderBy('name')->get();
+
+        if ($request->ajax()) {
+            $query = Product::where('is_active', true);
+
+            // Filter by Category
+            if ($request->category && $request->category !== 'all') {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('code', $request->category);
+                });
+            }
+
+            // Search Term
+            if ($request->term) {
+                $query->where(function ($q) use ($request) {
+                    $term = $request->term;
+                    $q->where('product_name', 'LIKE', "%{$term}%")
+                      ->orWhere('sku', 'LIKE', "%{$term}%");
+                });
+            }
+
+            $products = $query->limit(24)->get();
+
+            return response()->json($products);
+        }
+
+        return view('website.products.pos', compact('categories'));
+    }
 }

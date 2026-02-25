@@ -25,7 +25,11 @@
                                     <p class="text-muted">Enter your email and password to access your account.</p>
                                 </div>
 
+<<<<<<< HEAD
                                 <form method="POST" action="{{ route('customer.login') }}">
+=======
+                                <form method="POST" action="{{ route('website.login.post') }}">
+>>>>>>> 5e8809c65468bc3c7646316a77ffd6c2b7272310
                                     @csrf
 
                                     <div class="form-floating mb-4">
@@ -62,9 +66,12 @@
                                         Login to Account
                                     </button>
 
-                                    <p class="text-center text-muted mb-0">
                                         Don't have an account? 
+<<<<<<< HEAD
                                         <a href="{{ route('customer.register') }}" class="text-theme fw-bold text-decoration-none">Sign up here</a>
+=======
+                                        <a href="{{ route('website.register') }}" class="text-theme fw-bold text-decoration-none">Sign up here</a>
+>>>>>>> 5e8809c65468bc3c7646316a77ffd6c2b7272310
                                     </p>
                                 </form>
                             </div>

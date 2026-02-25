@@ -128,16 +128,28 @@ class StoreStockControlController extends Controller
         ]);
 
         $user = Auth::user();
-        StockRequest::create([
-            'store_id' => $user->store_id,
-            'product_id' => $request->product_id,
-            'requested_quantity' => $request->quantity,
-            'status' => 'pending',
-            'reason' => 'low_stock',
-            'remarks' => 'Quick request from low stock alert',
-        ]);
+        $storeId = $user->store_id;
+        $product = Product::findOrFail($request->product_id);
 
-        return response()->json(['success' => true, 'message' => 'Stock request sent successfully']);
+        DB::transaction(function () use ($request, $user, $storeId, $product) {
+            $po = StockRequest::create([
+                'store_id' => $storeId,
+                'request_number' => StockRequest::generateRequestNumber($storeId),
+                'status' => 'pending',
+                'requested_by' => $user->id,
+                'store_remarks' => 'Quick request from low stock alert',
+            ]);
+
+            $po->items()->create([
+                'product_id' => $product->id,
+                'quantity' => $request->quantity,
+                'unit_cost' => $product->cost_price ?? 0,
+            ]);
+
+            $po->calculateTotals();
+        });
+
+        return response()->json(['success' => true, 'message' => 'Stock request (PO) sent successfully']);
     }
 
     public function valuation(Request $request)
@@ -300,23 +312,195 @@ class StoreStockControlController extends Controller
         ->addColumn('status', function ($row) {
             $daysLeft = $row->days_left;
             if ($daysLeft <= 0) return '<span class="badge bg-danger">Expired</span>';
-            if ($daysLeft <= 15) return '<span class="badge bg-danger">Critical</span>';
-            if ($daysLeft <= 30) return '<span class="badge bg-warning">Urgent</span>';
-            return '<span class="badge bg-info">Warning</span>';
+            if ($daysLeft <= 30) return '<span class="badge bg-danger">Critical (< 1mo)</span>';
+            if ($daysLeft <= 90) return '<span class="badge bg-warning">Urgent (< 3mo)</span>';
+            if ($daysLeft <= 180) return '<span class="badge bg-info">Warning (< 6mo)</span>';
+            return '<span class="badge bg-success">Healthy</span>';
         })
         ->addColumn('action', fn($row) => '<button class="btn btn-sm btn-warning">Request Recall</button>')
         ->rawColumns(['status', 'action'])
         ->make(true);
 }
 
-    public function requests()
+    public function requests(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
-        $requests = StockRequest::where('store_id', $storeId)->with('product')->latest()->paginate(15);
+        
+        $query = StockRequest::where('store_id', $storeId)
+            ->with(['items.product', 'requestedBy']);
+        
+        // Filter by search (request number)
+        if ($request->filled('search')) {
+            $query->where('request_number', 'ILIKE', '%' . $request->search . '%');
+        }
+        
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        $requests = $query->latest()->paginate(15);
+        
         return view('store.stock-control.requests', compact('requests'));
     }
 
+    
+    public function create()
+    {
+        return view('store.stock-control.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.unit_cost' => 'required|numeric|min:0',
+        ]);
+
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        DB::transaction(function () use ($request, $user, $storeId) {
+            // Create PO
+            $po = StockRequest::create([
+                'store_id' => $storeId,
+                'request_number' => StockRequest::generateRequestNumber($storeId),
+                'status' => 'pending',
+                'requested_by' => $user->id,
+                'store_remarks' => $request->remarks,
+            ]);
+
+            // Add line items
+            foreach ($request->products as $item) {
+                $po->items()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $item['unit_cost'],
+                ]);
+            }
+
+            // Calculate totals
+            $po->calculateTotals();
+        });
+
+        return redirect()->route('store.stock-control.requests')
+            ->with('success', 'Purchase Order created successfully');
+    }
+
+    public function show($id)
+    {
+        $user = Auth::user();
+        $request = StockRequest::where('store_id', $user->store_id)
+            ->with(['items.product', 'requestedBy', 'approvedBy'])
+            ->findOrFail($id);
+        
+        return view('store.stock-control.show', compact('request'));
+    }
+
+    public function generateReplenishment()
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        // Find items where (Stock + In Transit) < Min Stock
+        $lowStocks = StoreStock::where('store_id', $storeId)
+            ->whereRaw('(quantity + in_transit_qty) < min_stock')
+            ->where('min_stock', '>', 0)
+            ->with('product')
+            ->get();
+
+        if ($lowStocks->isEmpty()) {
+            return back()->with('info', 'All items are currently above minimum stock levels.');
+        }
+
+        DB::transaction(function () use ($lowStocks, $user, $storeId) {
+            $po = StockRequest::create([
+                'store_id' => $storeId,
+                'request_number' => StockRequest::generateRequestNumber($storeId),
+                'status' => 'pending',
+                'requested_by' => $user->id,
+                'store_remarks' => 'Auto-generated replenishment for low stock items (Min/Max).',
+            ]);
+
+            foreach ($lowStocks as $stock) {
+                $requirement = $stock->max_stock - ($stock->quantity + $stock->in_transit_qty);
+                if ($requirement > 0) {
+                    $po->items()->create([
+                        'product_id' => $stock->product_id,
+                        'quantity' => $requirement,
+                        'unit_cost' => $stock->product->cost_price ?? 0,
+                    ]);
+                }
+            }
+
+            $po->calculateTotals();
+        });
+
+        return redirect()->route('store.stock-control.requests')
+            ->with('success', 'Replenishment Purchase Order generated successfully for ' . $lowStocks->count() . ' items.');
+    }
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $request = StockRequest::where('store_id', $user->store_id)
+            ->where('status', 'pending')
+            ->findOrFail($id);
+        
+        $request->delete();
+        
+        return response()->json(['success' => true, 'message' => 'PO cancelled successfully']);
+    }
+
+    public function searchProducts(Request $request)
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
+        $term = $request->term;
+        $productId = $request->product_id;
+
+        $query = Product::where('is_active', true);
+
+        // Search by specific product ID
+        if ($productId) {
+            $query->where('id', $productId);
+        } 
+        // Search by term
+        elseif ($term) {
+            $query->where(function($q) use ($term) {
+                $q->where('sku', 'ILIKE', "%{$term}%")
+                  ->orWhere('product_name', 'ILIKE', "%{$term}%")
+                  ->orWhere('sku', 'ILIKE', "%{$term}%");
+            });
+        }
+
+        $products = $query->with(['storeStock' => function($q) use ($storeId) {
+                $q->where('store_id', $storeId);
+            }])
+            ->limit(20)
+            ->get()
+            ->map(function($p) {
+                $stock = $p->storeStock->first();
+                return [
+                    'id' => $p->id,
+                    'sku' => $p->sku,
+                    'product_name' => $p->product_name,
+                    'sku' => $p->sku,
+                    'unit_type' => $p->unit_type ?? 'units',
+                    'current_stock' => $stock->quantity ?? 0,
+                    'in_transit' => $stock->in_transit_qty ?? 0,
+                    'cost_price' => $p->cost_price ?? 0,
+                    'max_stock' => $stock->max_stock ?? 0,
+                ];
+            });
+
+        return response()->json($products);
+    }
+
+    // Old method for backward compatibility
     public function storeRequest(Request $request)
     {
         $request->validate([
@@ -339,31 +523,93 @@ class StoreStockControlController extends Controller
     {
         $user = Auth::user();
         $storeId = $user->store_id;
-        $pending = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->with('product')->paginate(10);
+        
+        // Fetch dispatched POs with their items
+        $pending = StockRequest::where('store_id', $storeId)
+            ->where('status', 'dispatched')
+            ->with(['items.product'])
+            ->latest()
+            ->paginate(15);
+            
         return view('store.stock-control.received', compact('pending'));
+    }
+
+    public function receive($id)
+    {
+        $user = Auth::user();
+        $request = StockRequest::where('store_id', $user->store_id)
+            ->where('status', 'dispatched')
+            ->with(['items.product'])
+            ->findOrFail($id);
+            
+        return view('store.stock-control.receive', compact('request'));
     }
 
     public function confirmReceived(Request $request, $id)
     {
         $request->validate([
-            'received_quantity' => 'required|integer|min:1',
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:stock_request_items,id',
+            'items.*.received_quantity' => 'required|integer|min:0',
         ]);
 
         $user = Auth::user();
         $storeId = $user->store_id;
 
-        $stockRequest = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->findOrFail($id);
+        $stockRequest = StockRequest::where('store_id', $storeId)
+            ->where('status', 'dispatched')
+            ->findOrFail($id);
 
         DB::transaction(function () use ($request, $stockRequest, $storeId) {
-            $stock = StoreStock::firstOrCreate(['store_id' => $storeId, 'product_id' => $stockRequest->product_id]);
-            $stock->increment('quantity', $request->received_quantity);
+            foreach ($request->items as $itemData) {
+                $item = $stockRequest->items()->findOrFail($itemData['id']);
+                $receivedQty = $itemData['received_quantity'];
+
+                if ($receivedQty > 0) {
+                    $item->update([
+                        'received_quantity' => $receivedQty
+                    ]);
+
+                    // Update store stock
+                    $stock = StoreStock::firstOrCreate([
+                        'store_id' => $storeId, 
+                        'product_id' => $item->product_id
+                    ]);
+                    
+                    $stock->increment('quantity', $receivedQty);
+                    
+                    // Requirement 13.2: Create ProductBatch for traceability
+                    ProductBatch::create([
+                        'product_id' => $item->product_id,
+                        'store_id' => $storeId,
+                        'batch_number' => $itemData['batch_number'] ?? ('BATCH-' . now()->format('YmdHis')),
+                        'expiry_date' => $itemData['expiry_date'] ?? now()->addYear(),
+                        'quantity' => $receivedQty,
+                        'is_active' => true,
+                        'cost_price' => $item->unit_cost ?? 0,
+                    ]);
+
+                    // Create transaction record
+                    StockTransaction::create([
+                        'store_id' => $storeId,
+                        'product_id' => $item->product_id,
+                        'quantity_change' => $receivedQty,
+                        'type' => 'receipt',
+                        'reference_type' => 'stock_request',
+                        'reference_id' => $stockRequest->id,
+                        'remarks' => "Received from PO: {$stockRequest->request_number}. Batch: " . ($itemData['batch_number'] ?? 'N/A')
+                    ]);
+                }
+            }
 
             $stockRequest->update([
-                'received_quantity' => $request->received_quantity,
                 'status' => 'completed',
+                'verified_at' => now(),
+                'store_remarks' => $request->remarks ? ($stockRequest->store_remarks . "\n\nReceipt Remarks: " . $request->remarks) : $stockRequest->store_remarks
             ]);
         });
 
-        return redirect()->route('store.stock-control.received')->with('success', 'Received confirmed');
+        return redirect()->route('store.stock-control.requests')
+            ->with('success', 'Stock received and inventory updated successfully');
     }
 }

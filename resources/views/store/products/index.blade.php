@@ -40,7 +40,7 @@
                         <div class="col-12 col-md-5">
                             <div class="input-group shadow-sm">
                                 <span class="input-group-text bg-light border-end-0 text-muted px-3"><i class="mdi mdi-magnify fs-5"></i></span>
-                                <input type="text" name="search" class="form-control bg-light border-start-0 py-2" placeholder="Search Product Name or SKU..." value="{{ request('search') }}">
+                                <input type="text" name="search" class="form-control bg-light border-start-0 py-2" placeholder="Search SKU/UPC, Product Name..." value="{{ request('search') }}">
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
@@ -65,10 +65,9 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product</th>
+                                    <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Product [SKU/UPC]</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Category</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Subcategory</th>
-                                    <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">SKU</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Type</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Price</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase text-center" style="letter-spacing: 0.5px;">Status</th>
@@ -85,14 +84,12 @@
                                             <div class="ms-3">
                                                 <div class="small text-muted font-monospace">UPC: {{ $item->barcode ?: 'N/A' }}</div>
                                                 <p class="mb-0 fw-bold text-dark">{{ $item->product_name }}</p>
+                                                <small class="text-muted">SKU: {{ $item->sku ?? '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="fw-medium text-dark">{{$item->category->name ?? 'N/A'}}</td>
                                     <td class="text-muted">{{$item->subcategory->name ?? 'N/A'}}</td>
-                                    <td>
-                                        <span class="font-monospace text-muted small"><i class="mdi mdi-barcode me-1"></i>{{ $item->sku }}</span>
-                                    </td>
                                     <td>
                                         @if($item->store_id == null)
                                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-bold">Warehouse</span>

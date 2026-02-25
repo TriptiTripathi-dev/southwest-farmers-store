@@ -15,4 +15,12 @@ class HomeController extends Controller
         
         return view('website.home', compact('featuredProducts'));
     }
+
+    /**
+     * Display the contact page.
+     */
+    public function contact()
+    {
+        return view('website.contact');
+    }
 }

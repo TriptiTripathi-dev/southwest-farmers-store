@@ -16,22 +16,17 @@
             @endphp
 
             {{-- LOGO SECTION --}}
-            <div class="logo-box">
-                <a href="{{ route('dashboard') }}" class="logo logo-light">
-                    <span class="logo-sm">
-                        <img src="{{ $logo }}" alt="" height="22">
-                    </span>
-                    <span class="logo-lg">
-                        <img src="{{ $logo }}" alt="" height="24">
-                    </span>
-                </a>
-                <a href="{{ route('dashboard') }}" class="logo logo-dark">
-                    <span class="logo-sm">
-                        <img src="{{ $logo }}" alt="" height="22">
-                    </span>
-                    <span class="logo-lg">
-                        <img src="{{ $logo }}" alt="" height="24">
-                    </span>
+            <div class="logo-box text-center py-3">
+                <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                    <div class="d-flex align-items-center justify-content-center px-2">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 32px; height: 32px; min-width: 32px;">
+                            <i class="mdi mdi-home-variant text-white fs-18"></i>
+                        </div>
+                        <div class="text-start lh-1 overflow-hidden">
+                            <span class="d-block fw-bold text-dark fs-14 text-uppercase tracking-wider">Home Food</span>
+                            <span class="d-block text-muted fs-11 fw-medium">Distributors</span>
+                        </div>
+                    </div>
                 </a>
             </div>
 
@@ -82,6 +77,12 @@
                                 <a href="{{ route('inventory.index') }}"
                                     class="tp-link {{ request()->is('inventory/stock') ? 'active' : '' }}">
                                     Store Stock
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.inventory.visibility') }}"
+                                    class="tp-link {{ request()->routeIs('store.inventory.visibility') ? 'active' : '' }}">
+                                    Global Visibility
                                 </a>
                             </li>
                             @endif

@@ -37,6 +37,12 @@ class StoreInventoryController extends Controller
                     ->orWhere('barcode', 'ilike', "%{$search}%");
             });
         }
+        
+        if ($request->filled('type')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('unit_type', $request->type);
+            });
+        }
         $stocks = $query->latest()->paginate(15);
         $inTransitByProduct = StockRequest::where('store_id', $user->store_id)
             ->where('status', StockRequest::STATUS_DISPATCHED)
@@ -594,5 +600,51 @@ class StoreInventoryController extends Controller
         });
 
         return back()->with('success', 'Stock dispatched successfully.');
+    }
+
+    public function convertWeight(Request $request)
+    {
+        $request->validate([
+            'stock_id' => 'required|exists:store_stocks,id',
+            'source_qty' => 'required|numeric|min:0.01',
+            'target_unit' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $stock = StoreStock::where('store_id', $user->store_id)->findOrFail($request->stock_id);
+
+        if ($stock->quantity < $request->source_qty) {
+            return back()->with('error', 'Insufficient bulk stock for conversion.');
+        }
+
+        DB::transaction(function () use ($request, $stock, $user) {
+            $oldQty = $stock->quantity;
+            $stock->decrement('quantity', $request->source_qty);
+            $newQty = $oldQty - $request->source_qty;
+
+            // Log Transaction
+            StockTransaction::create([
+                'store_id' => $user->store_id,
+                'product_id' => $stock->product_id,
+                'type' => 'adjustment',
+                'quantity_change' => -$request->source_qty,
+                'running_balance' => $newQty,
+                'reference_id' => $stock->id,
+                'reference_type' => StoreStock::class,
+                'remarks' => "Converted {$request->source_qty} {$stock->product->unit} to {$request->target_unit}",
+                'user_id' => $user->id,
+            ]);
+
+            StoreNotification::create([
+                'user_id' => Auth::id(),
+                'store_id' => $user->store_id,
+                'title' => 'Weight Conversion',
+                'message' => "Converted {$request->source_qty} units of {$stock->product->product_name} bulk to {$request->target_unit}.",
+                'type' => 'info',
+                'url' => route('inventory.index', ['type' => 'weight']),
+            ]);
+        });
+
+        return back()->with('success', 'Weight conversion completed successfully.');
     }
 }

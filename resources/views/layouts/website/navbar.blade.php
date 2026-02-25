@@ -14,13 +14,16 @@
                     <a class="nav-link {{ request()->routeIs('website.home') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.home') }}">Home</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link {{ request()->routeIs('website.products.*') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.index') }}">Shop Products</a>
+                    <a class="nav-link {{ request()->routeIs('website.products.index') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.index') }}">Shop Products</a>
+                </li>
+                <li class="nav-item px-2">
+                    <a class="nav-link {{ request()->routeIs('website.products.pos') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.pos') }}">Quick Shop (POS)</a>
                 </li>
                 <li class="nav-item px-2">
                     <a class="nav-link text-dark" href="{{ route('website.home') }}#about">About Us</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link text-dark" href="{{ route('website.home') }}#contact">Contact</a>
+                    <a class="nav-link {{ request()->routeIs('website.contact') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.contact') }}">Contact</a>
                 </li>
             </ul>
 
@@ -52,6 +55,14 @@
                                     <i class="mdi mdi-view-dashboard-outline me-2 text-muted"></i> Dashboard
                                 </a>
                             </li>
+                            @else
+                            @if(Route::has('website.dashboard'))
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold" href="{{ route('website.dashboard') }}">
+                                    <i class="mdi mdi-view-dashboard-outline me-2 text-muted"></i> My Dashboard
+                                </a>
+                            </li>
+                            @endif
                             @endif
                             <li>
                                 <a class="dropdown-item py-2 fw-semibold" href="{{ $isCustomer ? '#' : route('profile.edit') }}">

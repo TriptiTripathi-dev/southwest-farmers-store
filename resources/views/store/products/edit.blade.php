@@ -103,12 +103,24 @@
                                         
                                         <div class="row g-4 mb-4">
                                             <div class="col-md-6">
+                                                <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">SKU / UPC <span class="text-danger">*</span></label>
+                                                <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                                    <span class="input-group-text bg-light border-0"><i class="mdi mdi-barcode"></i></span>
+                                                    <input type="text" name="sku" class="form-control bg-light border-0 py-3 px-3 fs-6 rounded-end-3 font-monospace" value="{{ $product->sku }}" {{ !$product->store_id ? 'readonly' : '' }} required>
+                                                </div>
+                                                <small class="text-muted">Universal Product Code</small>
+                                            </div>
+                                            <div class="col-md-6">
                                                 <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Product Name <span class="text-danger">*</span></label>
                                                 <input type="text" name="product_name" class="form-control bg-light border-0 shadow-sm py-3 px-3 fs-6 rounded-3" value="{{ $product->product_name }}" {{ !$product->store_id ? 'readonly' : '' }} required>
                                             </div>
+                                        </div>
+
+                                        <div class="row g-4 mb-4">
+                                           
                                             <div class="col-md-6">
-                                                <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">SKU (Unique Code) <span class="text-danger">*</span></label>
-                                                <input type="text" name="sku" class="form-control bg-light border-0 shadow-sm py-3 px-3 fs-6 rounded-3 font-monospace" value="{{ $product->sku }}" {{ !$product->store_id ? 'readonly' : '' }} required>
+                                                <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Barcode</label>
+                                                <input type="text" name="barcode" class="form-control bg-light border-0 shadow-sm py-3 px-3 fs-6 rounded-3 font-monospace" value="{{ $product->barcode }}" {{ !$product->store_id ? 'readonly' : '' }}>
                                             </div>
                                         </div>
 
@@ -170,12 +182,33 @@
                                                     </div>
                                                 </div>
                                                 <div class="mb-4">
+                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Unit Type <span class="text-danger">*</span></label>
+                                                    <select name="unit_type" id="unit_type_edit" class="form-select bg-light border-0 shadow-sm py-2 px-3 rounded-3" {{ !$product->store_id ? 'disabled' : '' }} required>
+                                                        <option value="units" {{ $product->unit_type == 'units' ? 'selected' : '' }}>Units (pcs, boxes, etc.)</option>
+                                                        <option value="weight" {{ $product->unit_type == 'weight' ? 'selected' : '' }}>Weight-based (lbs, kg)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-4">
                                                     <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Unit</label>
                                                     <input type="text" name="unit" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3" value="{{ $product->unit }}" {{ !$product->store_id ? 'readonly' : '' }}>
                                                 </div>
+                                                <div class="mb-4" id="weight_options_edit_container" style="display: {{ $product->unit_type == 'weight' ? 'block' : 'none' }};">
+                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Weight Options (lbs)</label>
+                                                    <input type="text" name="weight_options" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3" value="{{ is_array($product->weight_options) ? implode(',', $product->weight_options) : '' }}" placeholder="e.g. 10,20,50" {{ !$product->store_id ? 'readonly' : '' }}>
+                                                    <small class="text-muted">Comma-separated values</small>
+                                                </div>
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Lead Time (Days)</label>
+                                                    <input type="number" name="lead_time_days" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3" value="{{ $product->lead_time_days }}" min="0" {{ !$product->store_id ? 'readonly' : '' }}>
+                                                    <small class="text-muted">For international supply</small>
+                                                </div>
                                                 <div class="mb-2">
-                                                    <label class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">UPC Code</label>
-                                                    <input type="text" name="barcode" class="form-control bg-light border-0 shadow-sm py-2 px-3 rounded-3 font-monospace" value="{{ $product->barcode }}" {{ !$product->store_id ? 'readonly' : '' }} {{ $product->store_id ? 'required' : '' }}>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" name="requires_expiration" class="form-check-input" id="requires_expiration_edit" value="1" {{ $product->requires_expiration ? 'checked' : '' }} {{ !$product->store_id ? 'disabled' : '' }}>
+                                                        <label class="form-check-label fw-bold text-muted small" for="requires_expiration_edit">
+                                                            Requires Expiration Date
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -332,6 +365,17 @@
                     preview.src = URL.createObjectURL(file);
                     preview.classList.remove('d-none');
                     prompt.classList.add('d-none');
+                }
+            });
+            @endif
+
+            // Toggle weight options based on unit type in edit form
+            @if($product->store_id)
+            $('#unit_type_edit').on('change', function() {
+                if (this.value === 'weight') {
+                    $('#weight_options_edit_container').slideDown();
+                } else {
+                    $('#weight_options_edit_container').slideUp();
                 }
             });
             @endif

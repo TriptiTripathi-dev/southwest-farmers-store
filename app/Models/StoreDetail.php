@@ -45,4 +45,14 @@ class StoreDetail extends Model
     {
         return $this->belongsTo(StoreUser::class, 'store_user_id');
     }
+    /**
+     * Requirement 3.2: Location names must follow this format: SWF - (Location)
+     */
+    public function getFormattedNameAttribute()
+    {
+        if (str_starts_with($this->store_name, 'SWF -')) {
+            return $this->store_name;
+        }
+        return "SWF - " . $this->store_name;
+    }
 }

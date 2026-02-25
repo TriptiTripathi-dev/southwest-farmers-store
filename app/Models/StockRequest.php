@@ -10,22 +10,31 @@ class StockRequest extends Model
     use HasFactory;
 
     protected $fillable = [
-        'store_id', 
-        'product_id', 
-        'requested_quantity', 
-        'fulfilled_quantity',      // Added
-        'status', 
+        'store_id',
+        'request_number',
+        'total_items',
+        'total_amount',
+        'requested_by',
+        'approved_by',
+        'approved_at',
+        'status',
         'admin_note',
-        'store_payment_proof',     // Added
-        'store_remarks',           // Added
-        'warehouse_payment_proof', // Added
-        'warehouse_remarks',       // Added
-        'verified_at',             // Added
-        'purchase_ref'             // Added
+        'store_payment_proof',
+        'store_remarks',
+        'warehouse_payment_proof',
+        'warehouse_remarks',
+        'verified_at',
+        'purchase_ref',
+        // Old fields (kept for backward compatibility during migration)
+        'product_id',
+        'requested_quantity',
+        'fulfilled_quantity'
     ];
 
     protected $casts = [
         'verified_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'total_amount' => 'decimal:2'
     ];
 
     // Constants for Status
@@ -35,9 +44,9 @@ class StockRequest extends Model
     const STATUS_REJECTED = 'rejected';
 
     // Relationships
-    public function product()
+    public function items()
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(StockRequestItem::class);
     }
 
     public function store()
@@ -45,7 +54,47 @@ class StockRequest extends Model
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
 
-    // Helper to get pending amount
+    public function requestedBy()
+    {
+        return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    // Old relationship (kept for backward compatibility)
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    // Generate unique request number
+    public static function generateRequestNumber($storeId)
+    {
+        $year = date('Y');
+        $lastRequest = self::where('store_id', $storeId)
+            ->where('request_number', 'LIKE', "REQ-{$year}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        $sequence = $lastRequest 
+            ? intval(substr($lastRequest->request_number, -3)) + 1 
+            : 1;
+        
+        return sprintf("REQ-%s-%03d", $year, $sequence);
+    }
+
+    // Calculate totals from items
+    public function calculateTotals()
+    {
+        $this->total_items = $this->items()->count();
+        $this->total_amount = $this->items()->sum('total_cost');
+        $this->save();
+    }
+
+    // Helper to get pending amount (backward compatibility)
     public function getPendingQuantityAttribute()
     {
         return max(0, $this->requested_quantity - ($this->fulfilled_quantity ?? 0));

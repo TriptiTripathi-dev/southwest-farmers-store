@@ -5,19 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Product extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
     protected $fillable = [
         'store_id', 
-        'department_id', // <--- YE ADD KIYA HAI
+        'department_id',
         'category_id', 
         'subcategory_id', 
         'product_name', 
         'sku', 
         'barcode',
+        'sku',
         'unit',
+        'unit_type',
+        'weight_options',
         'price',
         'cost_price',
         'margin_percent',
@@ -27,6 +32,8 @@ class Product extends Model
         'promotion_price',
         'promotion_start_date',
         'promotion_end_date',
+        'lead_time_days',
+        'requires_expiration',
         'icon',
         'description', 
         'is_active'
@@ -41,6 +48,8 @@ class Product extends Model
         'promotion_start_date' => 'datetime',
         'promotion_end_date' => 'datetime',
         'taxable' => 'boolean',
+        'weight_options' => 'array',
+        'requires_expiration' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -108,5 +117,10 @@ class Product extends Model
     public function usedInRecipes()
     {
         return $this->hasMany(ProductIngredient::class, 'ingredient_id');
+    }
+
+    public function batches()
+    {
+        return $this->hasMany(ProductBatch::class);
     }
 }
