@@ -4,15 +4,21 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Website\HomeController;
 use App\Http\Controllers\Website\ProductController;
 use App\Http\Controllers\Website\CartController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Website\Auth\CustomerAuthController;
 
-// Ye code apne routes file mein (guest middleware ke andar) add karein
-Route::middleware('guest')->group(function () {
+// Website Auth Routes
+Route::middleware('guest:customer')->group(function () {
     // Registration Routes
-    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('customer/register', [CustomerAuthController::class, 'showRegistrationForm'])->name('customer.register');
+    Route::post('customer/register', [CustomerAuthController::class, 'register']);
 
+    // Login Routes
+    Route::get('customer/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+    Route::post('customer/login', [CustomerAuthController::class, 'login']);
+});
+
+Route::middleware('auth:customer')->group(function () {
+    Route::post('customer/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
 });
 
 // Public Website Routes

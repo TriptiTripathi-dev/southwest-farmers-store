@@ -11,7 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('customer/*') || $request->is('cart/*') || $request->is('checkout/*')) {
+                return route('customer.login');
+            }
+            return route('login');
+        });
+
+        $middleware->redirectUsersTo(function ($request) {
+            if (auth('customer')->check()) {
+                return route('website.home');
+            }
+            return '/dashboard';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

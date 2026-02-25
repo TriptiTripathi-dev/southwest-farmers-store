@@ -81,7 +81,7 @@
                                         <p class="text-muted mb-5">Join us to get fresh organics delivered fast to your doorstep.</p>
                                     </div>
 
-                                    <form method="POST" action="{{ route('register') }}" class="animate-fade-up delay-100">
+                                    <form method="POST" action="{{ route('customer.register') }}" class="animate-fade-up delay-100">
                                         @csrf
 
                                         <div class="form-group position-relative mb-4">
@@ -96,6 +96,30 @@
                                             <i class="mdi mdi-email-outline input-icon"></i>
                                             <input type="email" name="email" class="form-control custom-input @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="Email Address" required>
                                             @error('email')
+                                                <div class="invalid-feedback ms-3 mt-1 fw-bold">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group position-relative mb-4">
+                                            <i class="mdi mdi-phone-outline input-icon"></i>
+                                            <input type="text" name="phone" class="form-control custom-input @error('phone') is-invalid @enderror" value="{{ old('phone') }}" placeholder="Phone Number" required>
+                                            @error('phone')
+                                                <div class="invalid-feedback ms-3 mt-1 fw-bold">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group position-relative mb-4">
+                                            <i class="mdi mdi-map-marker-outline input-icon"></i>
+                                            <input type="text" name="address" class="form-control custom-input @error('address') is-invalid @enderror" value="{{ old('address') }}" placeholder="Full Address">
+                                            @error('address')
+                                                <div class="invalid-feedback ms-3 mt-1 fw-bold">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group position-relative mb-4">
+                                            <i class="mdi mdi-map-outline input-icon"></i>
+                                            <input type="text" name="area" class="form-control custom-input @error('area') is-invalid @enderror" value="{{ old('area') }}" placeholder="Area/Location">
+                                            @error('area')
                                                 <div class="invalid-feedback ms-3 mt-1 fw-bold">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -130,7 +154,7 @@
                                         <div class="text-center mt-4 animate-fade-up delay-300">
                                             <p class="text-muted fw-medium mb-0">
                                                 Already a member?
-                                                <a href="{{ route('login') }}" class="text-theme fw-bold text-decoration-none border-bottom border-success border-2 pb-1 ms-1 transition-all" style="border-color: var(--theme-primary) !important;">Log In</a>
+                                                <a href="{{ route('customer.login') }}" class="text-theme fw-bold text-decoration-none border-bottom border-success border-2 pb-1 ms-1 transition-all" style="border-color: var(--theme-primary) !important;">Log In</a>
                                             </p>
                                         </div>
                                     </form>

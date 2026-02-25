@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Store\Auth\LoginController;
-use App\Http\Controllers\Store\Auth\ForgotPasswordController;
-use App\Http\Controllers\Store\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Store\StoreRoleController;
 use App\Http\Controllers\Store\StorePermissionController;
@@ -32,35 +29,14 @@ use App\Http\Controllers\Warehouse\ProductController as WarehouseProductControll
 use App\Http\Controllers\Website\ProductController as WebsiteProductController;
 use App\Http\Controllers\Website\CartController;
 
-Route::middleware('guest')->group(function () {
-   
-    Route::get('/login', [LoginController::class, 'showLoginForm'])
-        ->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
-        ->name('password.request');
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
-        ->name('password.email');
-    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
-        ->name('password.reset');
-    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
-        ->name('password.update');
-});
+// Redundant guest group removed (handled by auth.php)
 // Public-facing website module routes
-Route::prefix('')->name('website.')->group(function () {
-    Route::get('products', [WebsiteProductController::class, 'index'])->name('products.index');
-    Route::get('products/{product}', [WebsiteProductController::class, 'show'])->name('products.show');
-
-    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('cart', [CartController::class, 'store'])->name('cart.store');
-});
+// Redundant website group removed (all website routes are in website.php)
 
 Route::get('/pos-test', function () {
     return view('pos-test');
 });
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])
-        ->name('logout');
     Route::get('/dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
@@ -211,6 +187,9 @@ Route::middleware('auth')->group(function () {
     });
 });
 // routes/web.php ke bottom mein:
+
+// Load Authentication Routes
+require __DIR__.'/auth.php';
 
 // Load Website Module Routes
 require __DIR__.'/website.php';
