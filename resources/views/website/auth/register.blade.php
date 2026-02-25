@@ -115,7 +115,7 @@
                                     <p class="text-muted mb-0">Join FreshStore and get fresh groceries delivered fast.</p>
                                 </div>
 
-                                <form method="POST" action="{{ route('customer.register') }}"
+                                <form method="POST" action="{{ route('website.register') }}"
                                       class="animate-fade-up delay-100" autocomplete="off">
                                     @csrf
 
@@ -212,7 +212,7 @@
 
                                     <p class="text-center mt-4">
                                         Already a member?
-                                        <a href="{{ route('customer.login') }}" class="text-theme fw-bold text-decoration-none">Log In</a>
+                                        <a href="{{ route('website.login') }}" class="text-theme fw-bold text-decoration-none">Log In</a>
                                     </p>
 
                                 </form>
