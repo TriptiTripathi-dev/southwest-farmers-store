@@ -61,13 +61,27 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label>SKU / UPC <span class="text-danger">*</span></label>
+                                    <label>UPC <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <span class="input-group-text"><i class="mdi mdi-barcode"></i></span>
-                                        <input type="text" name="sku" class="form-control font-monospace" placeholder="e.g. 012345678905" required>
+                                        <span class="input-group-text"><i class="mdi mdi-barcode-scan"></i></span>
+                                        <input type="text" name="upc" id="upcInput" class="form-control font-monospace" placeholder="e.g. 012345678905" required>
+                                        <button type="button" id="generateUpcBtn" class="btn btn-outline-secondary">
+                                            <i class="mdi mdi-refresh"></i> Generate
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Universal Product Code</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>SKU <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="mdi mdi-tag"></i></span>
+                                        <input type="text" name="sku" class="form-control font-monospace" placeholder="e.g. SKU-1234" required>
                                     </div>
                                     <small class="text-muted">Unique code - will display first everywhere</small>
                                 </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label>Product Name <span class="text-danger">*</span></label>
                                     <input type="text" name="product_name" class="form-control" placeholder="e.g. Fresh Samosa" required>
@@ -198,6 +212,26 @@
                 $('#weight_options_container').slideUp();
             }
         });
+
+        // Generate UPC Button Logic
+        const upcInput = document.getElementById('upcInput');
+        const generateUpcBtn = document.getElementById('generateUpcBtn');
+        if (generateUpcBtn) {
+            generateUpcBtn.addEventListener('click', function() {
+                var originalText = $(this).html();
+                $(this).html('<i class="mdi mdi-loading mdi-spin"></i>').prop('disabled', true);
+                
+                fetch("{{ route('store.products.generate-upc') }}") 
+                    .then(response => response.json())
+                    .then(data => {
+                        if (upcInput) upcInput.value = data.upc;
+                    })
+                    .catch(err => console.error(err))
+                    .finally(() => {
+                        $(generateUpcBtn).html(originalText).prop('disabled', false);
+                    });
+            });
+        }
     </script>
     @endpush
 </x-app-layout>

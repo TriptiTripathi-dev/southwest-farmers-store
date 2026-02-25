@@ -28,6 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // After successful store login, redirect to store/dashboard
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
