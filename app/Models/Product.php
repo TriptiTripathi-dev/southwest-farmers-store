@@ -36,7 +36,13 @@ class Product extends Model
         'requires_expiration',
         'icon',
         'description', 
-        'is_active'
+        'is_active',
+        'carton_length',
+        'carton_width',
+        'carton_height',
+        'units_per_carton',
+        'is_stackable',
+        'is_fragile'
     ];
 
     protected $casts = [
@@ -51,6 +57,8 @@ class Product extends Model
         'weight_options' => 'array',
         'requires_expiration' => 'boolean',
         'is_active' => 'boolean',
+        'is_stackable' => 'boolean',
+        'is_fragile' => 'boolean',
     ];
 
     public function getUpcCodeAttribute(): ?string

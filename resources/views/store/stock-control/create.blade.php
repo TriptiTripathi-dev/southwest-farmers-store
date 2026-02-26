@@ -97,13 +97,20 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ route('store.stock-control.requests') }}" class="btn btn-secondary">
-                        <i class="mdi mdi-close me-1"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
-                        <i class="mdi mdi-check me-1"></i> Generate PO
-                    </button>
+                <div class="d-flex justify-content-between gap-2 align-items-center mb-3">
+                    <div id="palletEstimateBadge" class="badge bg-secondary fs-6 py-2 px-3 shadow-sm d-none">
+                        <i class="mdi mdi-package-variant-closed me-1"></i> Estimated Pallets: <span id="palletCount">0</span>
+                        <small class="d-block mt-1 opacity-75 fw-normal" id="palletWeightInfo"></small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('store.stock-control.requests') }}" class="btn btn-secondary">
+                            <i class="mdi mdi-close me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                            <i class="mdi mdi-check me-1"></i> Generate PO
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -118,6 +125,7 @@
 <script>
 let selectedProducts = [];
 let searchTimeout = null;
+let palletEstimateTimeout = null;
 
 // Debounce search
 $('#productSearch').on('input', function() {
@@ -314,6 +322,59 @@ function updateTotals() {
     
     $('#totalItems').text(totalItems);
     $('#totalAmount').text('₹' + totalAmount.toFixed(2));
+    
+    estimatePallets();
+}
+
+function estimatePallets() {
+    clearTimeout(palletEstimateTimeout);
+    
+    if (selectedProducts.length === 0) {
+        $('#palletEstimateBadge').addClass('d-none');
+        return;
+    }
+    
+    $('#palletEstimateBadge').removeClass('d-none bg-success bg-warning bg-danger').addClass('bg-secondary');
+    $('#palletCount').html('<i class="mdi mdi-spin mdi-loading"></i>');
+    $('#palletWeightInfo').text('Calculating...');
+
+    palletEstimateTimeout = setTimeout(() => {
+        const payload = selectedProducts.map(p => ({
+            product_id: p.id,
+            quantity: p.quantity
+        }));
+
+        $.ajax({
+            url: '{{ route("store.stock-control.estimate-pallets") }}',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                items: payload
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#palletCount').text(response.total_pallets);
+                    $('#palletWeightInfo').text(response.total_weight.toFixed(2) + ' lbs total');
+                    
+                    $('#palletEstimateBadge').removeClass('bg-secondary');
+                    if (response.total_pallets === 0) {
+                         $('#palletEstimateBadge').addClass('bg-secondary');
+                    } else if (response.total_pallets < 5) {
+                        $('#palletEstimateBadge').addClass('bg-success');
+                    } else if (response.total_pallets < 10) {
+                        $('#palletEstimateBadge').addClass('bg-warning text-dark');
+                    } else {
+                        $('#palletEstimateBadge').addClass('bg-danger');
+                    }
+                }
+            },
+            error: function() {
+                $('#palletEstimateBadge').removeClass('bg-success bg-warning bg-danger').addClass('bg-secondary');
+                $('#palletCount').text('Error');
+                $('#palletWeightInfo').text('Could not estimate');
+            }
+        });
+    }, 500); // 500ms debounce
 }
 
 function updateHiddenInputs() {

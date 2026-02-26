@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests/{id}', [StoreStockControlController::class, 'show'])->name('requests.show');
         Route::delete('/requests/{id}', [StoreStockControlController::class, 'destroy'])->name('requests.destroy');
         Route::get('/requests/search-products', [StoreStockControlController::class, 'searchProducts'])->name('search-products');
+        Route::post('/requests/estimate-pallets', [StoreStockControlController::class, 'estimatePallets'])->name('estimate-pallets');
 
         Route::get('/received', [StoreStockControlController::class, 'received'])->name('received');
         Route::get('/requests/{id}/receive', [StoreStockControlController::class, 'receive'])->name('requests.receive');

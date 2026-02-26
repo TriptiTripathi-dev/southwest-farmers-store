@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\DB;
 
 class StoreStockControlController extends Controller
 {
-   public function overview()
+    public function overview()
     {
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
-        
+
         $categories = ProductCategory::where('is_active', true)->get();
 
         // --- 1. Area-wise Total Sales (For Chart) ---
@@ -160,7 +160,7 @@ class StoreStockControlController extends Controller
         // --- 1. Filters Setup ---
         $categoryId = $request->get('category_id');
         $productId = $request->get('product_id');
-        
+
         // Default: Last 30 days
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : Carbon::today()->subDays(29);
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : Carbon::today();
@@ -168,7 +168,7 @@ class StoreStockControlController extends Controller
         // Dropdown Data
         $categories = ProductCategory::where('is_active', true)->get();
         // Only show products that have ever been in this store to keep list manageable
-        $productsList = Product::whereHas('storeStocks', function($q) use ($storeId) {
+        $productsList = Product::whereHas('storeStocks', function ($q) use ($storeId) {
             $q->where('store_id', $storeId);
         })->select('id', 'product_name')->get();
 
@@ -204,7 +204,7 @@ class StoreStockControlController extends Controller
 
         // --- 4. Trend Analysis (Advanced Rewind Logic) ---
         // We calculate daily changes to "rewind" the current value back to the start date.
-        
+
         // Query daily value changes (Qty Change * Cost Price)
         $trendQuery = DB::table('stock_transactions')
             ->join('products', 'stock_transactions.product_id', '=', 'products.id')
@@ -212,7 +212,7 @@ class StoreStockControlController extends Controller
             ->selectRaw('SUM(stock_transactions.quantity_change * products.cost_price) as daily_value_change')
             ->where('stock_transactions.store_id', $storeId)
             ->whereBetween('stock_transactions.created_at', [
-                $startDate->copy()->startOfDay(), 
+                $startDate->copy()->startOfDay(),
                 Carbon::now()->endOfDay() // Fetch up to now to rewind correctly
             ])
             ->groupBy('date');
@@ -230,14 +230,14 @@ class StoreStockControlController extends Controller
         $dates = [];
         $trendData = [];
         $currentTracker = $storeValue; // Start with current value
-        
+
         // Loop from Today backwards to Start Date
         // We go slightly past end date if needed to calculate the "End Date Value" correctly
         $loopDate = Carbon::today();
-        
+
         while ($loopDate->gte($startDate)) {
             $dateStr = $loopDate->format('Y-m-d');
-            
+
             // If the loop date is within user's requested range, record it
             if ($loopDate->lte($endDate)) {
                 $dates[] = $dateStr;
@@ -273,79 +273,79 @@ class StoreStockControlController extends Controller
     }
 
     public function expiryData(Request $request)
-{
-    $user = Auth::user();
-    $storeId = $user->store_id;
+    {
+        $user = Auth::user();
+        $storeId = $user->store_id;
 
-    $days = $request->days ?? 60;
-    $categoryId = $request->category_id;
-    $damagedOnly = $request->damaged_only == 1;
+        $days = $request->days ?? 60;
+        $categoryId = $request->category_id;
+        $damagedOnly = $request->damaged_only == 1;
 
-    $query = ProductBatch::query()
-        ->join('products', 'product_batches.product_id', '=', 'products.id')
-        ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
-        ->where('product_batches.store_id', $storeId)
-        ->select([
-            'product_batches.*',
-            'products.product_name',
-            'products.sku',
-            'product_categories.name as category_name',
-            // Fixed: Direct subtraction (PostgreSQL mein ye integer days deta hai)
-            DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left"),
-            DB::raw("(product_batches.quantity * product_batches.cost_price) as value")
-        ])
-        ->where('product_batches.quantity', '>', 0);
+        $query = ProductBatch::query()
+            ->join('products', 'product_batches.product_id', '=', 'products.id')
+            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+            ->where('product_batches.store_id', $storeId)
+            ->select([
+                'product_batches.*',
+                'products.product_name',
+                'products.sku',
+                'product_categories.name as category_name',
+                // Fixed: Direct subtraction (PostgreSQL mein ye integer days deta hai)
+                DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left"),
+                DB::raw("(product_batches.quantity * product_batches.cost_price) as value")
+            ])
+            ->where('product_batches.quantity', '>', 0);
 
-    if ($days !== 'all') {
-        $query->whereRaw("product_batches.expiry_date <= CURRENT_DATE + INTERVAL '{$days} days'");
+        if ($days !== 'all') {
+            $query->whereRaw("product_batches.expiry_date <= CURRENT_DATE + INTERVAL '{$days} days'");
+        }
+
+        if ($categoryId) {
+            $query->where('products.category_id', $categoryId);
+        }
+
+        if ($damagedOnly) {
+            $query->where('product_batches.damaged_quantity', '>', 0);
+        }
+
+        return DataTables::of($query)
+            ->addColumn('status', function ($row) {
+                $daysLeft = $row->days_left;
+                if ($daysLeft <= 0) return '<span class="badge bg-danger">Expired</span>';
+                if ($daysLeft <= 30) return '<span class="badge bg-danger">Critical (< 1mo)</span>';
+                if ($daysLeft <= 90) return '<span class="badge bg-warning">Urgent (< 3mo)</span>';
+                if ($daysLeft <= 180) return '<span class="badge bg-info">Warning (< 6mo)</span>';
+                return '<span class="badge bg-success">Healthy</span>';
+            })
+            ->addColumn('action', fn($row) => '<button class="btn btn-sm btn-warning">Request Recall</button>')
+            ->rawColumns(['status', 'action'])
+            ->make(true);
     }
-
-    if ($categoryId) {
-        $query->where('products.category_id', $categoryId);
-    }
-
-    if ($damagedOnly) {
-        $query->where('product_batches.damaged_quantity', '>', 0);
-    }
-
-    return DataTables::of($query)
-        ->addColumn('status', function ($row) {
-            $daysLeft = $row->days_left;
-            if ($daysLeft <= 0) return '<span class="badge bg-danger">Expired</span>';
-            if ($daysLeft <= 30) return '<span class="badge bg-danger">Critical (< 1mo)</span>';
-            if ($daysLeft <= 90) return '<span class="badge bg-warning">Urgent (< 3mo)</span>';
-            if ($daysLeft <= 180) return '<span class="badge bg-info">Warning (< 6mo)</span>';
-            return '<span class="badge bg-success">Healthy</span>';
-        })
-        ->addColumn('action', fn($row) => '<button class="btn btn-sm btn-warning">Request Recall</button>')
-        ->rawColumns(['status', 'action'])
-        ->make(true);
-}
 
     public function requests(Request $request)
     {
         $user = Auth::user();
         $storeId = $user->store_id;
-        
+
         $query = StockRequest::where('store_id', $storeId)
             ->with(['items.product', 'requestedBy']);
-        
+
         // Filter by search (request number)
         if ($request->filled('search')) {
             $query->where('request_number', 'ILIKE', '%' . $request->search . '%');
         }
-        
+
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $requests = $query->latest()->paginate(15);
-        
+
         return view('store.stock-control.requests', compact('requests'));
     }
 
-    
+
     public function create()
     {
         return view('store.stock-control.create');
@@ -396,7 +396,7 @@ class StoreStockControlController extends Controller
         $request = StockRequest::where('store_id', $user->store_id)
             ->with(['items.product', 'requestedBy', 'approvedBy'])
             ->findOrFail($id);
-        
+
         return view('store.stock-control.show', compact('request'));
     }
 
@@ -449,9 +449,9 @@ class StoreStockControlController extends Controller
         $request = StockRequest::where('store_id', $user->store_id)
             ->where('status', 'pending')
             ->findOrFail($id);
-        
+
         $request->delete();
-        
+
         return response()->json(['success' => true, 'message' => 'PO cancelled successfully']);
     }
 
@@ -467,22 +467,22 @@ class StoreStockControlController extends Controller
         // Search by specific product ID
         if ($productId) {
             $query->where('id', $productId);
-        } 
+        }
         // Search by term
         elseif ($term) {
-            $query->where(function($q) use ($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('sku', 'ILIKE', "%{$term}%")
-                  ->orWhere('product_name', 'ILIKE', "%{$term}%")
-                  ->orWhere('sku', 'ILIKE', "%{$term}%");
+                    ->orWhere('product_name', 'ILIKE', "%{$term}%")
+                    ->orWhere('sku', 'ILIKE', "%{$term}%");
             });
         }
 
-        $products = $query->with(['storeStock' => function($q) use ($storeId) {
-                $q->where('store_id', $storeId);
-            }])
+        $products = $query->with(['storeStock' => function ($q) use ($storeId) {
+            $q->where('store_id', $storeId);
+        }])
             ->limit(20)
             ->get()
-            ->map(function($p) {
+            ->map(function ($p) {
                 $stock = $p->storeStock->first();
                 return [
                     'id' => $p->id,
@@ -523,14 +523,14 @@ class StoreStockControlController extends Controller
     {
         $user = Auth::user();
         $storeId = $user->store_id;
-        
+
         // Fetch dispatched POs with their items
         $pending = StockRequest::where('store_id', $storeId)
             ->where('status', 'dispatched')
             ->with(['items.product'])
             ->latest()
             ->paginate(15);
-            
+
         return view('store.stock-control.received', compact('pending'));
     }
 
@@ -541,7 +541,7 @@ class StoreStockControlController extends Controller
             ->where('status', 'dispatched')
             ->with(['items.product'])
             ->findOrFail($id);
-            
+
         return view('store.stock-control.receive', compact('request'));
     }
 
@@ -572,12 +572,12 @@ class StoreStockControlController extends Controller
 
                     // Update store stock
                     $stock = StoreStock::firstOrCreate([
-                        'store_id' => $storeId, 
+                        'store_id' => $storeId,
                         'product_id' => $item->product_id
                     ]);
-                    
+
                     $stock->increment('quantity', $receivedQty);
-                    
+
                     // Requirement 13.2: Create ProductBatch for traceability
                     ProductBatch::create([
                         'product_id' => $item->product_id,
@@ -611,5 +611,53 @@ class StoreStockControlController extends Controller
 
         return redirect()->route('store.stock-control.requests')
             ->with('success', 'Stock received and inventory updated successfully');
+    }
+
+    /**
+     * Estimate required pallets for the given items based on warehouse rules
+     * Expects payload: { items: [{ product_id, quantity }, ...] }
+     */
+    public function estimatePallets(Request $request, \App\Services\PalletizationService $service)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        $itemsToPack = [];
+        $totalWeight = 0;
+
+        foreach ($request->items as $itemData) {
+            $product = \App\Models\Product::find($itemData['product_id']);
+            if ($product) {
+                // Mock a PO item struct to pass into the service
+                $mockItem = new \stdClass();
+                $mockItem->product = $product;
+                $mockItem->quantity = $itemData['quantity'];
+
+                $itemsToPack[] = $mockItem;
+            }
+        }
+
+        try {
+            $pallets = $service->calculateOptimalArrangement($itemsToPack);
+
+            foreach ($pallets as $p) {
+                $totalWeight += $p['total_weight'];
+            }
+
+            return response()->json([
+                'success' => true,
+                'total_pallets' => count($pallets),
+                'total_weight' => $totalWeight,
+                'pallets' => $pallets
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to estimate pallets: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
