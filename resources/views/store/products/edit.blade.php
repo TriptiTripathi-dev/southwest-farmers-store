@@ -143,18 +143,16 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <label
-                                                    class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">SKU
-                                                    <span class="text-danger">*</span></label>
+                                                    class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">SKU</label>
                                                 <div class="input-group shadow-sm rounded-3 overflow-hidden">
                                                     <span class="input-group-text bg-light border-0"><i
                                                             class="mdi mdi-tag"></i></span>
                                                     <input type="text" name="sku"
                                                         class="form-control bg-light border-0 py-3 px-3 fs-6 rounded-end-3 font-monospace"
                                                         value="{{ $product->sku }}"
-                                                        {{ !$product->store_id ? 'readonly' : '' }} required>
+                                                        {{ !$product->store_id ? 'readonly' : '' }}>
                                                 </div>
-                                                <small class="text-muted">Unique code - will display first
-                                                    everywhere</small>
+                                                <small class="text-muted">Optional internal code</small>
                                             </div>
                                         </div>
 

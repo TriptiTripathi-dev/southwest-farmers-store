@@ -36,6 +36,7 @@ class StoreProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('product_name', 'ilike', "%{$search}%")
+                    ->orWhere('upc', 'ilike', "%{$search}%")
                     ->orWhere('sku', 'ilike', "%{$search}%")
                     ->orWhere('barcode', 'ilike', "%{$search}%");
             });
@@ -75,10 +76,11 @@ class StoreProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'sku' => 'required|string|max:50|unique:products,sku',
+            'sku' => 'nullable|string|max:50|unique:products,sku',
+            'upc' => 'nullable|string|max:50',
             'product_name' => 'required|string|max:255',
-            'barcode' => 'required|string|max:255',
-            'department_id' => 'required|exists:departments,id', 
+            'barcode' => 'nullable|string|max:255',
+            'department_id' => 'required|exists:departments,id',
             'category_id' => 'required',
             'unit_type' => 'required|in:units,weight',
             'selling_price' => 'required|numeric',
@@ -99,6 +101,7 @@ class StoreProductController extends Controller
             'category_id' => $request->category_id,
             'subcategory_id' => $request->subcategory_id,
             'sku' => $request->sku,
+            'upc' => $request->upc,
             'product_name' => $request->product_name,
             'barcode' => $request->barcode,
             'unit' => $request->unit ?? 'pcs',
@@ -134,7 +137,7 @@ class StoreProductController extends Controller
     {
         $product = Product::where('id', $id)->firstOrFail();
         $categories = ProductCategory::all();
-        
+
         // <--- EDIT KE LIYE BHI DEPARTMENTS CHAHIYE
         $departments = Department::where('is_active', true)->orderBy('name')->get();
 
@@ -164,7 +167,8 @@ class StoreProductController extends Controller
                 'category_id',
                 'subcategory_id',
                 'unit',
-                'barcode'
+                'barcode',
+                'upc'
             ]));
 
             // Update new fields
@@ -182,9 +186,9 @@ class StoreProductController extends Controller
         }
 
         if ($product->store_id != null && $request->has('selling_price')) {
-             $newPrice = (float) $request->selling_price;
-             $product->update(['price' => $newPrice]);
-             StoreStock::where('product_id', $product->id)->update(['selling_price' => $newPrice]);
+            $newPrice = (float) $request->selling_price;
+            $product->update(['price' => $newPrice]);
+            StoreStock::where('product_id', $product->id)->update(['selling_price' => $newPrice]);
 
             if (abs($oldPrice - $newPrice) > 0.0001 && Schema::hasTable('price_history')) {
                 DB::table('price_history')->insert([
@@ -219,7 +223,8 @@ class StoreProductController extends Controller
     }
 
     // Baaki methods same rahenge (destroy, import, export, analytics, etc.)
-    public function destroy($id) {
+    public function destroy($id)
+    {
         $stock = StoreStock::findOrFail($id);
         $product = $stock->product;
         if ($product->store_id != null) {
@@ -230,7 +235,8 @@ class StoreProductController extends Controller
         return back()->with('error', 'Cannot delete Warehouse products.');
     }
 
-    public function updateStatus(Request $request) {
+    public function updateStatus(Request $request)
+    {
         $product = Product::find($request->id);
         if ($product && $product->store_id != null) {
             $product->update(['is_active' => $request->status]);
@@ -239,7 +245,8 @@ class StoreProductController extends Controller
         return response()->json(['success' => false], 403);
     }
 
-    public function import(Request $request) {
+    public function import(Request $request)
+    {
         $request->validate([
             'file' => 'required|mimes:xlsx,csv',
             'category_id' => 'required',
@@ -252,10 +259,11 @@ class StoreProductController extends Controller
         return back()->with('success', 'Products imported successfully.');
     }
 
-    public function export() {
+    public function export()
+    {
         return Excel::download(new StoreProductExport, 'products.xlsx');
     }
-    
+
     // Analytics method ko yahan same rakhna hai jo aapne bheja tha...
     public function analytics(Request $request, $id)
     {
@@ -405,4 +413,16 @@ class StoreProductController extends Controller
         ));
     }
 
+    /**
+     * Generate a unique 12-digit numeric UPC code.
+     */
+    public function generateUpc()
+    {
+        do {
+            // Generate a random 12-digit number (UPC-A format)
+            $upc = str_pad(random_int(100000000000, 999999999999), 12, '0', STR_PAD_LEFT);
+        } while (Product::where('upc', $upc)->exists());
+
+        return response()->json(['upc' => $upc]);
+    }
 }

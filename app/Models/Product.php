@@ -12,13 +12,14 @@ class Product extends Model
     use SoftDeletes, HasFactory;
 
     protected $fillable = [
-        'store_id', 
+        'store_id',
         'department_id',
-        'category_id', 
-        'subcategory_id', 
-        'product_name', 
-        'sku', 
+        'category_id',
+        'subcategory_id',
+        'product_name',
+        'sku',
         'barcode',
+        'upc',
         'unit',
         'unit_type',
         'weight_options',
@@ -34,7 +35,7 @@ class Product extends Model
         'lead_time_days',
         'requires_expiration',
         'icon',
-        'description', 
+        'description',
         'is_active',
         'carton_length',
         'carton_width',
@@ -83,7 +84,7 @@ class Product extends Model
     }
 
     // Relationships
-    
+
     // <--- YE RELATIONSHIP ADD KI HAI
     public function department()
     {
@@ -94,7 +95,7 @@ class Product extends Model
     {
         return $this->hasMany(StoreStock::class);
     }
-    
+
     public function category()
     {
         return $this->belongsTo(ProductCategory::class);

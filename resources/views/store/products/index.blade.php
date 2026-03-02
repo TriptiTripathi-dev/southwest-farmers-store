@@ -74,7 +74,7 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4 py-3 text-muted small fw-bold text-uppercase"
-                                        style="letter-spacing: 0.5px;">Product [SKU / UPC]</th>
+                                        style="letter-spacing: 0.5px;">Product [UPC]</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase"
                                         style="letter-spacing: 0.5px;">Barcode</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase"
@@ -109,10 +109,6 @@
                                                                 {{ $item->upc }}
                                                             </span>
                                                         @endif
-                                                        <span class="badge bg-light text-muted border px-2 py-1">
-                                                            <i class="mdi mdi-tag me-1"></i> SKU:
-                                                            {{ $item->sku ?? '-' }}
-                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

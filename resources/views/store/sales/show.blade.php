@@ -37,31 +37,36 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($sale->items as $item)
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            @if($item->product->image)
-                                                <img src="{{ asset('storage/'.$item->product->image) }}" class="rounded me-3" width="40" height="40" style="object-fit:cover;">
-                                            @else
-                                                <div class="rounded me-3 bg-light d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
-                                                    <i class="mdi mdi-image text-muted"></i>
+                                @foreach ($sale->items as $item)
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                @if ($item->product->image)
+                                                    <img src="{{ asset('storage/' . $item->product->image) }}"
+                                                        class="rounded me-3" width="40" height="40"
+                                                        style="object-fit:cover;">
+                                                @else
+                                                    <div class="rounded me-3 bg-light d-flex align-items-center justify-content-center"
+                                                        style="width:40px; height:40px;">
+                                                        <i class="mdi mdi-image text-muted"></i>
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <span
+                                                        class="fw-bold text-dark d-block">{{ $item->product->product_name }}</span>
+                                                    <small class="text-muted">{{ $item->product->upc ?? 'N/A' }}</small>
                                                 </div>
-                                            @endif
-                                            <div>
-                                                <span class="fw-bold text-dark d-block">{{ $item->product->product_name }}</span>
-                                                <small class="text-muted">{{ $item->product->sku }}</small>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">${{ number_format($item->price, 2) }}</td>
-                                    <td class="text-center">
-                                        <span class="badge bg-light text-dark border px-3">{{ $item->quantity }}</span>
-                                    </td>
-                                    <td class="text-end pe-4 fw-bold">
-                                        ${{ number_format($item->price * $item->quantity, 2) }}
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td class="text-center">${{ number_format($item->price, 2) }}</td>
+                                        <td class="text-center">
+                                            <span
+                                                class="badge bg-light text-dark border px-3">{{ $item->quantity }}</span>
+                                        </td>
+                                        <td class="text-end pe-4 fw-bold">
+                                            ${{ number_format($item->price * $item->quantity, 2) }}
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -77,12 +82,13 @@
             </div>
 
             <div class="col-lg-4">
-                
+
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Customer Details</h6>
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-md bg-soft-primary rounded-circle d-flex align-items-center justify-content-center me-3 text-primary fw-bold fs-4">
+                            <div
+                                class="avatar-md bg-soft-primary rounded-circle d-flex align-items-center justify-content-center me-3 text-primary fw-bold fs-4">
                                 {{ substr($sale->customer->name ?? 'W', 0, 1) }}
                             </div>
                             <div>
@@ -90,15 +96,15 @@
                                 <small class="text-muted">{{ $sale->customer->phone ?? 'No Phone' }}</small>
                             </div>
                         </div>
-                        @if(optional($sale->customer)->email)
-                        <div class="d-flex align-items-center gap-2 text-muted mb-2">
-                            <i class="mdi mdi-email-outline"></i> {{ $sale->customer->email }}
-                        </div>
+                        @if (optional($sale->customer)->email)
+                            <div class="d-flex align-items-center gap-2 text-muted mb-2">
+                                <i class="mdi mdi-email-outline"></i> {{ $sale->customer->email }}
+                            </div>
                         @endif
-                        @if(optional($sale->customer)->address)
-                        <div class="d-flex align-items-center gap-2 text-muted">
-                            <i class="mdi mdi-map-marker-outline"></i> {{ $sale->customer->address }}
-                        </div>
+                        @if (optional($sale->customer)->address)
+                            <div class="d-flex align-items-center gap-2 text-muted">
+                                <i class="mdi mdi-map-marker-outline"></i> {{ $sale->customer->address }}
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -106,7 +112,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Order Summary</h6>
-                        
+
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Order ID</span>
                             <span class="fw-bold text-dark">#{{ $sale->id }}</span>
@@ -117,7 +123,8 @@
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">Payment</span>
-                            <span class="badge bg-success bg-opacity-10 text-success text-uppercase">{{ $sale->payment_method }}</span>
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success text-uppercase">{{ $sale->payment_method }}</span>
                         </div>
 
                         <hr class="border-dashed">
@@ -128,7 +135,8 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Tax / GST</span>
-                            <span class="fw-bold">${{ number_format($sale->tax_amount ?? $sale->gst_amount, 2) }}</span>
+                            <span
+                                class="fw-bold">${{ number_format($sale->tax_amount ?? $sale->gst_amount, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">Discount</span>
