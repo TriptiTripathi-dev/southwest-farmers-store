@@ -18,7 +18,7 @@ class ProductController extends Controller
         $storeId = $this->getNearbyStoreId();
 
         $query = Product::where('is_active', true);
-
+        
         if ($storeId) {
             $query->whereHas('storeStocks', function ($q) use ($storeId) {
                 $q->where('store_id', $storeId)->where('quantity', '>', 0);
