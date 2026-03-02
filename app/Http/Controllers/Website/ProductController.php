@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\StoreDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -13,9 +15,17 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        // Simple example: paginate all products
-        $products = Product::where('is_active', true)
-            ->paginate(12);
+        $storeId = $this->getNearbyStoreId();
+
+        $query = Product::where('is_active', true);
+
+        if ($storeId) {
+            $query->whereHas('storeStocks', function ($q) use ($storeId) {
+                $q->where('store_id', $storeId)->where('quantity', '>', 0);
+            });
+        }
+
+        $products = $query->paginate(12);
 
         return view('website.products.index', compact('products'));
     }
@@ -39,9 +49,16 @@ class ProductController extends Controller
     public function pos(Request $request)
     {
         $categories = \App\Models\ProductCategory::select('id', 'name', 'code')->orderBy('name')->get();
+        $storeId = $this->getNearbyStoreId();
 
         if ($request->ajax()) {
             $query = Product::where('is_active', true);
+
+            if ($storeId) {
+                $query->whereHas('storeStocks', function ($q) use ($storeId) {
+                    $q->where('store_id', $storeId)->where('quantity', '>', 0);
+                });
+            }
 
             // Filter by Category
             if ($request->category && $request->category !== 'all') {
@@ -65,5 +82,30 @@ class ProductController extends Controller
         }
 
         return view('website.products.pos', compact('categories'));
+    }
+
+    /**
+     * Get the nearby store ID based on user coordinates.
+     */
+    private function getNearbyStoreId()
+    {
+        $lat = null;
+        $lng = null;
+
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+            $lat = $customer->latitude;
+            $lng = $customer->longitude;
+        } else {
+            $lat = session('user_latitude');
+            $lng = session('user_longitude');
+        }
+
+        if ($lat && $lng) {
+            $store = StoreDetail::withinDistance($lat, $lng, 5)->first();
+            return $store ? $store->id : null;
+        }
+
+        return null; // No location set or no store nearby
     }
 }

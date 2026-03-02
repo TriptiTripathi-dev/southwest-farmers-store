@@ -55,4 +55,23 @@ class StoreDetail extends Model
         }
         return "SWF - " . $this->store_name;
     }
+
+    /**
+     * Scope a query to only include stores within a given distance of a coordinate.
+     */
+    public function scopeWithinDistance($query, $latitude, $longitude, $distance = 5)
+    {
+        // Use Haversine formula for distance calculation in KM
+        $haversine = "(6371 * acos(cos(radians($latitude)) 
+                     * cos(radians(latitude)) 
+                     * cos(radians(longitude) 
+                     - radians($longitude)) 
+                     + sin(radians($latitude)) 
+                     * sin(radians(latitude))))";
+
+        return $query->select('*')
+            ->selectRaw("$haversine AS distance")
+            ->havingRaw("$haversine < ?", [$distance])
+            ->orderBy('distance');
+    }
 }

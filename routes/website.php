@@ -6,10 +6,13 @@ use App\Http\Controllers\Website\ProductController;
 use App\Http\Controllers\Website\CartController;
 use App\Http\Controllers\Website\CustomerAuthController;
 use App\Http\Controllers\Website\OrderController;
+use App\Http\Controllers\Website\LocationController;
 
 // Website Routes
 Route::name('website.')->group(function () {
     
+    // Location Mapping
+    Route::post('/update-location', [LocationController::class, 'update'])->name('location.update');
     // Auth Routes
     Route::middleware('guest:customer')->group(function () {
         // Registration
