@@ -79,11 +79,13 @@
             {{-- ── Quick Stats ── --}}
             <div class="row g-4 mb-5 animate-fade-up delay-100">
                 <div class="col-6 col-md-3">
-                    <div class="stat-badge">
-                        <i class="mdi mdi-cart-outline fs-1 text-theme mb-2 d-block"></i>
-                        <h4 class="fw-bold text-dark mb-0">0</h4>
-                        <small class="text-muted fw-semibold">Total Orders</small>
-                    </div>
+                    <a href="{{ route('website.orders.index') }}" class="text-decoration-none">
+                        <div class="stat-badge hover-lift transition">
+                            <i class="mdi mdi-cart-outline fs-1 text-theme mb-2 d-block"></i>
+                            <h4 class="fw-bold text-dark mb-0">{{ \App\Models\Sale::where('customer_id', $customer->id)->count() }}</h4>
+                            <small class="text-muted fw-semibold">Total Orders</small>
+                        </div>
+                    </a>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="stat-badge">
@@ -123,8 +125,8 @@
                                 <small class="text-muted">Track your purchases</small>
                             </div>
                         </div>
-                        <a href="{{ route('website.products.index') }}" class="btn btn-theme w-100 rounded-pill fw-bold py-2 mt-auto">
-                            <i class="mdi mdi-cart-plus me-2"></i> Start Shopping
+                        <a href="{{ route('website.orders.index') }}" class="btn btn-theme w-100 rounded-pill fw-bold py-2 mt-auto">
+                            <i class="mdi mdi-package-variant-closed me-2"></i> View My Orders
                         </a>
                     </div>
                 </div>

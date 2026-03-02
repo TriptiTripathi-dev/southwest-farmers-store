@@ -270,8 +270,35 @@
 
         function proceedToCheckout() {
             const method = document.querySelector('input[name="payment_method"]:checked').value;
-            alert('Order placed successfully with ' + method.toUpperCase() + '! (Demo Checkout)');
-            // In a real app, this would redirect or submit a form to a checkout handler
+            const btn = event.target;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin me-2"></i>Processing...';
+
+            fetch(`{{ route('website.checkout.store') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ payment_method: method })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || 'Error placing order');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="mdi mdi-shield-check-outline me-2"></i>Place Your Order';
+                }
+            })
+            .catch(err => {
+                alert('An unexpected error occurred. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="mdi mdi-shield-check-outline me-2"></i>Place Your Order';
+            });
         }
 
         function removeItem(itemId) {

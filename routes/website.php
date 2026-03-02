@@ -5,6 +5,7 @@ use App\Http\Controllers\Website\HomeController;
 use App\Http\Controllers\Website\ProductController;
 use App\Http\Controllers\Website\CartController;
 use App\Http\Controllers\Website\CustomerAuthController;
+use App\Http\Controllers\Website\OrderController;
 
 // Website Routes
 Route::name('website.')->group(function () {
@@ -30,6 +31,12 @@ Route::name('website.')->group(function () {
         Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
         Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
         Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon');
+
+        // Orders & Checkout
+        Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
+        Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/my-orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/order-success/{invoice}', [OrderController::class, 'success'])->name('checkout.success');
     });
 
     // Public Routes
