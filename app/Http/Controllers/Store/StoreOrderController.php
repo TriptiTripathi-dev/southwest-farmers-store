@@ -30,7 +30,7 @@ class StoreOrderController extends Controller
 
         return DataTables::of($orders)
             ->editColumn('status', function ($order) {
-                $class = match($order->status) {
+                $class = match ($order->status) {
                     'pending' => 'bg-warning text-dark',
                     'approved' => 'bg-info text-white',
                     'dispatched' => 'bg-primary text-white',
@@ -198,7 +198,7 @@ class StoreOrderController extends Controller
 
         return DataTables::of($stocks)
             ->addColumn('product_name', fn($s) => $s->product->product_name)
-            ->addColumn('sku', fn($s) => $s->product->sku)
+            ->addColumn('upc', fn($s) => $s->product->upc ?? '-')
             ->addColumn('action', function ($stock) {
                 return '<button class="btn btn-sm btn-primary edit-levels" 
                             data-id="' . $stock->id . '" 
@@ -220,7 +220,7 @@ class StoreOrderController extends Controller
 
         $user = Auth::user();
         $stock = StoreStock::where('store_id', $user->store_id)->findOrFail($request->id);
-        
+
         $stock->update([
             'min_stock' => $request->min_stock,
             'max_stock' => $request->max_stock,
@@ -233,7 +233,7 @@ class StoreOrderController extends Controller
     {
         $products = Product::orderBy('product_name')->get();
         $selectedProduct = $product_id ? Product::with(['warehouseStock', 'storeStocks.store'])->findOrFail($product_id) : null;
-        
+
         // If searching via AJAX or filter
         if ($request->ajax() && $request->has('product_id')) {
             $p = Product::with(['warehouseStock', 'storeStocks.store'])->find($request->product_id);

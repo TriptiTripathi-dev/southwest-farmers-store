@@ -37,7 +37,7 @@ class StoreInventoryController extends Controller
                     ->orWhere('barcode', 'ilike', "%{$search}%");
             });
         }
-        
+
         if ($request->filled('type')) {
             $query->whereHas('product', function ($q) use ($request) {
                 $q->where('unit_type', $request->type);
@@ -64,7 +64,7 @@ class StoreInventoryController extends Controller
             ->select(
                 'store_stocks.*',
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 'products.price', // Selling Price
                 'products.cost_price',
                 'product_categories.name as category_name'
@@ -92,7 +92,7 @@ class StoreInventoryController extends Controller
             $term = $request->search;
             $query->where(function ($q) use ($term) {
                 $q->where('products.product_name', 'ILIKE', "%{$term}%")
-                    ->orWhere('products.sku', 'ILIKE', "%{$term}%");
+                    ->orWhere('products.upc', 'ILIKE', "%{$term}%");
             });
         }
 

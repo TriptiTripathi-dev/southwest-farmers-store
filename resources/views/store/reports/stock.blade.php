@@ -60,15 +60,17 @@
             <div class="card-body p-3">
                 <form method="GET" action="{{ route('store.reports.stock') }}" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Search UPC, Product Name, or SKU..." value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control"
+                            placeholder="Search UPC, Product Name, or SKU..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3">
                         <select name="category" class="form-select">
                             <option value="all">All Categories</option>
-                            @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
-                                {{ $cat->name }}
-                            </option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}"
+                                    {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -77,7 +79,8 @@
                             <option value="">All Status</option>
                             <option value="in" {{ request('status') == 'in' ? 'selected' : '' }}>In Stock</option>
                             <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>Low Stock</option>
-                            <option value="out" {{ request('status') == 'out' ? 'selected' : '' }}>Out of Stock</option>
+                            <option value="out" {{ request('status') == 'out' ? 'selected' : '' }}>Out of Stock
+                            </option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -106,51 +109,57 @@
                         </thead>
                         <tbody>
                             @forelse($stocks as $stock)
-                            @php
-                            $stockValue = $stock->quantity * $stock->price;
-                            $minLevel = $stock->min_stock_level ?? 5; // Default 5 if not set
-                            @endphp
-                            <tr>
-                                <td class="ps-4">
-                                    <span class="font-monospace text-dark fw-bold small">
-                                        <i class="mdi mdi-barcode me-1 text-primary"></i>{{ $stock->product->sku ?? 'N/A' }}
-                                    </span>
-                                </td>
-                                <td class="fw-bold text-dark">
-                                    {{ $stock->product_name }}
-                                    <br><small class="text-muted font-monospace">SKU: {{ $stock->sku }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
-                                        {{ $stock->product->department->name ?? 'N/A' }}
-                                    </span>
-                                </td>
-                                <td><span class="badge bg-light text-dark border">{{ $stock->category_name ?? 'Uncategorized' }}</span></td>
-                                <td class="text-center fw-bold">{{ $stock->quantity }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
-                                        {{ $stock->in_transit_qty ?? 0 }}
-                                    </span>
-                                </td>
-                                <td class="text-end">₹{{ number_format($stock->price, 2) }}</td>
-                                <td class="text-end fw-bold text-success">₹{{ number_format($stockValue, 2) }}</td>
-                                <td class="text-center">
-                                    @if($stock->quantity == 0)
-                                    <span class="badge bg-danger">Out of Stock</span>
-                                    @elseif($stock->quantity <= $minLevel)
-                                        <span class="badge bg-warning text-dark">Low Stock</span>
+                                @php
+                                    $stockValue = $stock->quantity * $stock->price;
+                                    $minLevel = $stock->min_stock_level ?? 5; // Default 5 if not set
+                                @endphp
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="font-monospace text-dark fw-bold small">
+                                            <i
+                                                class="mdi mdi-barcode me-1 text-primary"></i>{{ $stock->product->upc ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-dark">
+                                        {{ $stock->product_name }}
+                                        <br><small class="text-muted font-monospace">UPC:
+                                            {{ $stock->upc ?? 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                            {{ $stock->product->department->name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td><span
+                                            class="badge bg-light text-dark border">{{ $stock->category_name ?? 'Uncategorized' }}</span>
+                                    </td>
+                                    <td class="text-center fw-bold">{{ $stock->quantity }}</td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                                            {{ $stock->in_transit_qty ?? 0 }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">₹{{ number_format($stock->price, 2) }}</td>
+                                    <td class="text-end fw-bold text-success">₹{{ number_format($stockValue, 2) }}</td>
+                                    <td class="text-center">
+                                        @if ($stock->quantity == 0)
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        @elseif($stock->quantity <= $minLevel)
+                                            <span class="badge bg-warning text-dark">Low Stock</span>
                                         @else
-                                        <span class="badge bg-success">In Stock</span>
+                                            <span class="badge bg-success">In Stock</span>
                                         @endif
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-5 text-muted">
-                                    <i class="mdi mdi-package-variant mb-2 fs-1"></i>
-                                    <p>No stock records found matching your filters.</p>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <i class="mdi mdi-package-variant mb-2 fs-1"></i>
+                                        <p>No stock records found matching your filters.</p>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>

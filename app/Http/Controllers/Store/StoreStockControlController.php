@@ -76,7 +76,7 @@ class StoreStockControlController extends Controller
 
         return DataTables::of($query)
             ->addColumn('product_name', fn($row) => $row->product->product_name ?? 'N/A')
-            ->addColumn('sku', fn($row) => $row->product->sku ?? '-')
+            ->addColumn('upc', fn($row) => $row->product->upc ?? '-')
             ->addColumn('category_name', fn($row) => $row->product->category->name ?? '-')
             ->addColumn('quantity', fn($row) => $row->quantity)
             ->addColumn('selling_price', fn($row) => number_format($row->selling_price ?? 0, 2))
@@ -105,7 +105,7 @@ class StoreStockControlController extends Controller
 
         return DataTables::of($query)
             ->addColumn('product_name', fn($row) => $row->product->product_name ?? 'N/A')
-            ->addColumn('sku', fn($row) => $row->product->sku ?? '-')
+            ->addColumn('upc', fn($row) => $row->product->upc ?? '-')
             ->addColumn('category_name', fn($row) => $row->product->category->name ?? '-')
             ->addColumn('current_qty', fn($row) => $row->quantity)
             ->addColumn('min_level', fn($row) => 10)
@@ -193,7 +193,7 @@ class StoreStockControlController extends Controller
             ->select([
                 'products.id',
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 'store_stocks.quantity',
                 DB::raw('store_stocks.quantity * products.cost_price as value')
             ])
@@ -471,9 +471,9 @@ class StoreStockControlController extends Controller
         // Search by term
         elseif ($term) {
             $query->where(function ($q) use ($term) {
-                $q->where('sku', 'ILIKE', "%{$term}%")
+                $q->where('upc', 'ILIKE', "%{$term}%")
                     ->orWhere('product_name', 'ILIKE', "%{$term}%")
-                    ->orWhere('sku', 'ILIKE', "%{$term}%");
+                    ->orWhere('upc', 'ILIKE', "%{$term}%");
             });
         }
 
@@ -486,9 +486,8 @@ class StoreStockControlController extends Controller
                 $stock = $p->storeStock->first();
                 return [
                     'id' => $p->id,
-                    'sku' => $p->sku,
+                    'upc' => $p->upc,
                     'product_name' => $p->product_name,
-                    'sku' => $p->sku,
                     'unit_type' => $p->unit_type ?? 'units',
                     'current_stock' => $stock->quantity ?? 0,
                     'in_transit' => $stock->in_transit_qty ?? 0,
