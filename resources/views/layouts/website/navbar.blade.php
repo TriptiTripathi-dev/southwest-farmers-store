@@ -20,7 +20,7 @@
                     <a class="nav-link {{ request()->routeIs('website.products.pos') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.pos') }}">Quick Shop (POS)</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link text-dark" href="{{ route('website.home') }}#about">About Us</a>
+                    <a class="nav-link {{ request()->routeIs('website.about') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.about') }}">About Us</a>
                 </li>
                 <li class="nav-item px-2">
                     <a class="nav-link {{ request()->routeIs('website.contact') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.contact') }}">Contact</a>
@@ -82,10 +82,17 @@
                     </div>
                 @endif
 
+                @php
+                    $cartCount = 0;
+                    if(auth('customer')->check()) {
+                        $cart = \App\Models\Cart::where('user_id', auth('customer')->id())->first();
+                        $cartCount = $cart ? $cart->items()->count() : 0;
+                    }
+                @endphp
                 <a href="{{ route('website.cart.index') }}" class="btn btn-light position-relative rounded-circle p-2 border hover-lift ms-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
                     <i class="mdi mdi-cart-outline fs-5 text-dark"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success border border-white border-2 shadow-sm">
-                        0
+                        {{ $cartCount }}
                     </span>
                 </a>
                 

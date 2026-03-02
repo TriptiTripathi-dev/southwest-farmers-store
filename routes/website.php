@@ -23,6 +23,13 @@ Route::name('website.')->group(function () {
     Route::middleware('auth:customer')->group(function () {
         Route::get('dashboard', [CustomerAuthController::class, 'dashboard'])->name('dashboard');
         Route::post('customer/logout', [CustomerAuthController::class, 'logout'])->name('logout');
+
+        // Cart
+        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+        Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+        Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+        Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon');
     });
 
     // Public Routes
@@ -31,8 +38,6 @@ Route::name('website.')->group(function () {
     Route::get('/product/{slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/quick-shop', [ProductController::class, 'pos'])->name('products.pos');
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
-
-    // Cart
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
+    Route::get('/about', [HomeController::class, 'about'])->name('about');
 });

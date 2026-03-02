@@ -188,28 +188,45 @@
                 </div>
 
                 <!-- Main Content -->
-                <div class="col-lg-9">
+                <div class="col-lg-6">
                     <!-- Top Bar -->
                     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
-                        <div class="w-100 flex-grow-1" style="max-width: 500px;">
+                        <div class="w-100 flex-grow-1">
                             <div class="search-box">
                                 <i class="mdi mdi-magnify fs-4 text-muted"></i>
-                                <input type="text" id="posSearch" class="search-input" placeholder="Search products by name or SKU...">
+                                <input type="text" id="posSearch" class="search-input" placeholder="Search products...">
                             </div>
-                        </div>
-                        <div class="d-lg-none w-100">
-                            <select class="form-select rounded-pill px-4" onchange="filterCategory(this.value)">
-                                <option value="all">All Categories</option>
-                                @foreach($categories as $cat)
-                                <option value="{{ $cat->code }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
                         </div>
                     </div>
 
                     <!-- Products Grid -->
-                    <div class="row g-3 g-md-4" id="productGrid">
+                    <div class="row g-3" id="productGrid">
                         <!-- Content loaded via AJAX -->
+                    </div>
+                </div>
+
+                <!-- Side Cart -->
+                <div class="col-lg-3">
+                    <div class="category-sidebar p-0 overflow-hidden" style="position: sticky; top: 100px;">
+                        <div class="p-3 bg-dark text-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">Current Order</h6>
+                            <i class="mdi mdi-cart-outline"></i>
+                        </div>
+                        <div id="sideCartItems" style="max-height: 400px; overflow-y: auto;" class="p-3">
+                            <!-- Items loaded via AJAX -->
+                            <div class="text-center py-4 text-muted">
+                                <p>No items added yet</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-light border-top">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Amount</span>
+                                <span class="fw-bold" id="sideCartTotal">$0.00</span>
+                            </div>
+                            <button class="btn btn-theme w-100 py-3 fw-bold rounded-pill mt-2" id="checkoutBtn" disabled onclick="window.location.href='{{ route('website.cart.index') }}'">
+                                CHECKOUT NOW
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -237,60 +254,45 @@
 
         function loadProducts() {
             const grid = document.getElementById('productGrid');
-            grid.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <div class="spinner-border text-theme" role="status"></div>
-                </div>
-            `;
+            grid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-theme"></div></div>';
 
             fetch(`{{ route('website.products.pos') }}?category=${currentCategory}&term=${searchTerm}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
             .then(products => {
                 if (products.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-12 text-center py-5">
-                            <i class="mdi mdi-package-variant-closed fs-1 text-muted"></i>
-                            <h4 class="mt-3 fw-bold">No products found</h4>
-                            <p class="text-muted">Try adjusting your search or category filter.</p>
-                        </div>
-                    `;
+                    grid.innerHTML = '<div class="col-12 text-center py-5">No products found</div>';
                     return;
                 }
 
                 grid.innerHTML = products.map(p => `
-                    <div class="col-6 col-md-4 col-xl-3">
+                    <div class="col-6 col-md-4">
                         <div class="pos-card shadow-sm">
-                            <div class="pos-img-container">
-                                <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/400x400/ecfdf5/10b981?text=' + encodeURIComponent(p.product_name)}" 
+                            <div class="pos-img-container" style="height: 120px;">
+                                <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/200x200/ecfdf5/10b981?text=' + encodeURIComponent(p.product_name)}" 
                                      class="pos-img" alt="${p.product_name}">
                             </div>
-                            <div class="pos-content">
-                                <h3 class="pos-title">${p.product_name}</h3>
-                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                    <span class="pos-price">$${parseFloat(p.price).toFixed(2)}</span>
-                                    <small class="text-muted fw-bold">SKU: ${p.sku || 'N/A'}</small>
+                            <div class="pos-content p-2">
+                                <h3 class="pos-title" style="font-size: 0.8rem; min-height: 2rem;">${p.product_name}</h3>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="pos-price" style="font-size: 0.9rem;">$${parseFloat(p.price).toFixed(2)}</span>
                                 </div>
-                                <button type="button" class="btn-add-cart" onclick="addToCart(${p.id}, this)">
-                                    <i class="mdi mdi-cart-plus"></i> ADD
+                                <button type="button" class="btn-add-cart py-1 mt-2" style="font-size: 0.75rem;" onclick="addToCart(${p.id}, this)">
+                                    <i class="mdi mdi-plus"></i> ADD
                                 </button>
                             </div>
                         </div>
                     </div>
                 `).join('');
-            })
-            .catch(err => {
-                grid.innerHTML = `<div class="col-12 text-center py-5 text-danger">Error loading products. Please try again.</div>`;
             });
         }
 
         function addToCart(productId, btn) {
-            const originalContent = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+            @if(!auth('customer')->check())
+                window.location.href = '{{ route('website.login') }}';
+                return;
+            @endif
 
             const formData = new FormData();
             formData.append('product_id', productId);
@@ -299,41 +301,73 @@
 
             fetch('{{ route('website.cart.store') }}', {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Show success state on button
-                    btn.classList.replace('btn-add-cart', 'btn-success');
-                    btn.innerHTML = '<i class="mdi mdi-check"></i> ADDED';
-                    
-                    // Update navbar cart count if possible
-                    const cartBadge = document.querySelector('.navbar .badge');
-                    if (cartBadge) {
-                        cartBadge.textContent = data.cart_count;
-                        cartBadge.classList.replace('bg-success', 'bg-danger'); // Optional animation/color change
-                    }
+                    loadSideCart();
+                    // Update global badge
+                    const badge = document.querySelector('.navbar .badge');
+                    if (badge) badge.textContent = data.cart_count;
+                }
+            });
+        }
 
-                    setTimeout(() => {
-                        btn.classList.replace('btn-success', 'btn-add-cart');
-                        btn.innerHTML = originalContent;
-                        btn.disabled = false;
-                    }, 2000);
+        function loadSideCart() {
+            fetch('{{ route('website.cart.index') }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                // Since our CartController@index returns a full view, we should ideally have a partial or just use the data.
+                // For now, let's fetch JSON if we want more efficiency, but I'll implement a quick reload of the items.
+                updateSideCartUI(); 
+            });
+        }
+
+        function updateSideCartUI() {
+            // We'll fetch the cart data as JSON for the sidebar
+            fetch('{{ route('website.cart.index') }}', {
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest' 
                 }
             })
-            .catch(err => {
-                console.error('Cart Error:', err);
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
+            .then(res => res.json())
+            .then(data => {
+                const sideItems = document.getElementById('sideCartItems');
+                const sideTotal = document.getElementById('sideCartTotal');
+                const checkoutBtn = document.getElementById('checkoutBtn');
+
+                if (!data.cart || data.cart.items.length === 0) {
+                    sideItems.innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
+                    sideTotal.textContent = '$0.00';
+                    checkoutBtn.disabled = true;
+                    return;
+                }
+
+                sideItems.innerHTML = data.cart.items.map(item => `
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <div>
+                            <small class="fw-bold d-block">${item.product.product_name}</small>
+                            <small class="text-muted">${item.quantity} x $${parseFloat(item.price).toFixed(2)}</small>
+                        </div>
+                        <span class="fw-bold">$${parseFloat(item.total).toFixed(2)}</span>
+                    </div>
+                `).join('');
+
+                sideTotal.textContent = `$${parseFloat(data.cart.total_amount).toFixed(2)}`;
+                checkoutBtn.disabled = false;
             });
         }
 
         // Initial load
-        document.addEventListener('DOMContentLoaded', loadProducts);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            updateSideCartUI();
+        });
     </script>
     @endpush
 </x-website-layout>

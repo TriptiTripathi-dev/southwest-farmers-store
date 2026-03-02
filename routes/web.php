@@ -91,14 +91,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
     Route::post('/stocks/convert', [StoreInventoryController::class, 'convertWeight'])->name('inventory.convert');
 
-    // STOCK CONTROL MODULE - All Routes
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
-        // Overview
         Route::get('/overview', [StoreStockControlController::class, 'overview'])->name('overview');
         Route::get('/overview/data', [StoreStockControlController::class, 'overviewData'])->name('overview.data');
         Route::patch('recall/{id}/update-status', [StoreRecallController::class, 'updateStatus'])
             ->name('recall.update-status');
-        // Request Stock (PO)
         Route::get('/requests', [StoreStockControlController::class, 'requests'])->name('requests');
         Route::get('/requests/create', [StoreStockControlController::class, 'create'])->name('requests.create');
         Route::post('/requests/store', [StoreStockControlController::class, 'store'])->name('requests.store');
@@ -112,23 +109,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests/{id}/receive', [StoreStockControlController::class, 'receive'])->name('requests.receive');
         Route::post('/received/{id}/confirm', [StoreStockControlController::class, 'confirmReceived'])->name('received.confirm');
 
-        // Low Stock & Reorder
         Route::get('/low-stock', [StoreStockControlController::class, 'lowStock'])->name('low-stock');
         Route::get('/low-stock/data', [StoreStockControlController::class, 'lowStockData'])->name('low-stock.data');
         Route::post('/low-stock/request', [StoreStockControlController::class, 'quickRequest'])->name('low-stock.request');
-
-        // Valuation
         Route::get('/valuation', [StoreStockControlController::class, 'valuation'])->name('valuation');
 
-        // Expiry & Damage Alert
+        Route::get('/expiry', [StoreStockControlController::class, 'expiry'])->name('expiry');
+        Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
         Route::get('/expiry', [StoreStockControlController::class, 'expiry'])->name('expiry');
         Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
 
-        // Recall Requests (Store View)
         Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
         Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
 
-        // Stock Control & Recall
         Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
         Route::get('/recall/create', [StoreRecallController::class, 'create'])->name('recall.create');
         Route::post('/recall', [StoreRecallController::class, 'store'])->name('recall.store');
@@ -137,7 +130,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
-        // Audit Routes
+     
         Route::resource('promotions', StorePromotionController::class);
         Route::post('/promotions/{id}/status', [StorePromotionController::class, 'updateStatus'])->name('promotions.status');
         Route::get('/audits', [StoreAuditController::class, 'index'])->name('audits.index');
@@ -197,7 +190,7 @@ Route::middleware('auth')->group(function () {
                 Route::post('/{id}/reply', 'reply')->name('reply');
             });
 
-        // NEW: Phase 3 Store Purchase Orders
+     
         Route::prefix('purchase-orders')->name('orders.')->group(function () {
             Route::get('/', [StoreOrderController::class, 'index'])->name('index');
             Route::get('/data', [StoreOrderController::class, 'getOrders'])->name('data');
@@ -208,7 +201,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/{id}/confirm', [StoreOrderController::class, 'confirmReceive'])->name('confirm-receive');
         });
 
-        // NEW: Phase 3 Stock Level Management (Triggers for Warehouse Auto-Gen)
         Route::prefix('inventory')->name('inventory.')->group(function () {
             Route::get('/stock-levels', [StoreOrderController::class, 'stockLevels'])->name('stock-levels');
             Route::get('/stock-levels/data', [StoreOrderController::class, 'getStockLevelsData'])->name('stock-levels.data');

@@ -142,35 +142,51 @@
                 <div class="col-lg-8">
                     <div class="contact-card p-5 reveal active">
                         <h3 class="fw-black mb-4">Send us a Message</h3>
-                        <form action="#" method="POST">
+                        
+                        @if(session('success'))
+                            <div class="alert alert-success rounded-4 p-4 border-0 shadow-sm mb-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="mdi mdi-check fs-4"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ session('success') }}</h6>
+                                </div>
+                            </div>
+                        @endif
+
+                        <form action="{{ route('website.contact.submit') }}" method="POST">
+                            @csrf
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label fw-bold small text-muted text-uppercase mb-2">Full Name</label>
-                                        <input type="text" class="form-control form-control-premium" placeholder="John Doe" required>
+                                        <input type="text" name="name" class="form-control form-control-premium @error('name') is-invalid @enderror" placeholder="John Doe" value="{{ old('name') }}" required>
+                                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label fw-bold small text-muted text-uppercase mb-2">Email Address</label>
-                                        <input type="email" class="form-control form-control-premium" placeholder="john@example.com" required>
+                                        <input type="email" name="email" class="form-control form-control-premium @error('email') is-invalid @enderror" placeholder="john@example.com" value="{{ old('email') }}" required>
+                                        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="form-label fw-bold small text-muted text-uppercase mb-2">Subject</label>
-                                        <select class="form-select form-control-premium">
-                                            <option selected>General Inquiry</option>
-                                            <option>Order Status</option>
-                                            <option>Product Question</option>
-                                            <option>Feedback</option>
+                                        <select name="subject" class="form-select form-control-premium">
+                                            <option {{ old('subject') == 'General Inquiry' ? 'selected' : '' }}>General Inquiry</option>
+                                            <option {{ old('subject') == 'Order Status' ? 'selected' : '' }}>Order Status</option>
+                                            <option {{ old('subject') == 'Product Question' ? 'selected' : '' }}>Product Question</option>
+                                            <option {{ old('subject') == 'Feedback' ? 'selected' : '' }}>Feedback</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="form-label fw-bold small text-muted text-uppercase mb-2">Your Message</label>
-                                        <textarea class="form-control form-control-premium" rows="5" placeholder="How can we help you today?" required></textarea>
+                                        <textarea name="message" class="form-control form-control-premium @error('message') is-invalid @enderror" rows="5" placeholder="How can we help you today?" required>{{ old('message') }}</textarea>
+                                        @error('message') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
                                 <div class="col-md-12 text-end">

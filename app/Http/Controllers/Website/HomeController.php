@@ -23,4 +23,29 @@ class HomeController extends Controller
     {
         return view('website.contact');
     }
+
+    /**
+     * Display the about us page.
+     */
+    public function about()
+    {
+        return view('website.about');
+    }
+
+    /**
+     * Handle contact form submission.
+     */
+    public function submitContact(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'required|string',
+            'message' => 'required|string',
+        ]);
+
+        // Logic to send email or store in DB would go here
+        
+        return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
+    }
 }

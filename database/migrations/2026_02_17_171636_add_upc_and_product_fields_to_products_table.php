@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::table('products', function (Blueprint $table) {
             // UPC Code - must be displayed before product name everywhere
-            $table->string('sku', 50)->nullable()->after('id');
-            $table->index('sku');
+            if (!Schema::hasColumn('products', 'sku')) {
+                $table->string('sku', 50)->nullable()->after('id');
+                $table->index('sku');
+            }
             
             // Unit type: 'units' or 'weight'
             $table->enum('unit_type', ['units', 'weight'])->default('units')->after('unit');

@@ -19,7 +19,6 @@ class Product extends Model
         'product_name', 
         'sku', 
         'barcode',
-        'sku',
         'unit',
         'unit_type',
         'weight_options',
