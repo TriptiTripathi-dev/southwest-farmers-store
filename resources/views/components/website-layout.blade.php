@@ -165,7 +165,13 @@
                 </ul>
 
                 {{-- Right-side: Cart + Auth --}}
-                <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+            {{-- Location Badge --}}
+            <div id="userLocationDisplay" class="d-none d-lg-flex align-items-center gap-2 px-3 py-1 bg-light rounded-pill border ms-2">
+                <i class="mdi mdi-map-marker-radius text-theme"></i>
+                <small class="fw-bold text-muted" id="locationStatus">Checking location...</small>
+            </div>
+
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
 
                     {{-- Cart --}}
                     <a href="{{ route('website.cart.index') }}"
@@ -294,6 +300,52 @@
         window.addEventListener('scroll', () => {
             navbar.classList.toggle('scrolled', window.scrollY > 10);
         });
+
+        // Geolocation Handling
+        function updateLocationInSession(lat, lng) {
+            fetch("{{ route('website.location.update') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ latitude: lat, longitude: lng })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('locationStatus').textContent = "Location sync";
+                    // Optional: reload the products if on the product page
+                    if(window.location.pathname === '/products' || window.location.pathname === '/quick-shop') {
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        updateLocationInSession(lat, lng);
+                    },
+                    (error) => {
+                        console.error("Error getting location:", error);
+                        document.getElementById('locationStatus').textContent = "Local access denied";
+                    }
+                );
+            } else {
+                document.getElementById('locationStatus').textContent = "Geo not supported";
+            }
+        }
+
+        @if(!session('location_set'))
+            document.addEventListener('DOMContentLoaded', getLocation);
+        @else
+            document.getElementById('locationStatus').textContent = "Nearby stores";
+        @endif
     </script>
 
     @stack('scripts')
