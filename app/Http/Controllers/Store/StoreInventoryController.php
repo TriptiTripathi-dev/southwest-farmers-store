@@ -241,9 +241,9 @@ class StoreInventoryController extends Controller
     public function downloadSampleCsv()
     {
         return response()->streamDownload(function () {
-            echo "sku,quantity\n";
-            echo "STR-001,10\n";
-            echo "STR-002,5\n";
+            echo "upc,quantity\n";
+            echo "012345678905,10\n";
+            echo "012345678906,5\n";
         }, 'stock_request_sample.csv');
     }
 
@@ -264,7 +264,7 @@ class StoreInventoryController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
-                    ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
+                    ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('upc', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%"));
             });
         }
         if ($status === 'history') {

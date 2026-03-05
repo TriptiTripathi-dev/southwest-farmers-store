@@ -48,7 +48,7 @@
         <div class="tab-pane fade" id="expiry">
             <div class="card border-0 shadow-sm border-start border-danger border-4"><div class="card-body">
                 <table id="expiryTable" class="table table-hover w-100">
-                    <thead class="table-light"><tr><th>Batch</th><th>Product</th><th>SKU</th><th>Category</th><th>Expiry</th><th>Qty</th><th>Damaged</th><th>Status</th><th>Action</th></tr></thead>
+                    <thead class="table-light"><tr><th>Batch</th><th>Product</th><th>UPC</th><th>Category</th><th>Expiry</th><th>Qty</th><th>Damaged</th><th>Status</th><th>Action</th></tr></thead>
                 </table>
             </div></div>
         </div>
@@ -56,7 +56,7 @@
         <div class="tab-pane fade" id="lowstock">
             <div class="card border-0 shadow-sm border-start border-warning border-4"><div class="card-body">
                 <table id="lowStockTable" class="table table-hover w-100">
-                    <thead class="table-light"><tr><th>Product</th><th>SKU</th><th>Category</th><th>On Hand</th><th>Suggestion</th></tr></thead>
+                    <thead class="table-light"><tr><th>Product</th><th>UPC</th><th>Category</th><th>On Hand</th><th>Suggestion</th></tr></thead>
                 </table>
             </div></div>
         </div>
@@ -76,9 +76,9 @@
     $(document).ready(function() {
         $('#recallsTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'recalls' } }, columns: [ {data:'id'}, {data:'product_name'}, {data:'requested_quantity'}, {data:'reason'}, {data:'status'}, {data:'created_at'}, {data:'action'} ], order: [[5, 'desc']] });
         
-        $('#expiryTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'expiry' } }, columns: [ {data:'batch_number'}, {data:'product_name'}, {data:'sku'}, {data:'category_name'}, {data:'expiry_date'}, {data:'quantity'}, {data:'damaged_quantity'}, {data:'status'}, {data:'action'} ], order: [[4, 'asc']] });
+        $('#expiryTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'expiry' } }, columns: [ {data:'batch_number'}, {data:'product_name'}, {data:'upc'}, {data:'category_name'}, {data:'expiry_date'}, {data:'quantity'}, {data:'damaged_quantity'}, {data:'status'}, {data:'action'} ], order: [[4, 'asc']] });
         
-        $('#lowStockTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'lowstock' } }, columns: [ {data:'product_name'}, {data:'sku'}, {data:'category_name'}, {data:'quantity'}, {data:'reorder_suggestion'} ], order: [[3, 'asc']] });
+        $('#lowStockTable').DataTable({ processing: true, serverSide: true, ajax: { url: "{{ route('store.stock-control.recall.index') }}", data: { tab: 'lowstock' } }, columns: [ {data:'product_name'}, {data:'upc'}, {data:'category_name'}, {data:'quantity'}, {data:'reorder_suggestion'} ], order: [[3, 'asc']] });
         
         $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) { $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust(); });
     });

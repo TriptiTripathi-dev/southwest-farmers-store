@@ -29,7 +29,7 @@
                     <div class="mb-3">
                         <label>Excel File (xlsx, csv)</label>
                         <input type="file" name="file" class="form-control" required>
-                        <small class="text-muted d-block mt-1">Columns: product_name, sku, selling_price, stock_quantity, unit, barcode</small>
+                        <small class="text-muted d-block mt-1">Columns: product_name, upc, selling_price, stock_quantity, unit, barcode</small>
                     </div>
 
                 </div>

@@ -271,7 +271,7 @@
                         <tr class="bg-white border-bottom">
                             <td class="ps-4">
                                 <div class="fw-bold text-dark">${item.product.product_name}</div>
-                                <div class="text-muted font-monospace small mt-1"><i class="mdi mdi-barcode me-1"></i>${item.product.sku}</div>
+                                <div class="text-muted font-monospace small mt-1"><i class="mdi mdi-barcode me-1"></i>${item.product.upc}</div>
                                 <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
                             </td>
                             <td class="text-center">

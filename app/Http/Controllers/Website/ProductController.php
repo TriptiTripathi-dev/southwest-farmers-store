@@ -72,7 +72,8 @@ class ProductController extends Controller
                 $query->where(function ($q) use ($request) {
                     $term = $request->term;
                     $q->where('product_name', 'LIKE', "%{$term}%")
-                      ->orWhere('sku', 'LIKE', "%{$term}%");
+                      ->orWhere('upc', 'LIKE', "%{$term}%")
+                      ->orWhere('barcode', 'LIKE', "%{$term}%");
                 });
             }
 

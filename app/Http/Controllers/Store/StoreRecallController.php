@@ -65,7 +65,7 @@ class StoreRecallController extends Controller
                         'product_batches.id as batch_id', // Alias ID to avoid ambiguity
                         'product_batches.*',
                         'products.product_name',
-                        'products.sku',
+                        'products.upc',
                         'product_categories.name as category_name',
                         // POSTGRESQL FIX: Subtract dates directly
                         DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left")
@@ -95,7 +95,7 @@ class StoreRecallController extends Controller
 
                 return DataTables::of($query)
                     ->addColumn('product_name', fn($row) => $row->product->product_name ?? 'N/A')
-                    ->addColumn('sku', fn($row) => $row->product->sku ?? '-')
+                    ->addColumn('upc', fn($row) => $row->product->upc ?? '-')
                     ->addColumn('category_name', fn($row) => $row->product->category->name ?? '-')
                     ->editColumn('quantity', fn($row) => '<span class="badge bg-danger fs-6">' . $row->quantity . '</span>')
                     ->addColumn('reorder_suggestion', fn($row) => 'Target: 20 (Order: ' . max(0, 20 - $row->quantity) . ')')

@@ -8,7 +8,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-1">
                             <li class="breadcrumb-item"><a href="{{ route('inventory.index') }}">Inventory</a></li>
-                            <li class="breadcrumb-item active">History: {{ $product->sku }}</li>
+                            <li class="breadcrumb-item active">History: {{ $product->upc }}</li>
                         </ol>
                     </nav>
                     <h4 class="mb-0 fw-bold">Stock Ledger</h4>
@@ -27,7 +27,7 @@
                         </div>
                         <div>
                             <h5 class="fw-bold mb-1">{{ $product->product_name }}</h5>
-                            <span class="badge bg-light text-dark border">SKU: {{ $product->sku }}</span>
+                            <span class="badge bg-light text-dark border">UPC: {{ $product->upc }}</span>
                             <span class="badge bg-light text-dark border">Unit: {{ $product->unit }}</span>
                         </div>
                         <div class="ms-auto text-end">

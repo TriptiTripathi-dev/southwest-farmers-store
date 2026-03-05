@@ -32,7 +32,7 @@
                                 </div>
                                 <div>
                                     <h5 class="fw-bold mb-1">{{ $stockRequest->product->product_name }}</h5>
-                                    <p class="text-muted mb-0 small">SKU: {{ $stockRequest->product->sku }} | Unit: {{ $stockRequest->product->unit }}</p>
+                                    <p class="text-muted mb-0 small">UPC: {{ $stockRequest->product->upc }} | Unit: {{ $stockRequest->product->unit }}</p>
                                 </div>
                             </div>
 

@@ -76,7 +76,7 @@
                 <td>1</td>
                 <td>
                     <strong>{{ $recall->product->product_name }}</strong><br>
-                    <small>SKU: {{ $recall->product->sku }}</small><br>
+                    <small>UPC: {{ $recall->product->upc }}</small><br>
                     <small>Category: {{ $recall->product->category->name ?? 'N/A' }}</small>
                 </td>
                 <td>

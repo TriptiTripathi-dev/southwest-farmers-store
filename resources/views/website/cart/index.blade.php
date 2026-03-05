@@ -51,8 +51,8 @@
                                             <h5 class="fw-bold mb-2 text-dark">{{ $item->product->product_name }}</h5>
                                             <div class="d-flex gap-3 align-items-center mb-3">
                                                 <span class="fs-5 fw-bold text-primary">${{ number_format($item->product->price, 2) }}</span>
-                                                @if($item->product->sku)
-                                                    <span class="badge bg-secondary-subtle text-secondary fw-bold">SKU: {{ $item->product->sku }}</span>
+                                                @if($item->product->upc)
+                                                    <span class="badge bg-secondary-subtle text-secondary fw-bold">UPC: {{ $item->product->upc }}</span>
                                                 @endif
                                             </div>
                                             <p class="text-muted small mb-0">

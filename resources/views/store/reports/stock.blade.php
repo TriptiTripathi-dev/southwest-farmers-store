@@ -61,7 +61,7 @@
                 <form method="GET" action="{{ route('store.reports.stock') }}" class="row g-3">
                     <div class="col-md-4">
                         <input type="text" name="search" class="form-control"
-                            placeholder="Search UPC, Product Name, or SKU..." value="{{ request('search') }}">
+                            placeholder="Search UPC, Product Name..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3">
                         <select name="category" class="form-select">

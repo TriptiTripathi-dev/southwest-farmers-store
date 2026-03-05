@@ -30,7 +30,7 @@
                                         <select name="product_id" class="form-select" required>
                                             <option value="">-- Search Product --</option>
                                             @foreach($globalProducts as $gp)
-                                                <option value="{{ $gp->id }}">{{ $gp->product_name }} (SKU: {{ $gp->sku }})</option>
+                                                <option value="{{ $gp->id }}">{{ $gp->product_name }} [UPC: {{ $gp->upc ?? 'N/A' }}] (SKU: {{ $gp->sku }})</option>
                                             @endforeach
                                         </select>
                                         <div class="form-text">These are items supplied by the warehouse. You cannot edit their details.</div>

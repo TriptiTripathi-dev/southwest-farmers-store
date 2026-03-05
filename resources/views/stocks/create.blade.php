@@ -25,7 +25,7 @@
                             <select name="product_id" id="productSelect" class="form-select form-select-lg" required>
                                 <option value="">-- Choose Product --</option>
                                 @foreach($products as $p)
-                                    <option value="{{ $p->id }}">{{ $p->product_name }} (SKU: {{ $p->sku }})</option>
+                                    <option value="{{ $p->id }}">{{ $p->product_name }} (UPC: {{ $p->upc }})</option>
                                 @endforeach
                             </select>
                             <div class="form-text text-muted" id="currentStockDisplay"></div>

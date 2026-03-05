@@ -28,7 +28,7 @@
                 <form method="GET" class="row g-3 align-items-end">
                     <div class="col-md-4">
                         <label class="form-label small fw-bold text-muted">Search Product</label>
-                        <input type="text" name="search" class="form-control" placeholder="Name, SKU, Barcode..."
+                        <input type="text" name="search" class="form-control" placeholder="Name, UPC, Barcode..."
                             value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3">
@@ -84,7 +84,7 @@
                                         <div>
                                             <div class="fw-bold text-dark">{{ $stock->product->product_name }}</div>
                                             <div class="small text-muted">
-                                                SKU: {{ $stock->product->sku ?? 'N/A' }} |
+                                                UPC: {{ $stock->product->upc ?? 'N/A' }} |
                                                 Unit: <span
                                                     class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $stock->product->unit }}</span>
                                             </div>

@@ -38,7 +38,7 @@
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
                                    class="form-control border-start-0 ps-0" 
-                                   placeholder="Search by product name or SKU...">
+                                   placeholder="Search by product name or UPC...">
                             <button type="submit" class="btn btn-dark">Search</button>
                             @if(request('search'))
                                 <a href="{{ route('inventory.index') }}" class="btn btn-light border">
@@ -75,9 +75,9 @@
                                                 <i class="mdi mdi-barcode text-primary fs-4"></i>
                                             </div>
                                             <div>
-                                                <small class="d-block text-muted font-monospace">UPC: {{ $stock->product->barcode ?: 'N/A' }}</small>
+                                                <small class="d-block text-muted font-monospace">UPC: {{ $stock->product->upc ?? '-' }}</small>
                                                 <h6 class="mb-0 fw-semibold text-dark">{{ $stock->product->product_name }}</h6>
-                                                <small class="text-muted">{{ $stock->product->unit }} | SKU: {{ $stock->product->sku ?? '-' }}</small>
+                                                <small class="text-muted">{{ $stock->product->unit }}</small>
                                             </div>
                                         </div>
                                     </td>

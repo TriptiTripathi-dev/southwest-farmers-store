@@ -302,7 +302,8 @@ class StoreSalesController extends Controller
         if ($term) {
             $query->where(function ($q) use ($term) {
                 $q->where('products.product_name', 'ILIKE', "%{$term}%")
-                    ->orWhere('products.sku', 'ILIKE', "%{$term}%");
+                    ->orWhere('products.upc', 'ILIKE', "%{$term}%")
+                    ->orWhere('products.barcode', 'ILIKE', "%{$term}%");
             });
         }
 

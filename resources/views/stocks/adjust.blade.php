@@ -25,7 +25,7 @@
                                 <option value="">-- Choose Product --</option>
                                 @foreach($products as $p)
                                     <option value="{{ $p->id }}" data-unit="{{ $p->unit }}">
-                                        {{ $p->product_name }} (SKU: {{ $p->sku }})
+                                        {{ $p->product_name }} [UPC: {{ $p->upc ?? 'N/A' }}] (SKU: {{ $p->sku }})
                                     </option>
                                 @endforeach
                             </select>

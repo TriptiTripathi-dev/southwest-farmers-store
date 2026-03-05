@@ -45,7 +45,7 @@
                                 <span class="input-group-text bg-light border-end-0 text-muted px-3"><i
                                         class="mdi mdi-magnify fs-5"></i></span>
                                 <input type="text" name="search" class="form-control bg-light border-start-0 py-2"
-                                    placeholder="Search SKU/UPC, Product Name..." value="{{ request('search') }}">
+                                    placeholder="Search UPC, Product Name..." value="{{ request('search') }}">
                             </div>
                         </div>
                         <div class="col-12 col-md-4">

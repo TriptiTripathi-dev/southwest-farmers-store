@@ -89,8 +89,7 @@
                                     <td class="ps-4 fw-bold">#{{ $req->id }}</td>
                                     <td>
                                         <div class="fw-semibold text-dark">{{ $req->product->product_name }}</div>
-                                        <div class="small text-muted font-monospace">UPC: {{ $req->product->barcode ?: 'N/A' }}</div>
-                                        <div class="small text-muted font-monospace">SKU: {{ $req->product->sku }}</div>
+                                        <div class="small text-muted font-monospace">UPC: {{ $req->product->upc }}</div>
                                     </td>
                                     <td class="text-center">
                                         <span class="fw-bold">{{ $req->requested_quantity }}</span> 
@@ -174,7 +173,7 @@
                         <select name="product_id" id="productSearchSelect" class="form-select" required style="width: 100%;">
                             <option value="">Select Product...</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->barcode ?: 'N/A' }} - {{ $product->product_name }} ({{ $product->sku }})</option>
+                                <option value="{{ $product->id }}">{{ $product->barcode ?: 'N/A' }} - {{ $product->product_name }} ({{ $product->upc }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -205,7 +204,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info small">Required columns: sku, quantity</div>
+                    <div class="alert alert-info small">Required columns: upc, quantity</div>
                     <div class="text-end mb-2">
                         <a href="{{ route('inventory.requests.sample') }}" class="small">Download Sample</a>
                     </div>
@@ -262,7 +261,7 @@
             // Initialize Select2 on the Product dropdown
             $('#productSearchSelect').select2({
                 theme: 'bootstrap-5',
-                placeholder: "Search product name or SKU...",
+                placeholder: "Search product name or UPC...",
                 allowClear: true,
                 dropdownParent: $('#newRequestModal') // Crucial for Bootstrap modals
             });

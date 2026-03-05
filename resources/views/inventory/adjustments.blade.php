@@ -40,7 +40,7 @@
                                 <tr>
                                     <td class="ps-4 py-3">
                                         <div class="fw-semibold text-dark">{{ $adj->product->product_name }}</div>
-                                        <div class="small text-muted font-monospace">{{ $adj->product->sku }}</div>
+                                        <div class="small text-muted font-monospace">{{ $adj->product->upc }}</div>
                                     </td>
                                     <td>
                                         @if($adj->operation === 'add')
@@ -116,7 +116,7 @@
                             <select name="product_id" id="adjustmentProductSelect" class="form-select" required style="width: 100%;">
                                 <option value="" disabled selected>Select Product...</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->sku }})</option>
+                                    <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->upc }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -161,7 +161,7 @@
             // Initialize Select2 on the Product dropdown inside the modal
             $('#adjustmentProductSelect').select2({
                 theme: 'bootstrap-5',
-                placeholder: "Search by product name or SKU...",
+                placeholder: "Search by product name or UPC...",
                 allowClear: true,
                 dropdownParent: $('#newAdjustmentModal') // Prevents search box from being blocked by modal
             });

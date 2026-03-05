@@ -27,7 +27,7 @@
                                 <p class="text-muted mb-1 small">Total Products</p>
                                 <h3 class="mb-0 fw-bold">{{ $stats->total_products }}</h3>
                                 <span class="badge bg-light text-primary mt-2">
-                                    <i class="mdi mdi-package-variant-closed"></i> SKUs
+                                    <i class="mdi mdi-package-variant-closed"></i> UPCs
                                 </span>
                             </div>
                             <div class="icon-wrapper bg-info bg-opacity-10 rounded-3 p-3">
@@ -84,7 +84,7 @@
                                 <p class="text-muted mb-1 small">Avg. Product Value</p>
                                 <h3 class="mb-0 fw-bold" id="avgValue">$0.00</h3>
                                 <span class="badge bg-light text-danger mt-2">
-                                    <i class="mdi mdi-chart-line"></i> Per SKU
+                                    <i class="mdi mdi-chart-line"></i> Per UPC
                                 </span>
                             </div>
                             <div class="icon-wrapper bg-danger bg-opacity-10 rounded-3 p-3">

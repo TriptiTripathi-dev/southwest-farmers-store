@@ -1224,7 +1224,7 @@
                             let badgeText = p.quantity == 0 ? 'Out of Stock' : (p.quantity <= 5 ? 'Low: ' + p.quantity : p.quantity + ' In Stock');
                             let img = p.image ? `/storage/${p.image}` : `https://placehold.co/200x200/ecfdf5/10b981?text=${p.product_name.charAt(0)}`;
                             let safeName = p.product_name.replace(/'/g, "\\'");
-                            let upcCode = p.sku || 'N/A';
+                            let upcCode = p.upc || 'N/A';
                             
                             // Apply Rounding Rule
                             let displayPrice = roundToNine(p.price);
@@ -1239,7 +1239,7 @@
                                         <div class="product-name" title="${p.product_name}">${p.product_name}</div>
                                         <span class="badge-stock ${badgeClass}">${badgeText}</span>
                                         <div class="product-footer">
-                                            <small class="text-muted">SKU: ${p.sku}</small>
+                                            <small class="text-muted">UPC: ${p.upc || 'N/A'}</small>
                                             <span class="product-price">$${displayPrice.toFixed(2)}</span>
                                         </div>
                                     </div>

@@ -10,7 +10,7 @@
                     <tbody>
                         @foreach($products as $p)
                         <tr>
-                            <td>{{ $p->product->product_name }} <small>({{ $p->product->sku }})</small></td>
+                            <td>{{ $p->product->product_name }} <small>({{ $p->product->upc }})</small></td>
                             <td>{{ $p->quantity }}</td>
                             <td>
                                 <input type="hidden" name="products[{{$p->product_id}}][id]" value="{{$p->product_id}}">

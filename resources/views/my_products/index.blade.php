@@ -13,7 +13,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Product</th>
-                            <th>Type</th> <th>SKU</th>
+                            <th>Type</th> <th>UPC</th>
                             <th>My Stock</th>
                             <th>My Price</th>
                             <th class="text-end pe-4">Action</th>
@@ -40,7 +40,7 @@
                                     <span class="badge bg-warning text-dark">Local</span>
                                 @endif
                             </td>
-                            <td>{{ $stock->product->sku }}</td>
+                            <td>{{ $stock->product->upc }}</td>
                             <td>
                                 <span class="fw-bold {{ $stock->quantity < 5 ? 'text-danger' : 'text-success' }}">
                                     {{ $stock->quantity }}

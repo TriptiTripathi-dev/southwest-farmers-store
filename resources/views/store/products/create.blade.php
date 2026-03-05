@@ -98,10 +98,17 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label>Barcode (Optional)</label>
-                                <input type="text" name="barcode" class="form-control"
-                                    placeholder="Internal barcode">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Barcode (Optional)</label>
+                                    <input type="text" name="barcode" id="barcodeInput" class="form-control"
+                                        placeholder="Internal barcode">
+                                </div>
+                                <div class="col-md-6 mb-3 text-center d-flex align-items-center justify-content-center">
+                                    <div id="barcodePreviewContainer" style="display: none;">
+                                        <svg id="barcodeImage"></svg>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -171,6 +178,7 @@
     @push('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
         <script>
             $(document).ready(function() {
@@ -234,7 +242,24 @@
 
             // Generate UPC Button Logic
             const upcInput = document.getElementById('upcInput');
+            const barcodeInput = document.getElementById('barcodeInput');
             const generateUpcBtn = document.getElementById('generateUpcBtn');
+
+            function renderBarcode(value) {
+                if (value) {
+                    $('#barcodePreviewContainer').show();
+                    JsBarcode("#barcodeImage", value, {
+                        format: "CODE128",
+                        lineColor: "#000",
+                        width: 2,
+                        height: 50,
+                        displayValue: true
+                    });
+                } else {
+                    $('#barcodePreviewContainer').hide();
+                }
+            }
+
             if (generateUpcBtn) {
                 generateUpcBtn.addEventListener('click', function() {
                     var originalText = $(this).html();
@@ -244,11 +269,28 @@
                         .then(response => response.json())
                         .then(data => {
                             if (upcInput) upcInput.value = data.upc;
+                            if (barcodeInput) barcodeInput.value = data.upc;
+                            renderBarcode(data.upc);
                         })
                         .catch(err => console.error(err))
                         .finally(() => {
                             $(generateUpcBtn).html(originalText).prop('disabled', false);
                         });
+                });
+            }
+
+            // Live Sync UPC to Barcode and render image
+            if (upcInput) {
+                upcInput.addEventListener('input', function() {
+                    if (barcodeInput) barcodeInput.value = this.value;
+                    renderBarcode(this.value);
+                });
+            }
+
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', function() {
+                    if (upcInput) upcInput.value = this.value;
+                    renderBarcode(this.value);
                 });
             }
         </script>

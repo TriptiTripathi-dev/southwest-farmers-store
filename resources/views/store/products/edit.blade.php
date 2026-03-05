@@ -98,7 +98,7 @@
                             <i class="mdi mdi-lock fs-4 me-3 text-warning"></i>
                             <div>
                                 This is a <strong>Global Warehouse Product</strong>. You only have permission to edit
-                                your local <strong>Selling Price</strong>. Name, SKU, Category, and Description are
+                                your local <strong>Selling Price</strong>. Name, UPC, Category, and Description are
                                 locked and managed by the central Admin.
                             </div>
                         </div>
@@ -173,10 +173,15 @@
                                             <div class="col-md-6">
                                                 <label
                                                     class="form-label fw-bold text-muted small text-uppercase letter-spacing-1">Barcode</label>
-                                                <input type="text" name="barcode"
+                                                <input type="text" name="barcode" id="barcodeInput"
                                                     class="form-control bg-light border-0 shadow-sm py-3 px-3 fs-6 rounded-3 font-monospace"
                                                     value="{{ $product->barcode }}"
                                                     {{ !$product->store_id ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-6 text-center d-flex align-items-center justify-content-center">
+                                                <div id="barcodePreviewContainer" style="display: none;">
+                                                    <svg id="barcodeImage"></svg>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -399,6 +404,7 @@
     @push('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
         <script>
             $(document).ready(function() {
@@ -486,18 +492,50 @@
 
                 // Live Image Preview Logic
                 @if ($product->store_id)
-                    document.getElementById('imageInput').addEventListener('change', function(e) {
-                        const file = e.target.files[0];
-                        const preview = document.getElementById('imagePreview');
-                        const prompt = document.getElementById('uploadPrompt');
+                    const imageInput = document.getElementById('imageInput');
+                    if (imageInput) {
+                        imageInput.addEventListener('change', function(e) {
+                            const file = e.target.files[0];
+                            const preview = document.getElementById('imagePreview');
+                            const prompt = document.getElementById('uploadPrompt');
 
-                        if (file) {
-                            preview.src = URL.createObjectURL(file);
-                            preview.classList.remove('d-none');
-                            prompt.classList.add('d-none');
-                        }
-                    });
+                            if (file) {
+                                preview.src = URL.createObjectURL(file);
+                                preview.classList.remove('d-none');
+                                if (prompt) prompt.classList.add('d-none');
+                            }
+                        });
+                    }
                 @endif
+
+                // Barcode Helper
+                function renderBarcode(value) {
+                    if (value) {
+                        $('#barcodePreviewContainer').show();
+                        try {
+                            JsBarcode("#barcodeImage", value, {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: 2,
+                                height: 50,
+                                displayValue: true
+                            });
+                        } catch (e) {
+                            console.error("JsBarcode Error:", e);
+                        }
+                    } else {
+                        $('#barcodePreviewContainer').hide();
+                    }
+                }
+
+                // Initial Barcode Render
+                const upcInput = document.getElementById('upcInput');
+                const barcodeInput = document.getElementById('barcodeInput');
+                if (upcInput && upcInput.value) {
+                    renderBarcode(upcInput.value);
+                } else if (barcodeInput && barcodeInput.value) {
+                    renderBarcode(barcodeInput.value);
+                }
 
                 // Toggle weight options based on unit type in edit form
                 @if ($product->store_id)
@@ -510,7 +548,6 @@
                     });
 
                     // Generate UPC Button Logic
-                    const upcInput = document.getElementById('upcInput');
                     const generateUpcBtn = document.getElementById('generateUpcBtn');
                     if (generateUpcBtn) {
                         generateUpcBtn.addEventListener('click', function() {
@@ -521,11 +558,28 @@
                                 .then(response => response.json())
                                 .then(data => {
                                     if (upcInput) upcInput.value = data.upc;
+                                    if (barcodeInput) barcodeInput.value = data.upc;
+                                    renderBarcode(data.upc);
                                 })
                                 .catch(err => console.error(err))
                                 .finally(() => {
                                     $(generateUpcBtn).html(originalText).prop('disabled', false);
                                 });
+                        });
+                    }
+
+                    // Live Sync UPC to Barcode and render image
+                    if (upcInput) {
+                        upcInput.addEventListener('input', function() {
+                            if (barcodeInput) barcodeInput.value = this.value;
+                            renderBarcode(this.value);
+                        });
+                    }
+
+                    if (barcodeInput) {
+                        barcodeInput.addEventListener('input', function() {
+                            if (upcInput) upcInput.value = this.value;
+                            renderBarcode(this.value);
                         });
                     }
                 @endif

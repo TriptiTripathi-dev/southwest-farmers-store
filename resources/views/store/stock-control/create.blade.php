@@ -26,7 +26,7 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Type to search by UPC, Name, or SKU</label>
+                            <label class="form-label">Type to search by UPC or Name</label>
                             <input type="text" id="productSearch" class="form-control form-control-lg" placeholder="Start typing..." autocomplete="off">
                         </div>
                         
@@ -169,7 +169,7 @@ function renderSearchResults(products) {
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <div class="font-monospace text-primary small mb-1">
-                            <i class="mdi mdi-barcode"></i> ${p.sku || 'N/A'}
+                            <i class="mdi mdi-barcode"></i> ${p.upc || 'N/A'}
                         </div>
                         <div class="fw-bold">${p.product_name}</div>
                         <div class="small text-muted">
@@ -241,7 +241,7 @@ function addProduct(productId, isAdded) {
 function addToSelectedProducts(product) {
     selectedProducts.push({
         id: product.id,
-        sku: product.sku || 'N/A',
+        upc: product.upc || 'N/A',
         product_name: product.product_name,
         unit_type: product.unit_type,
         cost_price: product.cost_price || 0,
@@ -270,7 +270,7 @@ function renderSelectedProducts() {
         html += `
             <tr>
                 <td class="ps-3">
-                    <small class="font-monospace text-dark">${p.sku}</small>
+                    <small class="font-monospace text-dark">${p.upc}</small>
                 </td>
                 <td>${p.product_name}</td>
                 <td class="text-center">
