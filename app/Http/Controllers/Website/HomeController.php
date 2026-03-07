@@ -11,9 +11,10 @@ class HomeController extends Controller
     public function index()
     {
         // Fetch featured products, categories, etc. for the homepage
-        $featuredProducts = Product::where('is_active', true)->take(8)->get();
+        $featuredProducts = \App\Models\Product::where('is_active', true)->take(8)->get();
+        $homeSettings = \App\Models\HomePageSetting::first();
         
-        return view('website.home', compact('featuredProducts'));
+        return view('website.home', compact('featuredProducts', 'homeSettings'));
     }
 
     /**
@@ -21,7 +22,8 @@ class HomeController extends Controller
      */
     public function contact()
     {
-        return view('website.contact');
+        $settings = \App\Models\ContactPageSetting::first();
+        return view('website.contact', compact('settings'));
     }
 
     /**
@@ -29,7 +31,8 @@ class HomeController extends Controller
      */
     public function about()
     {
-        return view('website.about');
+        $settings = \App\Models\AboutPageSetting::first();
+        return view('website.about', compact('settings'));
     }
 
     /**
@@ -47,5 +50,10 @@ class HomeController extends Controller
         // Logic to send email or store in DB would go here
         
         return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
+    }
+    public function legalPage($slug)
+    {
+        $page = \App\Models\LegalPage::where('slug', $slug)->firstOrFail();
+        return view('website.legal', compact('page'));
     }
 }

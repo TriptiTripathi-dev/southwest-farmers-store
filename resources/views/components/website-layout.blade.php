@@ -20,9 +20,9 @@
 
     <style>
         :root {
-            --theme-primary: #10b981;
-            --theme-dark:    #064e3b;
-            --theme-light:   #ecfdf5;
+            --theme-primary: #009A36;
+            --theme-dark:    #004d1b;
+            --theme-light:   #e6ffef;
         }
 
         * { font-family: 'Inter', sans-serif; }
@@ -34,7 +34,7 @@
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(16,185,129,0.12);
+            border-bottom: 1px solid rgba(0,154,54,0.12);
             transition: box-shadow 0.3s ease;
         }
         .navbar-website.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -73,7 +73,7 @@
 
         /* Theme Buttons */
         .btn-theme {
-            background: linear-gradient(135deg, var(--theme-primary), #059669);
+            background: linear-gradient(135deg, var(--theme-primary), #00802d);
             border: none;
             color: #fff;
             font-weight: 700;
@@ -82,7 +82,7 @@
         .btn-theme:hover {
             opacity: 0.9;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16,185,129,0.3);
+            box-shadow: 0 8px 20px rgba(0,154,54,0.3);
             color: #fff;
         }
 
@@ -103,7 +103,7 @@
         .customer-avatar {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, var(--theme-primary), #059669);
+            background: linear-gradient(135deg, var(--theme-primary), #00802d);
             border-radius: 50%;
             display: flex;
             align-items: center;

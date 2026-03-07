@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_customers', function (Blueprint $table) {
-            $table->string('password')->after('email')->nullable();
-            $table->rememberToken()->after('password');
+        Schema::create('about_page_settings', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
 
@@ -22,8 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('store_customers', function (Blueprint $table) {
-            $table->dropColumn(['password', 'remember_token']);
-        });
+        Schema::dropIfExists('about_page_settings');
     }
 };

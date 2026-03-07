@@ -1,9 +1,11 @@
-<x-website-layout title="Quick Shop POS">
+<x-website-layout title="{{ $posSettings->title ?? 'Quick Shop POS' }}">
     @push('styles')
     <style>
         :root {
-            --pos-primary: #10b981;
-            --pos-primary-dark: #065f46;
+            --theme-primary: #019934;
+            --theme-dark: #004d1a;
+            --theme-hover: #01802b;
+            --theme-light: #e6fff0;
             --pos-bg: #f8fafc;
             --pos-card-bg: #ffffff;
             --pos-text: #1e293b;
@@ -48,7 +50,7 @@
         .cat-item.active {
             background: var(--pos-primary);
             color: white;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 154, 54, 0.2);
         }
 
         .pos-card {
@@ -175,7 +177,10 @@
                 <!-- Sidebar -->
                 <div class="col-lg-3 d-none d-lg-block">
                     <div class="category-sidebar">
-                        <h5 class="fw-black mb-4">Categories</h5>
+                        <h5 class="fw-black mb-4">{{ $posSettings->title ?? 'Quick Shop POS' }}</h5>
+                        <p class="text-muted small mb-4">{{ $posSettings->subtitle ?? 'Quickly browse and add products to your cart.' }}</p>
+                        <hr class="mb-4">
+                        <h6 class="fw-bold mb-3">Categories</h6>
                         <button class="cat-item active" onclick="filterCategory('all', this)">
                             <i class="mdi mdi-apps me-2"></i> All Products
                         </button>
@@ -270,7 +275,7 @@
                     <div class="col-6 col-md-4">
                         <div class="pos-card shadow-sm">
                             <div class="pos-img-container" style="height: 120px;">
-                                <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/200x200/ecfdf5/10b981?text=' + encodeURIComponent(p.product_name)}" 
+                                <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/200x200/e6ffef/009A36?text=' + encodeURIComponent(p.product_name)}" 
                                      class="pos-img" alt="${p.product_name}">
                             </div>
                             <div class="pos-content p-2">

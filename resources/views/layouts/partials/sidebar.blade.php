@@ -512,8 +512,44 @@
                         <ul class="nav-second-level">
                             @if ($can('view_settings'))
                             <li><a href="{{ route('settings.general') }}"
-                                    class="tp-link {{ $isProfileActive ? 'active' : '' }}">General
+                                    class="tp-link {{ request()->routeIs('settings.general') ? 'active' : '' }}">General
                                     Settings</a></li>
+                            @endif
+
+                            @php
+                            $isHomePageActive = request()->routeIs('settings.home-page');
+                            @endphp
+                            @if ($can('view_settings'))
+                            <li>
+                                <a href="{{ route('settings.home-page') }}"
+                                    class="tp-link {{ request()->routeIs('settings.home-page') ? 'active' : '' }}">
+                                    Home Page
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('settings.about-page') }}"
+                                    class="tp-link {{ request()->routeIs('settings.about-page') ? 'active' : '' }}">
+                                    About Page
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('settings.contact-page') }}"
+                                    class="tp-link {{ request()->routeIs('settings.contact-page') ? 'active' : '' }}">
+                                    Contact Page
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('settings.quick-pos') }}"
+                                    class="tp-link {{ request()->routeIs('settings.quick-pos') ? 'active' : '' }}">
+                                    Quick POS Page
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('settings.legal.index') }}"
+                                    class="tp-link {{ request()->routeIs('settings.legal.*') ? 'active' : '' }}">
+                                    Legal Pages
+                                </a>
+                            </li>
                             @endif
 
                             @if ($can('update_settings'))

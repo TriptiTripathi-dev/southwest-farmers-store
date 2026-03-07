@@ -50,4 +50,5 @@ Route::name('website.')->group(function () {
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
     Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
     Route::get('/about', [HomeController::class, 'about'])->name('about');
+    Route::get('/{slug}', [HomeController::class, 'legalPage'])->name('legal');
 });

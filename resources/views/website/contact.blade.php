@@ -3,7 +3,7 @@
     @push('styles')
     <style>
         .page-header {
-            background: linear-gradient(rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.1));
+            background: linear-gradient(rgba(0, 154, 54, 0.05), rgba(0, 154, 54, 0.1));
             padding: 80px 0;
             margin-bottom: 60px;
         }
@@ -18,14 +18,18 @@
 
         .contact-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 30px 60px -12px rgba(16, 185, 129, 0.12);
+            box-shadow: 0 30px 60px -12px rgba(0, 153, 52, 0.12);
         }
 
         .contact-icon {
+            --theme-primary: #019934;
+            --theme-dark: #004d1a;
+            --theme-hover: #01802b;
+            --theme-light: #e6fff0;
             width: 60px;
             height: 60px;
-            background: var(--theme-light, #ecfdf5);
-            color: var(--theme-primary, #10b981);
+            background: var(--theme-light, #e6ffef);
+            color: var(--theme-primary, #019934);
             border-radius: 1.25rem;
             display: flex;
             align-items: center;
@@ -44,24 +48,24 @@
 
         .form-control-premium:focus {
             background-color: white;
-            border-color: var(--theme-primary, #10b981);
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            border-color: var(--theme-primary, #009A36);
+            box-shadow: 0 0 0 4px rgba(0, 154, 54, 0.1);
         }
 
         .btn-premium {
-            background: linear-gradient(135deg, var(--theme-primary, #10b981), #059669);
+            background: linear-gradient(135deg, var(--theme-primary, #009A36), #00802d);
             color: white;
             border: none;
             padding: 1rem 2.5rem;
             border-radius: 100px;
             font-weight: 700;
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 10px 20px -5px rgba(0, 154, 54, 0.4);
             transition: all 0.3s ease;
         }
 
         .btn-premium:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 15px 30px -5px rgba(0, 154, 54, 0.5);
             color: white;
         }
 
@@ -77,7 +81,7 @@
         }
 
         .text-gradient {
-            background: linear-gradient(135deg, var(--theme-dark, #064e3b), var(--theme-primary, #10b981));
+            background: linear-gradient(135deg, var(--theme-dark, #004d1b), var(--theme-primary, #009A36));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -98,10 +102,10 @@
     <section class="page-header">
         <div class="container text-center">
             <span class="badge bg-theme-light text-theme rounded-pill px-4 py-2 mb-3 fw-bold">
-                👋 GET IN TOUCH
+                {{ $settings->header_badge ?? '👋 GET IN TOUCH' }}
             </span>
-            <h1 class="display-3 fw-black mb-3 text-gradient">How can we help?</h1>
-            <p class="lead text-muted mx-auto" style="max-width: 600px;">Have questions about our products or your order? Our team is here to provide dedicated support.</p>
+            <h1 class="display-3 fw-black mb-3 text-gradient">{{ $settings->header_title ?? 'How can we help?' }}</h1>
+            <p class="lead text-muted mx-auto" style="max-width: 600px;">{{ $settings->header_subtitle ?? 'Have questions about our products or your order? Our team is here to provide dedicated support.' }}</p>
         </div>
     </section>
 
@@ -116,24 +120,24 @@
                             <div class="contact-icon">
                                 <i class="mdi mdi-map-marker-outline"></i>
                             </div>
-                            <h5 class="fw-bold mb-2">Visit Our Store</h5>
-                            <p class="text-muted mb-0">123 Fresh Way, Organic Valley,<br/>Green City, GC 56789</p>
+                            <h5 class="fw-bold mb-2">{{ $settings->address_title ?? 'Visit Our Store' }}</h5>
+                            <p class="text-muted mb-0">{!! $settings->address_content ?? '123 Fresh Way, Organic Valley,<br/>Green City, GC 56789' !!}</p>
                         </div>
 
                         <div class="contact-card p-4 reveal active" style="transition-delay: 0.1s">
                             <div class="contact-icon">
                                 <i class="mdi mdi-phone-outline"></i>
                             </div>
-                            <h5 class="fw-bold mb-2">Call Us Anytime</h5>
-                            <p class="text-muted mb-0">+1 (555) fresh-store<br/>Mon-Sat: 8am - 8pm</p>
+                            <h5 class="fw-bold mb-2">{{ $settings->phone_title ?? 'Call Us Anytime' }}</h5>
+                            <p class="text-muted mb-0">{!! $settings->phone_content ?? '+1 (555) fresh-store<br/>Mon-Sat: 8am - 8pm' !!}</p>
                         </div>
 
                         <div class="contact-card p-4 reveal active" style="transition-delay: 0.2s">
                             <div class="contact-icon">
                                 <i class="mdi mdi-email-outline"></i>
                             </div>
-                            <h5 class="fw-bold mb-2">Email Support</h5>
-                            <p class="text-muted mb-0">hello@freshstore.com<br/>support@freshstore.com</p>
+                            <h5 class="fw-bold mb-2">{{ $settings->email_title ?? 'Email Support' }}</h5>
+                            <p class="text-muted mb-0">{!! $settings->email_content ?? 'hello@freshstore.com<br/>support@freshstore.com' !!}</p>
                         </div>
                     </div>
                 </div>
@@ -141,7 +145,7 @@
                 <!-- Contact Form -->
                 <div class="col-lg-8">
                     <div class="contact-card p-5 reveal active">
-                        <h3 class="fw-black mb-4">Send us a Message</h3>
+                        <h3 class="fw-black mb-4">{{ $settings->form_title ?? 'Send us a Message' }}</h3>
                         
                         @if(session('success'))
                             <div class="alert alert-success rounded-4 p-4 border-0 shadow-sm mb-4">

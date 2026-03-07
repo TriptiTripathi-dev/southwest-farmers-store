@@ -91,7 +91,7 @@
                 @endphp
                 <a href="{{ route('website.cart.index') }}" class="btn btn-light position-relative rounded-circle p-2 border hover-lift ms-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
                     <i class="mdi mdi-cart-outline fs-5 text-dark"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success border border-white border-2 shadow-sm">
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-theme border border-white border-2 shadow-sm">
                         {{ $cartCount }}
                     </span>
                 </a>

@@ -4,7 +4,7 @@
             
             <div class="col-12 col-lg-4 pe-lg-5">
                 <h4 class="fw-bold text-white mb-4 d-flex align-items-center">
-                    <i class="mdi mdi-leaf text-success me-2 fs-3"></i> FreshStore
+                    <i class="mdi mdi-leaf text-theme me-2 fs-3"></i> FreshStore
                 </h4>
                 <p class="text-white-50 small mb-4 pe-md-4">
                     Your premier destination for high-quality, fresh, and organic everyday essentials. We deliver happiness and health right to your doorstep.
@@ -21,8 +21,10 @@
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{{ route('website.home') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Home</a></li>
                     <li class="mb-2"><a href="{{ route('website.products.index') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Shop Products</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none text-white-hover transition-all">About Us</a></li>
-                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none text-white-hover transition-all">Contact</a></li>
+                    <li class="mb-2"><a href="{{ route('website.about') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">About Us</a></li>
+                    <li class="mb-2"><a href="{{ route('website.contact') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Contact Us</a></li>
+                    <li class="mb-2"><a href="{{ route('website.legal', 'privacy-policy') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="{{ route('website.legal', 'terms-and-conditions') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Terms & Conditions</a></li>
                 </ul>
             </div>
 
@@ -30,15 +32,15 @@
                 <h6 class="fw-bold text-uppercase mb-4 text-white">Contact Us</h6>
                 <ul class="list-unstyled text-white-50 small">
                     <li class="mb-3 d-flex align-items-start">
-                        <i class="mdi mdi-map-marker mt-1 me-2 text-success"></i>
+                        <i class="mdi mdi-map-marker mt-1 me-2 text-theme"></i>
                         <span>123 Fresh Market Street,<br>Green City, Earth 10020</span>
                     </li>
                     <li class="mb-3 d-flex align-items-center">
-                        <i class="mdi mdi-phone me-2 text-success"></i>
+                        <i class="mdi mdi-phone me-2 text-theme"></i>
                         <span>+1 (234) 567-8900</span>
                     </li>
                     <li class="d-flex align-items-center">
-                        <i class="mdi mdi-email me-2 text-success"></i>
+                        <i class="mdi mdi-email me-2 text-theme"></i>
                         <span>support@freshstore.com</span>
                     </li>
                 </ul>
@@ -49,7 +51,7 @@
                 <p class="text-white-50 small mb-3">Subscribe to get updates on new products and special discounts.</p>
                 <form class="d-flex">
                     <input type="email" class="form-control rounded-start-pill border-0" placeholder="Your email address" required>
-                    <button class="btn btn-success rounded-end-pill px-3" type="submit">
+                    <button class="btn btn-theme rounded-end-pill px-3" type="submit">
                         <i class="mdi mdi-send"></i>
                     </button>
                 </form>
@@ -69,5 +71,5 @@
 
 <style>
     /* Utility for footer link hover */
-    .text-white-hover:hover { color: #10b981 !important; padding-left: 5px; }
+    .text-white-hover:hover { color: #019934 !important; padding-left: 5px; }
 </style>

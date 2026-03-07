@@ -5,7 +5,7 @@
                 <div class="col-md-7 text-center">
                     <div class="bg-white rounded-5 shadow-lg p-5 border-0">
                         <div class="mb-4">
-                            <div class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 100px; height: 100px; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 100px; height: 100px; box-shadow: 0 10px 20px rgba(0, 154, 54, 0.3);">
                                 <i class="mdi mdi-check-decagram display-3"></i>
                             </div>
                         </div>

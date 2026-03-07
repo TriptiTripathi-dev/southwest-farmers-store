@@ -11,6 +11,12 @@
             min-height: 400px;
             border: 1px solid #e2e8f0;
         }
+        :root {
+            --pos-primary: #019934;
+            --pos-primary-dark: #004d1a;
+            --pos-primary-hover: #01802b;
+            --pos-light: #e6fff0;
+        }
         .main-img {
             max-width: 100%;
             max-height: 400px;
@@ -74,12 +80,12 @@
             font-weight: 800;
             border: none;
             transition: all 0.3s;
-            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 154, 54, 0.3);
         }
         .btn-buy-now:hover {
             background: var(--pos-primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 20px 25px -5px rgba(0, 154, 54, 0.4);
         }
     </style>
     @endpush
@@ -98,7 +104,7 @@
                 <!-- Product Image -->
                 <div class="col-lg-6">
                     <div class="product-gallery">
-                        <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/600x600/ecfdf5/10b981?text=' . urlencode($product->product_name) }}" 
+                        <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/600x600/e6ffef/009A36?text=' . urlencode($product->product_name) }}" 
                              class="main-img" alt="{{ $product->product_name }}">
                     </div>
                 </div>

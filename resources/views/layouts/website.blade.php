@@ -12,10 +12,10 @@
     <style>
         :root {
             /* Light Green Theme Palette */
-            --theme-primary: #10b981;       /* Emerald Green */
-            --theme-primary-hover: #059669; /* Darker Emerald */
-            --theme-light: #ecfdf5;         /* Very Light Green Background */
-            --theme-dark: #064e3b;          /* Deep Green for text/footer */
+            --theme-primary: #019934;       /* Forest Green */
+            --theme-primary-hover: #01802b; /* Darker Forest Green */
+            --theme-light: #e6fff0;         /* Very Light Green Background */
+            --theme-dark: #004d1a;          /* Deep Green for text/footer */
             --theme-text: #1e293b;          /* Standard dark slate */
         }
 
@@ -40,7 +40,7 @@
             background-color: var(--theme-primary-hover);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 12px rgba(1, 153, 52, 0.3);
         }
 
         .btn-outline-theme {

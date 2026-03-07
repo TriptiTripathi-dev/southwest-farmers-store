@@ -4,9 +4,10 @@
     <style>
         /* Modern Design System Tokens */
         :root {
-            --theme-primary: #10b981;
-            --theme-dark: #064e3b;
-            --theme-light: #ecfdf5;
+            --theme-primary: #019934;
+            --theme-dark: #004d1a;
+            --theme-light: #e6fff0;
+            --theme-hover: #01802b;
             --glass-bg: rgba(255, 255, 255, 0.7);
             --glass-border: rgba(255, 255, 255, 0.3);
         }
@@ -24,7 +25,7 @@
 
         /* Hero Section Enhancements */
         .hero-section {
-            background: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+            background: radial-gradient(circle at 10% 20%, rgba(1, 153, 52, 0.05) 0%, transparent 40%),
                         radial-gradient(circle at 90% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 40%);
             min-height: 85vh;
             display: flex;
@@ -67,7 +68,7 @@
         .feature-card-new:hover {
             transform: translateY(-15px);
             border-color: var(--theme-primary);
-            box-shadow: 0 30px 60px -12px rgba(16, 185, 129, 0.12);
+            box-shadow: 0 30px 60px -12px rgba(1, 153, 52, 0.12);
         }
 
         .feature-icon-new {
@@ -116,7 +117,7 @@
         .cart-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(16, 185, 129, 0.9);
+            background: rgba(1, 153, 52, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -132,25 +133,25 @@
 
         /* Typography */
         .text-gradient {
-            background: linear-gradient(135deg, var(--theme-dark), var(--theme-primary));
+            background: linear-gradient(135deg, #019934 0%, #01802b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .btn-premium {
-            background: linear-gradient(135deg, var(--theme-primary), #059669);
+            background: linear-gradient(135deg, #019934, #01802b);
             color: white;
             border: none;
             padding: 1rem 2.5rem;
             border-radius: 100px;
             font-weight: 700;
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 10px 20px -5px rgba(0, 154, 54, 0.4);
             transition: all 0.3s ease;
         }
 
         .btn-premium:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 15px 30px -5px rgba(0, 154, 54, 0.5);
             color: white;
         }
     </style>
@@ -158,7 +159,7 @@
 
     <!-- Hero Section -->
     <section class="hero-section position-relative overflow-hidden">
-        <div class="hero-blob" style="width: 600px; height: 600px; top: -200px; right: -100px; background: #10b981;"></div>
+        <div class="hero-blob" style="width: 600px; height: 600px; top: -200px; right: -100px; background: #009A36;"></div>
         <div class="hero-blob" style="width: 400px; height: 400px; bottom: -100px; left: -100px; background: #fbbf24; animation-delay: -5s;"></div>
         
         <div class="container py-5 position-relative z-1">
@@ -166,17 +167,17 @@
                 <div class="col-lg-6">
                     <div class="reveal active">
                         <span class="badge bg-theme-light text-theme rounded-pill px-4 py-2 mb-4 fw-bold">
-                            ✨ THE MODERN GROCERY EXPERIENCE
+                            {{ $homeSettings?->hero_badge ?? '✨ THE MODERN GROCERY EXPERIENCE' }}
                         </span>
                         <h1 class="display-2 fw-black mb-4 lh-sm">
-                            Freshness <br/> <span class="text-gradient">Redefined</span> for Your Home.
+                            {!! $homeSettings?->hero_title ?? 'Freshness <br/> <span class="text-gradient">Redefined</span> for Your Home.' !!}
                         </h1>
-                        <p class="lead text-muted mb-5 pe-lg-5">
-                            Experience the pinnacle of quality with our curated selection of organic produce and daily essentials, delivered with surgical precision to your doorstep.
-                        </p>
+                        <div class="lead text-muted mb-5 pe-lg-5">
+                            {!! $homeSettings?->hero_subtitle ?? 'Experience the pinnacle of quality with our curated selection of organic produce and daily essentials, delivered with surgical precision to your doorstep.' !!}
+                        </div>
                         <div class="d-flex flex-wrap gap-4">
-                            <a href="{{ route('website.products.index') }}" class="btn btn-premium btn-lg">
-                                <i class="mdi mdi-shopping-outline me-2"></i>Browse Products
+                            <a href="{{ $homeSettings?->hero_button_url ?? route('website.products.index') }}" class="btn btn-premium btn-lg">
+                                <i class="mdi mdi-shopping-outline me-2"></i>{{ $homeSettings?->hero_button_text ?? 'Browse Products' }}
                             </a>
                             <a href="#features" class="btn btn-link text-dark fw-bold text-decoration-none d-flex align-items-center">
                                 Learn our Story <i class="mdi mdi-arrow-right ms-2 fs-5"></i>
@@ -206,7 +207,7 @@
                             </div>
                         </div>
 
-                        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80" 
+                        <img src="{{ ($homeSettings?->hero_image) ? asset('storage/'.$homeSettings->hero_image) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80' }}" 
                              alt="Fresh Produce" 
                              class="img-fluid rounded-[3rem] shadow-2xl floating-element"
                              style="border: 15px solid white;">
@@ -220,38 +221,22 @@
     <section id="features" class="py-5 bg-white">
         <div class="container py-5">
             <div class="text-center mb-5 reveal">
-                <h2 class="display-5 fw-black text-dark mb-3">Why Shop With Us?</h2>
-                <p class="text-muted mx-auto" style="max-width: 600px;">We've optimized every step of the process to ensure you get the freshest items at the best prices.</p>
+                <h2 class="display-5 fw-black text-dark mb-3">{{ $homeSettings?->features_title ?? 'Why Shop With Us?' }}</h2>
+                <div class="text-muted mx-auto" style="max-width: 600px;">{!! $homeSettings?->features_subtitle ?? "We've optimized every step of the process to ensure you get the freshest items at the best prices." !!}</div>
             </div>
             
             <div class="row g-4">
-                <div class="col-md-4 reveal delay-100">
+                @for($i = 1; $i <= 3; $i++)
+                <div class="col-md-4 reveal delay-{{ $i * 100 }}">
                     <div class="feature-card-new">
                         <div class="feature-icon-new">
-                            <i class="mdi mdi-leaf-circle-outline fs-1"></i>
+                            <i class="mdi {{ $homeSettings?->{'feature_'.$i.'_icon'} ?? ($i==1 ? 'mdi-leaf-circle-outline' : ($i==2 ? 'mdi-shield-check-outline' : 'mdi-clock-fast')) }} fs-1"></i>
                         </div>
-                        <h4 class="fw-bold mb-3">Eco-Friendly</h4>
-                        <p class="text-muted">100% plastic-free packaging options and locally sourced organic produce.</p>
+                        <h4 class="fw-bold mb-3">{{ $homeSettings?->{'feature_'.$i.'_title'} ?? ($i==1 ? 'Eco-Friendly' : ($i==2 ? 'Quality First' : 'Always On Time')) }}</h4>
+                        <div class="text-muted">{!! $homeSettings?->{'feature_'.$i.'_text'} ?? ($i==1 ? '100% plastic-free packaging options and locally sourced organic produce.' : ($i==2 ? 'Every single item undergoes a 5-point quality check before leaving our facility.' : 'Real-time tracking and precise delivery windows you can count on.')) !!}</div>
                     </div>
                 </div>
-                <div class="col-md-4 reveal delay-200">
-                    <div class="feature-card-new">
-                        <div class="feature-icon-new">
-                            <i class="mdi mdi-shield-check-outline fs-1"></i>
-                        </div>
-                        <h4 class="fw-bold mb-3">Quality First</h4>
-                        <p class="text-muted">Every single item undergoes a 5-point quality check before leaving our facility.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal delay-300">
-                    <div class="feature-card-new">
-                        <div class="feature-icon-new">
-                            <i class="mdi mdi-clock-fast fs-1"></i>
-                        </div>
-                        <h4 class="fw-bold mb-3">Always On Time</h4>
-                        <p class="text-muted">Real-time tracking and precise delivery windows you can count on.</p>
-                    </div>
-                </div>
+                @endfor
             </div>
         </div>
     </section>
@@ -261,8 +246,8 @@
         <div class="container py-5">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 reveal">
                 <div>
-                    <h2 class="display-5 fw-black text-dark mb-0">Trending Products</h2>
-                    <p class="text-muted mt-2">The local community's favorites this week.</p>
+                    <h2 class="display-5 fw-black text-dark mb-0">{{ $homeSettings?->trending_title ?? 'Trending Products' }}</h2>
+                    <p class="text-muted mt-2">{{ $homeSettings?->trending_subtitle ?? "The local community's favorites this week." }}</p>
                 </div>
                 <a href="{{ route('website.products.index') }}" class="btn btn-outline-theme rounded-pill px-4">
                     View Complete Catalog <i class="mdi mdi-chevron-right"></i>
@@ -274,7 +259,7 @@
                     <div class="col-6 col-md-4 col-lg-3 reveal" style="transition-delay: {{ ($index % 4) * 0.1 }}s">
                         <div class="product-card-enhanced h-100">
                             <div class="product-image-container">
-                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/ecfdf5/10b981?text=Fresh+Product' }}" 
+                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
                                      class="img-fluid" alt="{{ $product->product_name }}">
                                 <div class="cart-overlay">
                                     <form action="{{ route('website.cart.store') }}" method="POST">
@@ -315,11 +300,11 @@
             <div class="glass-card p-5 rounded-[3rem] text-center overflow-hidden position-relative reveal">
                 <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 bg-theme" style="mask-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
                 <div class="position-relative z-1">
-                    <h2 class="display-4 fw-black text-dark mb-3">Ready for a Healthy Change?</h2>
-                    <p class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">Join thousands of families getting farm-fresh organics delivered straight to their kitchen.</p>
+                    <h2 class="display-4 fw-black text-dark mb-3">{{ $homeSettings?->cta_title ?? 'Ready for a Healthy Change?' }}</h2>
+                    <div class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">{!! $homeSettings?->cta_subtitle ?? 'Join thousands of families getting farm-fresh organics delivered straight to their kitchen.' !!}</div>
                     <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ route('website.register') }}" class="btn btn-premium btn-lg">Join us Today</a>
-                        <a href="{{ route('website.products.index') }}" class="btn btn-white btn-lg rounded-pill shadow-sm border px-5 fw-bold">Shop Now</a>
+                        <a href="{{ $homeSettings?->cta_button_1_url ?? route('website.register') }}" class="btn btn-premium btn-lg">{{ $homeSettings?->cta_button_1_text ?? 'Join us Today' }}</a>
+                        <a href="{{ $homeSettings?->cta_button_2_url ?? route('website.products.index') }}" class="btn btn-white btn-lg rounded-pill shadow-sm border px-5 fw-bold">{{ $homeSettings?->cta_button_2_text ?? 'Shop Now' }}</a>
                     </div>
                 </div>
             </div>

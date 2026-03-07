@@ -3,7 +3,7 @@
     @push('styles')
     <style>
         .page-header {
-            background: linear-gradient(rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.1));
+            background: linear-gradient(rgba(0, 154, 54, 0.05), rgba(0, 154, 54, 0.1));
             padding: 80px 0;
             margin-bottom: 60px;
         }
@@ -34,7 +34,7 @@
         .cart-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(16, 185, 129, 0.9);
+            background: rgba(0, 154, 54, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -49,7 +49,7 @@
         }
 
         .text-gradient {
-            background: linear-gradient(135deg, var(--theme-dark, #064e3b), var(--theme-primary, #10b981));
+            background: linear-gradient(135deg, var(--theme-dark, #004d1b), var(--theme-primary, #009A36));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -114,7 +114,7 @@
                     <div class="col-6 col-md-4 col-lg-3 reveal active" style="transition-delay: {{ ($index % 4) * 0.1 }}s">
                         <div class="product-card-enhanced h-100">
                             <div class="product-image-container">
-                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/ecfdf5/10b981?text=Fresh+Product' }}" 
+                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
                                      class="img-fluid" alt="{{ $product->product_name }}">
                                 <div class="cart-overlay">
                                     <form action="{{ route('website.cart.store') }}" method="POST">
@@ -134,6 +134,7 @@
                                 <h5 class="fw-bold text-dark mb-3 text-truncate">{{ $product->product_name ?? $product->name }}</h5>
                                 <p class="h4 fw-black text-theme">${{ number_format($product->price, 2) }}</p>
                             </div>
+
                         </div>
                     </div>
                 @empty

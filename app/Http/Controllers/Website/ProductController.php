@@ -82,7 +82,8 @@ class ProductController extends Controller
             return response()->json($products);
         }
 
-        return view('website.products.pos', compact('categories'));
+        $posSettings = \App\Models\QuickPosSetting::first();
+        return view('website.products.pos', compact('categories', 'posSettings'));
     }
 
     /**

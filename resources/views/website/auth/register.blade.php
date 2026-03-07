@@ -43,7 +43,7 @@
             outline: none;
             border-color: var(--theme-primary);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+            box-shadow: 0 0 0 4px rgba(1, 153, 52, 0.12);
         }
         .custom-field.is-invalid { border-color: #ef4444; }
         .custom-field.is-invalid:focus { box-shadow: 0 0 0 4px rgba(239,68,68,0.12); }
@@ -61,7 +61,7 @@
             color: var(--theme-primary);
             margin-bottom: 0.75rem;
             padding-bottom: 0.3rem;
-            border-bottom: 1.5px solid rgba(16,185,129,0.2);
+            border-bottom: 1.5px solid rgba(0, 154, 54, 0.2);
         }
 
         /* Auth card */
@@ -75,7 +75,7 @@
 
         /* Submit button */
         .btn-submit-register {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #019934, #01802b);
             border: none; color: #fff;
             font-weight: 700; font-size: 1.05rem;
             border-radius: 2rem; padding: 0.9rem 2rem;
@@ -83,7 +83,7 @@
         }
         .btn-submit-register:hover {
             opacity: 0.92; transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16,185,129,0.35);
+            box-shadow: 0 10px 25px rgba(0, 154, 54, 0.35);
             color: #fff;
         }
     </style>
@@ -94,7 +94,7 @@
 
         {{-- Background blobs --}}
         <div class="position-absolute rounded-circle"
-             style="width:500px;height:500px;top:-150px;left:-150px;background:rgba(16,185,129,0.12);filter:blur(80px);"></div>
+             style="width:500px;height:500px;top:-150px;left:-150px;background:rgba(0, 154, 54, 0.12);filter:blur(80px);"></div>
         <div class="position-absolute rounded-circle"
              style="width:400px;height:400px;bottom:-100px;right:-100px;background:rgba(251,191,36,0.12);filter:blur(80px);"></div>
 
@@ -225,7 +225,7 @@
                                      class="position-absolute top-0 start-0 w-100 h-100"
                                      style="object-fit:cover; filter:brightness(0.8);">
                                 <div class="position-absolute top-0 start-0 w-100 h-100"
-                                     style="background:linear-gradient(to top, rgba(6,78,59,0.92) 0%, rgba(16,185,129,0.1) 100%);"></div>
+                                     style="background:linear-gradient(to top, rgba(0,77,27,0.92) 0%, rgba(0, 154, 54, 0.1) 100%);"></div>
 
                                 {{-- Floating cards --}}
                                 <div class="position-absolute bg-white rounded-4 shadow-lg p-3 d-flex align-items-center floating-badge"

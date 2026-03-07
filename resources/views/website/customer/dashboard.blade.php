@@ -12,26 +12,28 @@
         .delay-300 { animation-delay: 0.3s; }
 
         .account-card {
-            border: 1px solid rgba(16,185,129,0.12);
+            border: 1px solid rgba(0, 154, 54, 0.12);
             border-radius: 1.5rem;
             transition: all 0.3s ease;
         }
-        .account-card:hover { box-shadow: 0 10px 30px rgba(16,185,129,0.1); transform: translateY(-4px); }
+        .account-card:hover { box-shadow: 0 10px 30px rgba(0, 154, 54, 0.1); transform: translateY(-4px); }
 
         .avatar-large {
             width: 90px; height: 90px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #019934, #00802b);
+            --theme-primary: #019934;
+            --theme-light: #e6fff0;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             color: #fff;
             font-weight: 900;
             font-size: 2rem;
-            box-shadow: 0 10px 25px rgba(16,185,129,0.3);
+            box-shadow: 0 10px 25px rgba(0, 154, 54, 0.3);
         }
 
         .stat-badge {
             background: var(--theme-light);
-            border: 1px solid rgba(16,185,129,0.2);
+            border: 1px solid rgba(0, 154, 54, 0.2);
             border-radius: 1rem;
             padding: 1.5rem;
             text-align: center;

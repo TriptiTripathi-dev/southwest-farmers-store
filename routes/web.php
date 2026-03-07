@@ -76,6 +76,26 @@ Route::middleware('auth')->group(function () {
     Route::resource('permissions', StorePermissionController::class);
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
+    Route::get('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'edit'])->name('settings.home-page');
+    Route::put('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'update'])->name('settings.home-page.update');
+    
+    Route::get('/settings/about-page', [\App\Http\Controllers\Store\AboutPageSettingController::class, 'edit'])->name('settings.about-page');
+    Route::put('/settings/about-page', [\App\Http\Controllers\Store\AboutPageSettingController::class, 'update'])->name('settings.about-page.update');
+    
+    Route::get('/settings/contact-page', [\App\Http\Controllers\Store\ContactPageSettingController::class, 'edit'])->name('settings.contact-page');
+    Route::put('/settings/contact-page', [\App\Http\Controllers\Store\ContactPageSettingController::class, 'update'])->name('settings.contact-page.update');
+    
+    Route::get('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'edit'])->name('settings.quick-pos');
+    Route::put('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'update'])->name('settings.quick-pos.update');
+    
+    Route::resource('settings/legal', \App\Http\Controllers\Store\LegalPageSettingController::class)->names([
+        'index' => 'settings.legal.index',
+        'create' => 'settings.legal.create',
+        'store' => 'settings.legal.store',
+        'edit' => 'settings.legal.edit',
+        'update' => 'settings.legal.update',
+        'destroy' => 'settings.legal.destroy',
+    ]);
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::post('/inventory/request/generate-po', [StoreInventoryController::class, 'generateWarehousePo'])->name('inventory.request.generate-po');
