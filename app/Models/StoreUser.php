@@ -17,6 +17,7 @@ class StoreUser extends Authenticatable
     protected $guard_name = 'store_user';
 
     protected $fillable = [
+        'store_id',        // Store ID
         'parent_id',     // Kisne create kiya (Store Owner)
         'name',
         'email',
@@ -71,6 +72,11 @@ class StoreUser extends Authenticatable
 
     public function hasPermission($permissionName)
     {
+        // Super Admin bypass
+        if ($this->isAdmin()) {
+            return true;
+        }
+
         // 1. Direct permissions
         if ($this->permissions->contains('name', $permissionName)) {
             return true;
@@ -84,5 +90,10 @@ class StoreUser extends Authenticatable
         }
 
         return false;
+    }
+
+    public function isAdmin()
+    {
+        return $this->email === 'admin@store.com';
     }
 }

@@ -88,6 +88,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'edit'])->name('settings.quick-pos');
     Route::put('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'update'])->name('settings.quick-pos.update');
     
+    Route::resource('enquiries', \App\Http\Controllers\Store\EnquiryController::class)->only(['index', 'show', 'destroy'])->names([
+        'index' => 'store.enquiries.index',
+        'show' => 'store.enquiries.show',
+        'destroy' => 'store.enquiries.destroy',
+    ]);
     Route::resource('settings/legal', \App\Http\Controllers\Store\LegalPageSettingController::class)->names([
         'index' => 'settings.legal.index',
         'create' => 'settings.legal.create',

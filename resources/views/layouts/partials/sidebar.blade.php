@@ -30,7 +30,7 @@
                 </a>
             </div>
 
-            <ul id="sidebar-menu">
+            <ul class="metismenu list-unstyled" id="main-menu-navigation">
 
                 <li class="menu-title">Main</li>
 
@@ -346,6 +346,25 @@
                             <iconify-icon icon="tabler:users"></iconify-icon>
                         </span>
                         <span class="sidebar-text"> Customers </span>
+                    </a>
+                </li>
+                @endif
+
+                {{-- ENQUIRIES --}}
+                @if ($can('view_settings')) {{-- Using view_settings permission as a proxy for admin access --}}
+                <li>
+                    <a href="{{ route('store.enquiries.index') }}"
+                        class="tp-link {{ request()->routeIs('store.enquiries.*') ? 'active' : '' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:mail"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Enquiries </span>
+                        @php
+                            $unreadCount = \App\Models\Enquiry::where('is_read', false)->count();
+                        @endphp
+                        @if($unreadCount > 0)
+                            <span class="badge bg-danger ms-1 float-end">{{ $unreadCount }}</span>
+                        @endif
                     </a>
                 </li>
                 @endif

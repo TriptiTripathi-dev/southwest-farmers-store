@@ -298,7 +298,7 @@
     <section class="py-5 mb-5">
         <div class="container py-5">
             <div class="glass-card p-5 rounded-[3rem] text-center overflow-hidden position-relative reveal">
-                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 bg-theme" style="mask-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 bg-theme"></div>
                 <div class="position-relative z-1">
                     <h2 class="display-4 fw-black text-dark mb-3">{{ $homeSettings?->cta_title ?? 'Ready for a Healthy Change?' }}</h2>
                     <div class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">{!! $homeSettings?->cta_subtitle ?? 'Join thousands of families getting farm-fresh organics delivered straight to their kitchen.' !!}</div>

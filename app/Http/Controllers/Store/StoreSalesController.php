@@ -285,9 +285,11 @@ class StoreSalesController extends Controller
             ->select(
                 'store_stocks.product_id',
                 'store_stocks.quantity',
+                'store_stocks.selling_price', // Use store specific price
                 'products.product_name',
                 'products.sku',
                 'products.barcode',
+                'products.upc',
                 'products.price',
                 'products.icon',
                 'product_categories.name as category_name'

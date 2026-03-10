@@ -12,8 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(function ($request) {
-            if ($request->is('customer/*') || $request->is('cart/*') || $request->is('checkout/*')) {
-                return route('customer.login');
+            if ($request->is('customer*') || $request->is('cart*') || $request->is('checkout*') || $request->is('dashboard*') || $request->is('my-orders*')) {
+                return route('website.login');
             }
             return route('login');
         });

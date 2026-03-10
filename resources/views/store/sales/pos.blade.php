@@ -1222,12 +1222,12 @@
                         products.forEach(p => {
                             let badgeClass = p.quantity <= 5 ? 'badge-low-stock' : 'badge-in-stock';
                             let badgeText = p.quantity == 0 ? 'Out of Stock' : (p.quantity <= 5 ? 'Low: ' + p.quantity : p.quantity + ' In Stock');
-                            let img = p.image ? `/storage/${p.image}` : `https://placehold.co/200x200/ecfdf5/10b981?text=${p.product_name.charAt(0)}`;
+                            let img = p.icon ? `/storage/${p.icon}` : `https://placehold.co/200x200/ecfdf5/10b981?text=${p.product_name.charAt(0)}`;
                             let safeName = p.product_name.replace(/'/g, "\\'");
                             let upcCode = p.upc || 'N/A';
                             
                             // Apply Rounding Rule
-                            let displayPrice = roundToNine(p.price);
+                            let displayPrice = roundToNine(p.selling_price || p.price);
                             
                             html += `<div class="col-6 col-sm-4 col-lg-3">
                                 <div class="product-card" onclick="addToCart(${p.product_id}, '${safeName}', ${displayPrice}, ${p.quantity})">

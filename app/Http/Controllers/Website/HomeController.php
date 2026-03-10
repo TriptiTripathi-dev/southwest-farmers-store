@@ -40,14 +40,14 @@ class HomeController extends Controller
      */
     public function submitContact(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'subject' => 'required|string',
             'message' => 'required|string',
         ]);
 
-        // Logic to send email or store in DB would go here
+        \App\Models\Enquiry::create($data);
         
         return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
     }
