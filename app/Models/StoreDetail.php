@@ -25,7 +25,12 @@ class StoreDetail extends Model
         'latitude',
         'longitude',
         'is_active',
-        'store_user_id'
+        'store_user_id',
+        'pos_terminal_id',
+        'pos_store_id',
+        'pos_agent_secret',
+        'pos_hardware_url',
+        'pos_terminal_status'
     ];
 
     public function setStoreNameAttribute($value)
@@ -41,7 +46,7 @@ class StoreDetail extends Model
             : 'SWF - ' . $name;
     }
 
-     public function user()
+    public function user()
     {
         return $this->belongsTo(StoreUser::class, 'store_user_id');
     }

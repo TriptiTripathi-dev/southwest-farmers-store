@@ -78,16 +78,17 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'edit'])->name('settings.home-page');
     Route::put('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'update'])->name('settings.home-page.update');
-    
+
     Route::get('/settings/about-page', [\App\Http\Controllers\Store\AboutPageSettingController::class, 'edit'])->name('settings.about-page');
     Route::put('/settings/about-page', [\App\Http\Controllers\Store\AboutPageSettingController::class, 'update'])->name('settings.about-page.update');
-    
+
     Route::get('/settings/contact-page', [\App\Http\Controllers\Store\ContactPageSettingController::class, 'edit'])->name('settings.contact-page');
     Route::put('/settings/contact-page', [\App\Http\Controllers\Store\ContactPageSettingController::class, 'update'])->name('settings.contact-page.update');
-    
+
     Route::get('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'edit'])->name('settings.quick-pos');
     Route::put('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'update'])->name('settings.quick-pos.update');
-    
+    Route::post('/settings/quick-pos/connect', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'connectToServer'])->name('settings.quick-pos.connect');
+
     Route::resource('enquiries', \App\Http\Controllers\Store\EnquiryController::class)->only(['index', 'show', 'destroy'])->names([
         'index' => 'store.enquiries.index',
         'show' => 'store.enquiries.show',
@@ -155,7 +156,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/recall/{recall}/challan', [StoreRecallController::class, 'downloadChallan'])->name('recall.challan');
     });
     Route::prefix('store')->name('store.')->group(function () {
-     
+
         Route::resource('promotions', StorePromotionController::class);
         Route::post('/promotions/{id}/status', [StorePromotionController::class, 'updateStatus'])->name('promotions.status');
         Route::get('/audits', [StoreAuditController::class, 'index'])->name('audits.index');
@@ -215,7 +216,7 @@ Route::middleware('auth')->group(function () {
                 Route::post('/{id}/reply', 'reply')->name('reply');
             });
 
-     
+
         Route::prefix('purchase-orders')->name('orders.')->group(function () {
             Route::get('/', [StoreOrderController::class, 'index'])->name('index');
             Route::get('/data', [StoreOrderController::class, 'getOrders'])->name('data');
