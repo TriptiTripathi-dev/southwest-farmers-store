@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HomePageSetting extends Model
 {
     protected $fillable = [
+        'store_id',
         'hero_badge',
         'hero_title',
         'hero_subtitle',
@@ -33,4 +34,9 @@ class HomePageSetting extends Model
         'cta_button_2_text',
         'cta_button_2_url',
     ];
+
+    public function store()
+    {
+        return $this->belongsTo(StoreDetail::class, 'store_id');
+    }
 }

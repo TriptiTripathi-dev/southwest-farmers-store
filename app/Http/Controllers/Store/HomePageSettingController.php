@@ -11,18 +11,20 @@ class HomePageSettingController extends Controller
 {
     public function edit()
     {
-        $settings = HomePageSetting::first();
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = HomePageSetting::where('store_id', $storeId)->first();
         if (!$settings) {
-            $settings = HomePageSetting::create([]);
+            $settings = HomePageSetting::create(['store_id' => $storeId]);
         }
         return view('settings.home_page', compact('settings'));
     }
 
     public function update(Request $request)
     {
-        $settings = HomePageSetting::first();
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = HomePageSetting::where('store_id', $storeId)->first();
         if (!$settings) {
-            $settings = HomePageSetting::create([]);
+            $settings = HomePageSetting::create(['store_id' => $storeId]);
         }
 
         $request->validate([

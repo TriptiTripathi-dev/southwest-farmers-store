@@ -37,6 +37,15 @@ class LocationController extends Controller
             ]);
         }
 
+        // Find nearest store and update session
+        $nearestStore = \App\Models\StoreDetail::where('is_active', true)
+            ->withinDistance($latitude, $longitude, 50)
+            ->first();
+
+        if ($nearestStore) {
+            session(['store_id' => $nearestStore->id]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Location updated successfully'
