@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AboutPageSetting extends Model
 {
     protected $fillable = [
+        'store_id',
         'hero_title',
         'hero_subtitle',
         'mission_badge',
@@ -34,4 +35,9 @@ class AboutPageSetting extends Model
         'cta_title',
         'cta_subtitle',
     ];
+
+    public function store()
+    {
+        return $this->belongsTo(StoreDetail::class, 'store_id');
+    }
 }

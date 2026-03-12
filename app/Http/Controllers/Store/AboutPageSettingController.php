@@ -11,13 +11,21 @@ class AboutPageSettingController extends Controller
 {
     public function edit()
     {
-        $settings = AboutPageSetting::first() ?: AboutPageSetting::create([]);
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = AboutPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = AboutPageSetting::create(['store_id' => $storeId]);
+        }
         return view('settings.about_page', compact('settings'));
     }
 
     public function update(Request $request)
     {
-        $settings = AboutPageSetting::first();
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = AboutPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = AboutPageSetting::create(['store_id' => $storeId]);
+        }
         
         $data = $request->validate([
             'hero_title' => 'nullable|string|max:255',

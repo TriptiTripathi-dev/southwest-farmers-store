@@ -10,9 +10,17 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $storeId = session('store_id');
+        
         // Fetch featured products, categories, etc. for the homepage
+        // If a store is selected, perhaps filter products by store? 
+        // For now, focusing on the settings as requested.
         $featuredProducts = \App\Models\Product::where('is_active', true)->take(8)->get();
-        $homeSettings = \App\Models\HomePageSetting::first();
+        
+        $homeSettings = \App\Models\HomePageSetting::where('store_id', $storeId)->first();
+        if (!$homeSettings) {
+            $homeSettings = \App\Models\HomePageSetting::whereNull('store_id')->first();
+        }
         
         return view('website.home', compact('featuredProducts', 'homeSettings'));
     }
@@ -22,7 +30,11 @@ class HomeController extends Controller
      */
     public function contact()
     {
-        $settings = \App\Models\ContactPageSetting::first();
+        $storeId = session('store_id');
+        $settings = \App\Models\ContactPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = \App\Models\ContactPageSetting::whereNull('store_id')->first();
+        }
         return view('website.contact', compact('settings'));
     }
 
@@ -31,7 +43,11 @@ class HomeController extends Controller
      */
     public function about()
     {
-        $settings = \App\Models\AboutPageSetting::first();
+        $storeId = session('store_id');
+        $settings = \App\Models\AboutPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = \App\Models\AboutPageSetting::whereNull('store_id')->first();
+        }
         return view('website.about', compact('settings'));
     }
 

@@ -10,13 +10,21 @@ class ContactPageSettingController extends Controller
 {
     public function edit()
     {
-        $settings = ContactPageSetting::first() ?: ContactPageSetting::create([]);
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = ContactPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = ContactPageSetting::create(['store_id' => $storeId]);
+        }
         return view('settings.contact_page', compact('settings'));
     }
 
     public function update(Request $request)
     {
-        $settings = ContactPageSetting::first();
+        $storeId = auth()->user()->store_id ?? null;
+        $settings = ContactPageSetting::where('store_id', $storeId)->first();
+        if (!$settings) {
+            $settings = ContactPageSetting::create(['store_id' => $storeId]);
+        }
         
         $data = $request->validate([
             'header_badge' => 'nullable|string|max:255',
