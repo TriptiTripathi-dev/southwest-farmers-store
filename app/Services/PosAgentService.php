@@ -83,4 +83,74 @@ class PosAgentService
             return ['success' => false, 'message' => 'Exception occurred during registration.'];
         }
     }
+
+    /**
+     * Print receipt for a sale.
+     */
+    public function printReceipt($terminalId, $sale)
+    {
+        try {
+            // Prepare items data
+            $items = $sale->items->map(function ($item) {
+                return [
+                    'name' => $item->product->name ?? 'Unknown Item',
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    'total' => $item->total,
+                ];
+            })->toArray();
+
+            $payload = [
+                'title' => 'Southwest Farmers Store',
+                'invoice_number' => $sale->invoice_number,
+                'items' => $items,
+                'subtotal' => $sale->subtotal,
+                'tax' => $sale->tax_amount,
+                'discount' => $sale->discount_amount,
+                'total' => $sale->total_amount,
+                'payment_method' => $sale->payment_method,
+                'date' => $sale->created_at->format('Y-m-d H:i:s'),
+            ];
+
+            // HMAC Signature generation using the agent secret
+            $signature = hash_hmac('sha256', json_encode($payload), $this->agentSecret);
+
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+                'x-agent-signature' => $signature,
+                'Content-Type' => 'application/json',
+            ])->timeout(60)->post($this->baseUrl . '/api/printer/print', $payload);
+
+            if ($response->successful()) {
+                Log::info('POS Receipt printed successfully', ['invoice' => $sale->invoice_number]);
+                return ['success' => true, 'message' => 'Receipt printed.'];
+            }
+
+            Log::error('POS Printing failed', ['status' => $response->status(), 'body' => $response->body()]);
+            return ['success' => false, 'message' => 'Printer error: ' . $response->status()];
+        } catch (\Exception $e) {
+            Log::error('POS Print Exception', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Printing exception: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Open the cash drawer.
+     */
+    public function openCashDrawer($terminalId)
+    {
+        try {
+            // Hitting status is the known API for cash drawer in analysis
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(100)->get($this->baseUrl . '/api/cash-drawer/status');
+
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error('POS Cash Drawer Error', ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
 }

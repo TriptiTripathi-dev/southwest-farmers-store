@@ -14,6 +14,7 @@ use App\Models\StockTransaction;
 use App\Services\StoreStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\StoreNotification;
@@ -295,9 +296,8 @@ class StoreSalesController extends Controller
                 'product_categories.name as category_name'
             );
 
-        // Filter by Category
         if ($category && $category !== 'all') {
-            $query->where('product_categories.slug', $category);
+            $query->where('product_categories.id', $category);
         }
 
         // Search Term
@@ -355,7 +355,7 @@ class StoreSalesController extends Controller
     }
 
     // 4. Checkout (Existing FIFO Logic)
-    public function checkout(Request $request, StoreStockService $stockService)
+    public function checkout(Request $request, StoreStockService $stockService, \App\Services\PosAgentService $posAgentService)
     {
         $request->validate([
             'cart' => 'required|json',
@@ -478,10 +478,36 @@ class StoreSalesController extends Controller
 
             DB::commit();
 
+            // POS Hardware Integration
+            $posWarning = null;
+            try {
+                $settings = \App\Models\QuickPosSetting::first();
+                $store = \App\Models\StoreDetail::where('id', $storeId)->first();
+
+                if ($store && $store->pos_terminal_id) {
+                    // 1. Open Cash Drawer for Cash payments
+                    if ($paymentMethod === 'cash' && ($settings->cash_drawer_enabled ?? false)) {
+                        $posAgentService->openCashDrawer($store->pos_terminal_id);
+                    }
+
+                    // 2. Auto Print Receipt
+                    if (($settings->printer_enabled ?? false) && ($settings->auto_print_receipt ?? false)) {
+                        $printResult = $posAgentService->printReceipt($store->pos_terminal_id, $sale);
+                        if (!$printResult['success']) {
+                            $posWarning = 'Receipt printing failed: ' . $printResult['message'];
+                        } else {
+                            $sale->update(['receipt_printed' => true]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('POS Hardware Integration Error @ Checkout', ['error' => $e->getMessage()]);
+            }
+
             return response()->json([
                 'success' => true,
                 'invoice' => $invoiceNumber,
-                'message' => 'Sale completed successfully!'
+                'message' => 'Sale completed successfully!' . ($posWarning ? " ($posWarning)" : '')
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
