@@ -6,6 +6,8 @@
             --theme-dark: #004d1a;
             --theme-hover: #01802b;
             --theme-light: #e6fff0;
+            --pos-primary: #019934;
+            --pos-primary-dark: #007a29;
             --pos-bg: #f8fafc;
             --pos-card-bg: #ffffff;
             --pos-text: #1e293b;
@@ -272,20 +274,22 @@
                 }
 
                 grid.innerHTML = products.map(p => `
-                    <div class="col-6 col-md-4">
-                        <div class="pos-card shadow-sm">
-                            <div class="pos-img-container" style="height: 120px;">
+                    <div class="col-6 col-md-4 col-xl-3">
+                        <div class="pos-card shadow-sm h-100 d-flex flex-column">
+                            <div class="pos-img-container position-relative overflow-hidden" style="height: 140px; padding: 0.5rem;">
                                 <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/200x200/e6ffef/009A36?text=' + encodeURIComponent(p.product_name)}" 
-                                     class="pos-img" alt="${p.product_name}">
+                                     class="pos-img w-100 h-100 object-fit-contain" alt="${p.product_name}">
+                                ${p.stock <= 5 && p.stock !== null ? '<span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm rounded-pill">Low Stock</span>' : ''}
                             </div>
-                            <div class="pos-content p-2">
-                                <h3 class="pos-title" style="font-size: 0.8rem; min-height: 2rem;">${p.product_name}</h3>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="pos-price" style="font-size: 0.9rem;">$${parseFloat(p.price).toFixed(2)}</span>
+                            <div class="pos-content p-3 d-flex flex-column flex-grow-1 border-top border-light">
+                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.85rem; line-height: 1.25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5rem;">${p.product_name}</h3>
+                                <p class="text-muted small mb-3" style="font-size: 0.75rem;">${p.barcode ? '<i class="mdi mdi-barcode me-1"></i>'+p.barcode : '&nbsp;'}</p>
+                                <div class="mt-auto d-flex justify-content-between align-items-center bg-light rounded-pill p-1 ps-3">
+                                    <span class="fw-black text-theme" style="font-size: 1rem;">$${parseFloat(p.price).toFixed(2)}</span>
+                                    <button type="button" class="btn btn-theme rounded-circle shadow-sm d-flex align-items-center justify-content-center hover-lift" style="width: 32px; height: 32px; padding: 0;" onclick="addToCart(${p.id}, this)">
+                                        <i class="mdi mdi-cart-plus fs-5"></i>
+                                    </button>
                                 </div>
-                                <button type="button" class="btn-add-cart py-1 mt-2" style="font-size: 0.75rem;" onclick="addToCart(${p.id}, this)">
-                                    <i class="mdi mdi-plus"></i> ADD
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -354,12 +358,12 @@
                 }
 
                 sideItems.innerHTML = data.cart.items.map(item => `
-                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                        <div>
-                            <small class="fw-bold d-block">${item.product.product_name}</small>
-                            <small class="text-muted">${item.quantity} x $${parseFloat(item.price).toFixed(2)}</small>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                        <div class="pe-3">
+                            <small class="fw-bold d-block text-dark lh-sm mb-1">${item.product.product_name}</small>
+                            <small class="text-muted d-block">${item.quantity} x <span class="text-theme fw-semibold">$${parseFloat(item.price).toFixed(2)}</span></small>
                         </div>
-                        <span class="fw-bold">$${parseFloat(item.total).toFixed(2)}</span>
+                        <span class="fw-bold text-dark bg-light px-2 py-1 rounded-pill" style="font-size: 0.9rem;">$${parseFloat(item.total).toFixed(2)}</span>
                     </div>
                 `).join('');
 

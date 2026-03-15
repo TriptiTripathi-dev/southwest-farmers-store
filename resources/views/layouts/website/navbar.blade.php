@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg bg-white sticky-top shadow-sm py-3">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center fw-bold fs-4 text-theme" href="{{ route('website.home') }}">
-            <i class="mdi mdi-leaf fs-3 me-2"></i> FreshStore
+            <img src="{{ asset('assets/images/logo.jpg') }}" alt="Southwest Farmers" height="60" class="me-2">
         </a>
 
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">

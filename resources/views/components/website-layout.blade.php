@@ -1,4 +1,4 @@
-@props(['title' => 'FreshStore - Fresh Groceries'])
+@props(['title' => 'Southwest Farmers - Fresh Groceries'])
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }}</title>
-    <meta name="description" content="FreshStore – Fresh Groceries & Organic Products delivered at your doorstep.">
+    <meta name="description" content="Southwest Farmers – Fresh Groceries & Organic Products delivered at your doorstep.">
+    <link rel="icon" href="{{ asset('logo.png') }}?v={{ time() }}" type="image/png">
 
     {{-- Bootstrap 5 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -136,10 +137,7 @@
         <div class="container">
             {{-- Brand --}}
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('website.home') }}">
-                <div class="d-flex align-items-center justify-content-center rounded-3 bg-theme-light" style="width:40px;height:40px;">
-                    <i class="mdi mdi-leaf text-theme fs-4"></i>
-                </div>
-                <span class="navbar-brand-text">FreshStore</span>
+                <img src="{{ asset('assets/images/logo.jpg') }}" alt="Southwest Farmers" height="40" class="rounded">
             </a>
 
             {{-- Mobile Toggler --}}
@@ -253,10 +251,7 @@
             <div class="row g-4">
                 <div class="col-lg-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:rgba(255,255,255,0.1);">
-                            <i class="mdi mdi-leaf text-white fs-5"></i>
-                        </div>
-                        <span class="text-white fw-bold fs-5">FreshStore</span>
+                        <img src="{{ asset('assets/images/logo.jpg') }}" alt="Southwest Farmers" height="40" class="rounded bg-white p-1">
                     </div>
                     <p class="opacity-75 small">Fresh groceries and organic products delivered fast to your doorstep.</p>
                 </div>
@@ -281,7 +276,7 @@
                 </div>
             </div>
             <hr class="mt-4 opacity-25">
-            <p class="text-center mb-0 opacity-50 small">&copy; {{ date('Y') }} FreshStore. All rights reserved.</p>
+            <p class="text-center mb-0 opacity-50 small">&copy; {{ date('Y') }} Southwest Farmers. All rights reserved.</p>
         </div>
     </footer>
 

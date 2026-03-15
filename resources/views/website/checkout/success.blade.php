@@ -1,4 +1,4 @@
-<x-website-layout title="Order Successful | FreshStore">
+<x-website-layout title="Order Successful | Southwest Farmers">
     <div class="py-5" style="min-height: 80vh; display: flex; align-items: center; background: #f8fafc;">
         <div class="container">
             <div class="row justify-content-center">
