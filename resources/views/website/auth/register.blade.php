@@ -1,4 +1,4 @@
-<x-website-layout title="Create Account - FreshStore">
+<x-website-layout title="Create Account - Southwest Farmers">
 
     @push('styles')
     <style>
@@ -112,7 +112,7 @@
                                         <i class="mdi mdi-account-plus-outline fs-3"></i>
                                     </div>
                                     <h2 class="fw-bolder text-dark mb-1">Create your account</h2>
-                                    <p class="text-muted mb-0">Join FreshStore and get fresh groceries delivered fast.</p>
+                                    <p class="text-muted mb-0">Join Southwest Farmers and get fresh groceries delivered fast.</p>
                                 </div>
 
                                 <form method="POST" action="{{ route('website.register') }}"

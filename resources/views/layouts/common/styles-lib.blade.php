@@ -2,7 +2,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 @php
-   $favicon = asset('assets/images/logo.jpg'); // Default Favicon
+   $favicon = asset('logo.png'); // Default Favicon
     
     // Check if store user is logged in and has a custom favicon
     if(auth()->check()) {
@@ -13,7 +13,7 @@
     }
 @endphp
 
-<link rel="shortcut icon" href="{{ $favicon }}">
+<link rel="icon" href="{{ $favicon }}?v={{ time() }}" type="image/png">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 

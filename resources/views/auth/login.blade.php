@@ -24,19 +24,10 @@
                         <div class="col-12 col-lg-6 mb-5 mb-lg-0 pe-lg-5">
                             <div class="login-logo-section d-flex flex-column align-items-center align-items-lg-start justify-content-center h-100">
                                 <div class="auth-brand mb-4">
-                                    <a href="{{ url('/') }}" class="logo logo-light">
+                                    <a href="{{ url('/') }}" class="logo">
                                         <span class="logo-lg">
                                             <img src="{{ $login_logo }}"
-                                                 alt="Store POS"
-                                                 height="40"
-                                                 class="d-inline-block">
-                                        </span>
-                                    </a>
-
-                                    <a href="{{ url('/') }}" class="logo logo-dark">
-                                        <span class="logo-lg">
-                                            <img src="{{ $login_logo }}"
-                                                 alt="Store POS"
+                                                 alt="Southwest Farmers"
                                                  height="40"
                                                  class="d-inline-block">
                                         </span>

@@ -1,4 +1,4 @@
-<x-website-layout title="Contact Us - FreshStore">
+<x-website-layout title="Contact Us - Southwest Farmers">
     
     @push('styles')
     <style>

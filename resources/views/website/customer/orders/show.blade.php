@@ -1,4 +1,4 @@
-<x-website-layout title="Order Details #{{ $order->invoice_number }} - FreshStore">
+<x-website-layout title="Order Details #{{ $order->invoice_number }} - Southwest Farmers">
     <div class="py-5" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
         <div class="container">
             <div class="d-flex align-items-center gap-3 mb-2">

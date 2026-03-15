@@ -4,7 +4,7 @@
             
             <div class="col-12 col-lg-4 pe-lg-5">
                 <h4 class="fw-bold text-white mb-4 d-flex align-items-center">
-                    <i class="mdi mdi-leaf text-theme me-2 fs-3"></i> FreshStore
+                    <img src="{{ asset('assets/images/logo.jpg') }}" alt="Southwest Farmers" height="80" class="me-2 rounded shadow-sm bg-white p-1">
                 </h4>
                 <p class="text-white-50 small mb-4 pe-md-4">
                     Your premier destination for high-quality, fresh, and organic everyday essentials. We deliver happiness and health right to your doorstep.
@@ -41,7 +41,7 @@
                     </li>
                     <li class="d-flex align-items-center">
                         <i class="mdi mdi-email me-2 text-theme"></i>
-                        <span>support@freshstore.com</span>
+                        <span>support@southwestfarmers.com</span>
                     </li>
                 </ul>
             </div>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="border-top border-secondary border-opacity-50 pt-4 pb-2 d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <p class="text-white-50 small mb-0">&copy; {{ date('Y') }} FreshStore. All rights reserved.</p>
+            <p class="text-white-50 small mb-0">&copy; {{ date('Y') }} Southwest Farmers. All rights reserved.</p>
             <div class="d-flex gap-3 mt-3 mt-md-0">
                 <i class="mdi mdi-cc-visa fs-3 text-white-50"></i>
                 <i class="mdi mdi-cc-mastercard fs-3 text-white-50"></i>

@@ -1,4 +1,4 @@
-<x-website-layout title="My Account - FreshStore">
+<x-website-layout title="My Account - Southwest Farmers">
 
     @push('styles')
     <style>
