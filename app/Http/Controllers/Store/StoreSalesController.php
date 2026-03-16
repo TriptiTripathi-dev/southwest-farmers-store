@@ -514,4 +514,46 @@ class StoreSalesController extends Controller
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get Terminal Status
+     */
+    public function terminalStatus(\App\Services\PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['status' => 'offline', 'message' => 'Terminal ID not configured.']);
+        }
+
+        $status = $posAgentService->getTerminalStatus($store->pos_terminal_id);
+        return response()->json($status);
+    }
+
+    /**
+     * Get weight from scale
+     */
+    public function getWeight(\App\Services\PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
+        }
+
+        $weight = $posAgentService->getWeight($store->pos_terminal_id);
+        return response()->json(['success' => true, 'weight' => $weight]);
+    }
+
+    /**
+     * Get last scan from scanner
+     */
+    public function getLastScan(\App\Services\PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
+        }
+
+        $scan = $posAgentService->getLastScan($store->pos_terminal_id);
+        return response()->json(['success' => true, 'scan' => $scan]);
+    }
 }

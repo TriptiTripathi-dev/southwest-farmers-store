@@ -25,6 +25,40 @@ class PosAgentService
 
         $this->agentSecret = $dynamicSecret ?: config('app.pos_agent_secret', env('POS_AGENT_SECRET', ''));
     }
+    /**
+     * Public check to see who the terminal is.
+     */
+    public function whoAmI()
+    {
+        try {
+            $response = Http::timeout(100)->get($this->baseUrl . '/api/terminal/whoami');
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Agent whoami error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Approve a terminal for a specific store.
+     */
+    public function approveTerminal($terminalId, $storeId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+                'Content-Type' => 'application/json',
+            ])->timeout(60)->post($this->baseUrl . '/api/terminal/approve', [
+                'store_id' => $storeId
+            ]);
+
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error('POS Agent terminal approval error', ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
 
     /**
      * Check the status of the terminal.
@@ -136,21 +170,111 @@ class PosAgentService
     }
 
     /**
-     * Open the cash drawer.
+     * Check if cash drawer configuration is active.
      */
-    public function openCashDrawer($terminalId)
+    public function getCashDrawerStatus($terminalId)
     {
         try {
-            // Hitting status is the known API for cash drawer in analysis
             $response = Http::withHeaders([
                 'x-terminal-id' => $terminalId,
                 'x-agent-secret' => $this->agentSecret,
             ])->timeout(100)->get($this->baseUrl . '/api/cash-drawer/status');
 
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Cash Drawer Status Error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Open the cash drawer.
+     */
+    public function openCashDrawer($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+                'Content-Type' => 'application/json',
+            ])->timeout(100)->post($this->baseUrl . '/api/cash-drawer/open', []);
+
             return $response->successful();
         } catch (\Exception $e) {
-            Log::error('POS Cash Drawer Error', ['error' => $e->getMessage()]);
+            Log::error('POS Cash Drawer Open Error', ['error' => $e->getMessage()]);
             return false;
+        }
+    }
+
+    /**
+     * Get Scale Status
+     */
+    public function getScaleStatus($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(100)->get($this->baseUrl . '/api/scale/status');
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Scale Status Error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Get Weight from Scale
+     */
+    public function getWeight($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(100)->get($this->baseUrl . '/api/scale/weight');
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Scale Weight Error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Get Scanner Status
+     */
+    public function getScannerStatus($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(100)->get($this->baseUrl . '/api/scanner/status');
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Scanner Status Error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Get Last Scanned Barcode
+     */
+    public function getLastScan($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(100)->get($this->baseUrl . '/api/scanner/last');
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Exception $e) {
+            Log::error('POS Scanner Last Scan Error', ['error' => $e->getMessage()]);
+            return null;
         }
     }
 }

@@ -853,6 +853,9 @@
                         <small class="text-muted d-block">{{ Auth::user()->store->address ?? 'Store Panel' }}</small>
                     </div>
                     <div class="col-auto d-none d-sm-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;" id="hardwareStatusBadge">
+                            <i class="mdi mdi-robot-confused-outline me-1"></i>Agent: Checking...
+                        </span>
                         <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;">
                             <i class="mdi mdi-calendar me-1"></i>{{ now()->format('M d, Y') }}
                         </span>
@@ -1357,6 +1360,7 @@
                             'name' => $item->product->product_name,
                             'price' => (float) $item->price,
                             'quantity' => $item->quantity,
+                            'unit_type' => $item->product->unit_type,
                             'max' => $item->product->storeStocks
                                 ? $item->product
                                     ->storeStocks()
@@ -1378,6 +1382,88 @@
                 status: null,
                 approvedAmount: 0
             };
+
+            let hardwareAgent = {
+                online: false,
+                approved: false,
+                terminal_id: '{{ Auth::user()->store->pos_terminal_id ?? "" }}'
+            };
+
+            const hardwareStatusMap = {
+                online: { text: "Agent: Online", class: "bg-success text-white border-0", icon: "mdi-robot-outline" },
+                offline: { text: "Agent: Offline", class: "bg-danger text-white border-0", icon: "mdi-robot-dead-outline" },
+                unauthorized: { text: "Agent: Unapproved", class: "bg-warning text-dark border-0", icon: "mdi-robot-confused-outline" }
+            };
+
+            function updateHardwareUI(status) {
+                const badge = $('#hardwareStatusBadge');
+                const config = hardwareStatusMap[status] || hardwareStatusMap.offline;
+                badge.attr('class', `badge fw-bold ${config.class}`).css('font-size', '11px');
+                badge.html(`<i class="mdi ${config.icon} me-1"></i>${config.text}`);
+            }
+
+            function checkTerminalStatus() {
+                if (!hardwareAgent.terminal_id) {
+                    updateHardwareUI('offline');
+                    return;
+                }
+                $.get("{{ route('store.sales.terminal-status') }}")
+                    .done(function(data) {
+                        if (data && data.status === 'Approved') {
+                            hardwareAgent.online = true;
+                            hardwareAgent.approved = true;
+                            updateHardwareUI('online');
+                        } else if (data && (data.status === 'PendingApproval' || data.status === 'Registered')) {
+                            hardwareAgent.online = true;
+                            hardwareAgent.approved = false;
+                            updateHardwareUI('unauthorized');
+                        } else {
+                            hardwareAgent.online = false;
+                            updateHardwareUI('offline');
+                        }
+                    })
+                    .fail(function() {
+                        hardwareAgent.online = false;
+                        updateHardwareUI('offline');
+                    });
+            }
+
+            let lastBarcode = null;
+            function pollScanner() {
+                if (!hardwareAgent.online || !hardwareAgent.approved) return;
+                
+                $.get("{{ route('store.sales.scanner-scan') }}")
+                    .done(function(data) {
+                        if (data && data.success && data.scan && data.scan.barcode) {
+                            const newBarcode = data.scan.barcode;
+                            if (newBarcode !== lastBarcode) {
+                                lastBarcode = newBarcode;
+                                processScannedBarcode(newBarcode);
+                            }
+                        }
+                    });
+            }
+
+            function processScannedBarcode(barcode) {
+                // Find product by barcode
+                $.get("{{ route('sales.search') }}", { search: barcode })
+                    .done(function(data) {
+                        if (data && data.length > 0) {
+                            const product = data[0];
+                            addToCart(product.id);
+                            toastr.success(`Scanned: ${product.product_name}`);
+                        } else {
+                            toastr.warning(`Barcode ${barcode} not found.`);
+                        }
+                    });
+            }
+
+            // Start scanner polling every 2 seconds
+            setInterval(pollScanner, 2000);
+
+            // Check hardware status every 30 seconds
+            checkTerminalStatus();
+            setInterval(checkTerminalStatus, 30000);
 
             /* ─── HELPERS ──────────────────────────────────────── */
             function preserveMaxStock(newCart) {
@@ -1704,7 +1790,13 @@
 
                     html += `<div class="cart-item">
                     <div class="cart-item-info flex-grow-1 min-w-0">
-                        <div class="cart-item-name text-truncate">${item.name}</div>
+                        <div class="cart-item-name text-truncate">
+                            ${item.name}
+                            ${(item.unit_type && ['kg', 'lb', 'pound', 'oz'].includes(item.unit_type.toLowerCase())) ? 
+                                `<span class="badge bg-soft-info text-info ms-1" style="font-size:10px; cursor:pointer;" onclick="getWeightForLine(${index})">
+                                    <i class="mdi mdi-scale"></i> Scale
+                                </span>` : ''}
+                        </div>
                         <div class="cart-item-price">$${rp.toFixed(2)} × ${item.quantity} = $${(rp*item.quantity).toFixed(2)}</div>
                     </div>
                     <div class="qty-control flex-shrink-0">
@@ -1744,6 +1836,48 @@
                 $('#mobileTax').text('$' + tax.toFixed(2));
                 $('#mobileDiscount').text('-$' + discount.toFixed(2));
                 $('#mobileGrandTotal').text('$' + grandTotal.toFixed(2));
+            }
+
+            function getWeightForLine(index) {
+                if (!hardwareAgent.online || !hardwareAgent.approved) {
+                    toastr.error("Hardware Agent not connected/approved.");
+                    return;
+                }
+                
+                toastr.info("Reading scale...");
+                $.get("{{ route('store.sales.scale-weight') }}")
+                    .done(function(data) {
+                        if (data && data.success && data.weight !== null) {
+                            const weight = parseFloat(data.weight);
+                            if (weight > 0) {
+                                cart[index].quantity = weight;
+                                renderCart();
+                                // Sync with server cart
+                                syncCartItem(index);
+                                toastr.success(`Weight captured: ${weight}`);
+                            } else {
+                                toastr.warning("No weight detected on scale.");
+                            }
+                        } else {
+                            toastr.error("Failed to read from scale.");
+                        }
+                    })
+                    .fail(function() {
+                        toastr.error("Scale error.");
+                    });
+            }
+
+            function syncCartItem(index) {
+                const item = cart[index];
+                $.ajax({
+                    url: "{{ route('store.sales.cart.update') }}",
+                    method: 'POST',
+                    data: {
+                        _token: csrfToken,
+                        item_id: item.item_id,
+                        quantity: item.quantity
+                    }
+                });
             }
 
             function updateQty(index, change) {
