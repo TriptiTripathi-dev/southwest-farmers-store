@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
     Route::get('/pos', [StoreSalesController::class, 'index'])->name('sales.pos');
+    Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
+    Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     // Notifications
     Route::get('/notifications', [StoreNotificationController::class, 'index'])->name('store.notifications.index');
     Route::get('/notifications/read/{id}', [StoreNotificationController::class, 'markRead'])->name('store.notifications.read');
@@ -183,7 +185,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
-        Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
+        Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('/pos/terminal-status', [StoreSalesController::class, 'terminalStatus'])->name('sales.terminal-status');
         Route::get('/pos/scale-weight', [StoreSalesController::class, 'getWeight'])->name('sales.scale-weight');
         Route::get('/pos/scanner-scan', [StoreSalesController::class, 'getLastScan'])->name('sales.scanner-scan');

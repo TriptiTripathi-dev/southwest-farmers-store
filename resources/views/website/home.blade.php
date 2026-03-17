@@ -167,7 +167,7 @@
                 <div class="col-lg-6">
                     <div class="reveal active">
                         <span class="badge bg-theme-light text-theme rounded-pill px-4 py-2 mb-4 fw-bold">
-                            {{ $homeSettings?->hero_badge ?? '✨ THE MODERN GROCERY EXPERIENCE' }}
+                            {{ $homeSettings?->hero_badge ?? 'THE MODERN GROCERY EXPERIENCE' }}
                         </span>
                         <h1 class="display-2 fw-black mb-4 lh-sm">
                             {!! $homeSettings?->hero_title ?? 'Freshness <br/> <span class="text-gradient">Redefined</span> for Your Home.' !!}

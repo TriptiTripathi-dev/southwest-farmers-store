@@ -4,13 +4,13 @@
         <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
             rel="stylesheet" />
         <style>
-            /* Fix for Select2 height inside Bootstrap form-select-lg */
+            /* Fix for Select2 height inside Bootstrap form-select */
             .select2-container--bootstrap-5 .select2-selection--single {
-                height: calc(3.5rem + 2px);
-                padding: 0.75rem 1rem;
-                font-size: 1.25rem;
-                border-radius: 0.5rem;
-                border: 2px solid #ced4da;
+                height: calc(2.8rem + 2px);
+                padding: 0.5rem 0.75rem;
+                font-size: 0.95rem;
+                border-radius: 0.375rem;
+                border: 1px solid #dee2e6;
             }
 
             .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
@@ -29,21 +29,21 @@
             <p class="text-muted small mb-0">Manage inventory transfers between locations</p>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-gradient bg-primary text-white border-0 py-3">
-                <h5 class="mb-0">
-                    <i class="fas fa-paper-plane me-2"></i>Request Stock Transfer
-                </h5>
+        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+            <div class="card-header bg-success text-white border-0 py-2">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-paper-plane me-2 small"></i>Request Stock Transfer
+                </h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-3">
                 <form action="{{ route('transfers.store') }}" method="POST">
                     @csrf
-                    <div class="row g-3 align-items-end">
+                    <div class="row g-2 align-items-end">
                         <div class="col-12 col-md-4">
-                            <label class="form-label fw-500 text-dark">
-                                <i class="fas fa-warehouse text-primary me-2"></i>Request From Store
+                            <label class="form-label small fw-bold text-muted mb-1">
+                                <i class="fas fa-warehouse text-success me-1"></i>Request From Store
                             </label>
-                            <select name="from_store_id" id="storeSelect" class="form-select form-select-lg border-2"
+                            <select name="from_store_id" id="storeSelect" class="form-select border"
                                 required style="width: 100%;">
                                 <option value="">-- Select Store --</option>
                                 @foreach ($stores as $store)
@@ -54,10 +54,10 @@
                         </div>
 
                         <div class="col-12 col-md-4">
-                            <label class="form-label fw-500 text-dark">
-                                <i class="fas fa-box text-primary me-2"></i>Product
+                            <label class="form-label small fw-bold text-muted mb-1">
+                                <i class="fas fa-box text-success me-1"></i>Product
                             </label>
-                            <select name="product_id" id="productSelect" class="form-select form-select-lg border-2"
+                            <select name="product_id" id="productSelect" class="form-select border"
                                 required style="width: 100%;">
                                 <option value="">-- Select Product --</option>
                                 @foreach ($products as $product)
@@ -69,17 +69,17 @@
                         </div>
 
                         <div class="col-12 col-md-2">
-                            <label class="form-label fw-500 text-dark">
-                                <i class="fas fa-cubes text-primary me-2"></i>Quantity
+                            <label class="form-label small fw-bold text-muted mb-1">
+                                <i class="fas fa-cubes text-success me-1"></i>Quantity
                             </label>
-                            <input type="number" name="quantity" class="form-control form-control-lg border-2"
+                            <input type="number" name="quantity" class="form-control border"
                                 min="1" placeholder="0" required>
                         </div>
 
                         <div class="col-12 col-md-2 d-grid">
                             <button type="submit"
-                                class="btn btn-primary btn-lg d-flex align-items-center justify-content-center gap-2">
-                                <i class="fas fa-arrow-right"></i> Send Request
+                                class="btn btn-success fw-bold d-flex align-items-center justify-content-center gap-2">
+                                <i class="fas fa-paper-plane small"></i> Send Request
                             </button>
                         </div>
                     </div>
@@ -90,14 +90,14 @@
         <div class="row g-4">
             <div class="col-12 col-lg-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-gradient bg-warning border-0 py-3">
-                        <h5 class="mb-0 d-flex align-items-center gap-2">
-                            <i class="fas fa-arrow-down text-dark"></i>
+                    <div class="card-header bg-warning border-0 py-2">
+                        <h6 class="mb-0 d-flex align-items-center gap-2 fw-bold text-dark">
+                            <i class="fas fa-arrow-down small"></i>
                             <span>Requests Received</span>
-                            <span class="badge bg-danger-subtle text-danger rounded-pill ms-auto">
+                            <span class="badge bg-danger-subtle text-danger rounded-pill ms-auto small">
                                 {{ $outgoing->where('status', 'pending')->count() }}
                             </span>
-                        </h5>
+                        </h6>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -175,14 +175,14 @@
 
             <div class="col-12 col-lg-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-gradient bg-info text-white border-0 py-3">
-                        <h5 class="mb-0 d-flex align-items-center gap-2">
-                            <i class="fas fa-arrow-up"></i>
+                    <div class="card-header bg-info text-white border-0 py-2">
+                        <h6 class="mb-0 d-flex align-items-center gap-2 fw-bold">
+                            <i class="fas fa-arrow-up small"></i>
                             <span>My Sent Requests</span>
-                            <span class="badge bg-light text-info rounded-pill ms-auto">
+                            <span class="badge bg-light text-info rounded-pill ms-auto small">
                                 {{ $incoming->whereIn('status', ['pending', 'dispatched'])->count() }}
                             </span>
-                        </h5>
+                        </h6>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -273,10 +273,10 @@
             <form id="receiveForm" method="POST" class="modal-content border-0 shadow">
                 @csrf
 
-                <div class="modal-header bg-gradient bg-primary text-white border-0 py-3">
-                    <h5 class="modal-title" id="receiveModalLabel">
-                        <i class="fas fa-inbox me-2"></i>Confirm Stock Receipt
-                    </h5>
+                <div class="modal-header bg-success text-white border-0 py-2">
+                    <h6 class="modal-title fw-bold" id="receiveModalLabel">
+                        <i class="fas fa-inbox me-2 small"></i>Confirm Stock Receipt
+                    </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
@@ -310,7 +310,7 @@
                                 Quantity</label>
                         </div>
                         <input type="number" name="received_qty" id="modalReceivedQty"
-                            class="form-control form-control-lg border-2" min="0" required>
+                            class="form-control border" min="0" required>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-info-circle me-1"></i>Enter less than expected if there is a shortage or
                             damage.
@@ -318,10 +318,10 @@
                     </div>
                 </div>
 
-                <div class="modal-footer bg-light border-top py-3">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
-                        <i class="fas fa-arrow-right"></i> Confirm & Add to Stock
+                <div class="modal-footer bg-light border-top py-2">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none small" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success d-flex align-items-center gap-2 fw-bold">
+                        <i class="fas fa-check-circle small"></i> Confirm & Add
                     </button>
                 </div>
             </form>

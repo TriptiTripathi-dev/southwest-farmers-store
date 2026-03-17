@@ -13,6 +13,24 @@
 
     @include('layouts.common.styles-lib')
     @stack('styles-lib')
+    <style>
+        :root {
+            --bs-primary: #019934;
+            --bs-sidebar-item-hover: #019934;
+            --bs-sidebar-item-active: #fff;
+            --bs-sidebar-item-active-bg: #019934;
+        }
+        .tp-link.active, .tp-link:hover {
+            background-color: #019934 !important;
+            color: #fff !important;
+        }
+        .tp-link.active .nav-icon iconify-icon, .tp-link:hover .nav-icon iconify-icon {
+            color: #fff !important;
+        }
+        .menu-arrow {
+            color: inherit !important;
+        }
+    </style>
     @stack('styles')
 </head>
 

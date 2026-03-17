@@ -131,4 +131,15 @@ class Product extends Model
     {
         return $this->hasMany(ProductBatch::class);
     }
+
+    /**
+     * Requirement 12.6: Real-time stock levels across Warehouse
+     * Aggregates quantities from all batches for this product.
+     */
+    public function warehouseStock()
+    {
+        return $this->hasOne(ProductBatch::class)
+            ->selectRaw('product_id, SUM(quantity) as quantity')
+            ->groupBy('product_id');
+    }
 }

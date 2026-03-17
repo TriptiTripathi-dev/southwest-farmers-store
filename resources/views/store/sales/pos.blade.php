@@ -5,14 +5,14 @@
 
         <style>
             :root {
-                --pos-primary: #3b82f6;
-                --pos-primary-dark: #1d4ed8;
-                --pos-bg: #f1f5f9;
+                --pos-primary: #019934;
+                --pos-primary-dark: #004d1a;
+                --pos-bg: #f8fafc;
                 --pos-card-bg: #ffffff;
                 --pos-text: #0f172a;
                 --pos-muted: #64748b;
                 --pos-border: #e2e8f0;
-                --pos-accent: #6366f1;
+                --pos-accent: #019934;
                 --pos-success: #10b981;
                 --pos-warning: #f59e0b;
                 --pos-danger: #ef4444;
@@ -332,11 +332,12 @@
 
             /* ─── CART AREA (the key fix: flex-grow so it fills space) */
             .rp-cart-body {
-                flex: 1;
+                flex: 1 1 auto;
                 overflow-y: auto;
                 padding: 12px 14px;
-                min-height: 0;
-                /* CRITICAL for flex scroll */
+                min-height: 150px;
+                background: #fff;
+                /* Ensure it's not collapsed */
             }
 
             .rp-footer {

@@ -11,13 +11,13 @@
 
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-0">
-                    <ul class="nav nav-pills nav-justified bg-light rounded-2 p-1">
-                        <li class="nav-item">
+                    <ul class="nav nav-pills bg-light rounded-2 p-1">
+                        <li class="nav-item flex-fill">
                             <a class="nav-link {{ !request('type') ? 'active fw-bold' : 'text-muted' }}" href="{{ route('inventory.index') }}">
                                 <i class="mdi mdi-view-list me-1"></i> All Stock
                             </a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('type') == 'weight' ? 'active fw-bold' : 'text-muted' }}" href="{{ route('inventory.index', ['type' => 'weight']) }}">
                                 <i class="mdi mdi-scale me-1"></i> Free Weight (Bulk)
                             </a>
@@ -26,27 +26,31 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-3">
-                    <form action="{{ route('inventory.index') }}" method="GET">
-                        @if(request('type'))
-                            <input type="hidden" name="type" value="{{ request('type') }}">
-                        @endif
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="mdi mdi-magnify text-muted"></i>
-                            </span>
-                            <input type="text" name="search" value="{{ request('search') }}" 
-                                   class="form-control border-start-0 ps-0" 
-                                   placeholder="Search by product name or UPC...">
-                            <button type="submit" class="btn btn-dark">Search</button>
-                            @if(request('search'))
-                                <a href="{{ route('inventory.index') }}" class="btn btn-light border">
-                                    <i class="mdi mdi-close"></i>
-                                </a>
-                            @endif
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-6 col-md-8">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-2 p-md-3">
+                            <form action="{{ route('inventory.index') }}" method="GET">
+                                @if(request('type'))
+                                    <input type="hidden" name="type" value="{{ request('type') }}">
+                                @endif
+                                <div class="input-group input-group-lg border rounded-pill overflow-hidden bg-white shadow-sm">
+                                    <span class="input-group-text bg-white border-0 ps-4">
+                                        <i class="mdi mdi-magnify text-success fs-4"></i>
+                                    </span>
+                                    <input type="text" name="search" value="{{ request('search') }}" 
+                                           class="form-control border-0 bg-white fs-6 py-3" 
+                                           placeholder="Search products or UPC...">
+                                    @if(request('search'))
+                                        <a href="{{ route('inventory.index') }}" class="btn btn-link text-muted border-0 py-3 px-3">
+                                            <i class="mdi mdi-close fs-4"></i>
+                                        </a>
+                                    @endif
+                                    <button type="submit" class="btn btn-success px-4 px-md-5 fw-bold text-uppercase small">Search</button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
 
@@ -56,7 +60,7 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="ps-4 py-3 text-muted small fw-bold">UPC / PRODUCT</th>
+                                    <th class="ps-4 py-3 text-muted small fw-bold" style="min-width: 250px;">UPC / PRODUCT</th>
                                     <th class="py-3 text-muted small fw-bold">CATEGORY</th>
                                     <th class="py-3 text-muted small fw-bold">SUBCATEGORY</th>
                                     <th class="py-3 text-muted small fw-bold">QUANTITY</th>
@@ -71,8 +75,8 @@
                                 <tr>
                                     <td class="ps-4 py-3">
                                         <div class="d-flex align-items-center">
-                                            <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; min-width: 40px;">
-                                                <i class="mdi mdi-barcode text-primary fs-4"></i>
+                                            <div class="rounded bg-success-subtle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; min-width: 40px;">
+                                                <i class="mdi mdi-barcode text-success fs-4"></i>
                                             </div>
                                             <div>
                                                 <small class="d-block text-muted font-monospace">UPC: {{ $stock->product->upc ?? '-' }}</small>
@@ -92,15 +96,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-light text-dark border">
-                                            {{ $stock->product->subcategory->name ?? 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td>
                                         <span class="h6 mb-0 fw-bold">{{ $stock->quantity }}</span>
                                     </td>
                                     <td>
-                                        <span class="h6 mb-0 fw-bold text-primary">{{ (int) ($inTransitByProduct[$stock->product_id] ?? 0) }}</span>
+                                        <span class="h6 mb-0 fw-bold text-success">{{ (int) ($inTransitByProduct[$stock->product_id] ?? 0) }}</span>
                                     </td>
                                     <td>
                                         @php $inTransitQty = (int) ($inTransitByProduct[$stock->product_id] ?? 0); @endphp
@@ -116,7 +115,7 @@
                                     </td>
                                     <td class="text-center">
                                         @if($stock->product->unit_type == 'weight')
-                                        <button class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill convert-weight-btn" 
+                                        <button class="btn btn-sm btn-outline-success fw-bold px-3 rounded-pill convert-weight-btn" 
                                                 data-id="{{ $stock->id }}"
                                                 data-name="{{ $stock->product->product_name }}"
                                                 data-qty="{{ $stock->quantity }}"
@@ -134,7 +133,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-5">
+                                    <td colspan="8" class="text-center py-5">
                                         <div class="text-muted">
                                             <i class="mdi mdi-package-variant-closed fs-1 d-block mb-2 opacity-50"></i>
                                             <p class="mb-0">No stock found in your inventory.</p>

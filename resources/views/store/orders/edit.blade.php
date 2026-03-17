@@ -1,9 +1,5 @@
-@extends('layouts.app')
-
-@section('title', 'Edit Purchase Order')
-
-@section('content')
-    <div class="content-wrapper">
+<x-app-layout title="Edit Purchase Order">
+    <div class="content">
         <div class="container-fluid px-3 px-md-4 py-4">
             <form action="{{ route('store.orders.update', $order->id) }}" method="POST">
                 @csrf
@@ -16,7 +12,7 @@
                     <div class="d-flex gap-2">
                         <a href="{{ route('store.orders.show', $order->id) }}"
                             class="btn btn-light fw-bold px-4 rounded-pill border shadow-sm">Cancel</a>
-                        <button type="submit" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">Save
+                        <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill shadow-sm">Save
                             Changes</button>
                     </div>
                 </div>
@@ -25,7 +21,7 @@
                     <div class="col-lg-8">
                         <div class="card border-0 shadow-sm rounded-4 mb-4">
                             <div class="card-header bg-white border-bottom p-3">
-                                <h6 class="fw-bold m-0"><i class="mdi mdi-format-list-bulleted me-2"></i>Order Items</h6>
+                                <h6 class="fw-bold m-0"><i class="mdi mdi-format-list-bulleted me-2 text-success"></i>Order Items</h6>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
@@ -80,7 +76,7 @@
                     <div class="col-lg-4">
                         <div class="card border-0 shadow-sm rounded-4">
                             <div class="card-header bg-white border-bottom p-3">
-                                <h6 class="fw-bold m-0 text-primary"><i class="mdi mdi-shield-check me-2"></i>Manager
+                                <h6 class="fw-bold m-0 text-success"><i class="mdi mdi-shield-check me-2"></i>Manager
                                     Approval Required</h6>
                             </div>
                             <div class="card-body p-4">
@@ -136,4 +132,4 @@
             });
         </script>
     @endpush
-@endsection
+</x-app-layout>

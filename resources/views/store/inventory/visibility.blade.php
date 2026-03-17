@@ -1,9 +1,5 @@
-@extends('layouts.app')
-
-@section('title', 'Product Visibility')
-
-@section('content')
-    <div class="content-wrapper">
+<x-app-layout title="Product Visibility">
+    <div class="content">
         <div class="container-fluid px-3 px-md-4 py-4">
 
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
@@ -39,7 +35,7 @@
                                     <div id="productImg"
                                         class="mb-2 mx-auto rounded-circle border bg-white d-flex align-items-center justify-content-center"
                                         style="width: 80px; height: 80px; overflow: hidden;">
-                                        <i class="mdi mdi-package-variant fs-1 text-primary"></i>
+                                        <i class="mdi mdi-package-variant fs-1 text-success"></i>
                                     </div>
                                     <h6 id="summaryName" class="fw-bold mb-1"></h6>
                                     <p id="summaryUPC" class="text-muted small font-monospace mb-0"></p>
@@ -54,8 +50,8 @@
                     <div class="card border-0 shadow-sm rounded-4">
                         <div
                             class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold m-0"><i class="mdi mdi-map-marker-radius me-2"></i>Inventory Locations</h6>
-                            <span id="loadingSpinner" class="spinner-border spinner-border-sm text-primary d-none"></span>
+                            <h6 class="fw-bold m-0"><i class="mdi mdi-map-marker-radius me-2 text-success"></i>Inventory Locations</h6>
+                            <span id="loadingSpinner" class="spinner-border spinner-border-sm text-success d-none"></span>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -72,7 +68,7 @@
                                         <tr>
                                             <td colspan="4" class="text-center py-5">
                                                 <div class="text-muted opacity-50">
-                                                    <i class="mdi mdi-arrow-left-bold-outline fs-1 d-block mb-2"></i>
+                                                    <i class="mdi mdi-arrow-left-bold-outline fs-1 d-block mb-2 text-success"></i>
                                                     <p class="mb-0">Please select a product from the left to see inventory
                                                         distribution.</p>
                                                 </div>
@@ -160,4 +156,4 @@
             }
         </style>
     @endpush
-@endsection
+</x-app-layout>

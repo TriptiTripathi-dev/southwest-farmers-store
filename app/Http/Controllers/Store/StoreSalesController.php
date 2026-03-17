@@ -23,7 +23,7 @@ class StoreSalesController extends Controller
 {
     public function index()
     {  
-         $categories = ProductCategory::select('id', 'name')->orderBy('name')->get();
+         $categories = ProductCategory::select('id', 'name')->distinct()->orderBy('name')->get();
 
         // Fetch active cart for logged in user
         $currentCart = Cart::where('user_id', Auth::id())
@@ -282,25 +282,11 @@ class StoreSalesController extends Controller
             ->where('store_stocks.store_id', $storeId)
             ->where('store_stocks.quantity', '>', 0)
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
-            ->select(
-                'store_stocks.product_id',
-                'store_stocks.quantity',
-                'store_stocks.selling_price', // Use store specific price
-                'products.product_name',
-                'products.sku',
-                'products.barcode',
-                'products.upc',
-                'products.price',
-                'products.icon',
-                'product_categories.name as category_name'
-            );
-
+            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id');
         if ($category && $category !== 'all') {
             $query->where('product_categories.id', $category);
         }
 
-        // Search Term
         if ($term) {
             $query->where(function ($q) use ($term) {
                 $q->where('products.product_name', 'ILIKE', "%{$term}%")
@@ -309,7 +295,30 @@ class StoreSalesController extends Controller
             });
         }
 
-        $products = $query->orderBy('store_stocks.quantity', 'asc')
+        $products = $query->groupBy(
+                'store_stocks.product_id',
+                'store_stocks.selling_price',
+                'products.product_name',
+                'products.sku',
+                'products.barcode',
+                'products.upc',
+                'products.price',
+                'products.icon',
+                'product_categories.name'
+            )
+            ->select(
+                'store_stocks.product_id',
+                DB::raw('SUM(store_stocks.quantity) as quantity'),
+                'store_stocks.selling_price',
+                'products.product_name',
+                'products.sku',
+                'products.barcode',
+                'products.upc',
+                'products.price',
+                'products.icon',
+                'product_categories.name as category_name'
+            )
+            ->orderBy('quantity', 'asc')
             ->orderBy('products.product_name', 'asc')
             ->limit(20)
             ->get();
