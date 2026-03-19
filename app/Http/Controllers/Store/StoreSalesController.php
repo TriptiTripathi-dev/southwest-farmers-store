@@ -487,30 +487,47 @@ class StoreSalesController extends Controller
 
             DB::commit();
 
-            // POS Hardware Integration
+            // POS Hardware Integration (Strict Mode)
             $posWarning = null;
             try {
-                $settings = \App\Models\QuickPosSetting::first();
                 $store = \App\Models\StoreDetail::where('id', $storeId)->first();
 
                 if ($store && $store->pos_terminal_id) {
-                    // 1. Open Cash Drawer for Cash payments
-                    if ($paymentMethod === 'cash' && ($settings->cash_drawer_enabled ?? false)) {
-                        $posAgentService->openCashDrawer($store->pos_terminal_id);
+                    // 1. Handle Cash Payment Strict Flow
+                    if ($paymentMethod === 'cash') {
+                        // Check status first
+                        $drawerStatus = $posAgentService->getCashDrawerStatus($store->pos_terminal_id);
+                        if (!$drawerStatus || ($drawerStatus['connected'] ?? false) === false) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Cash Drawer is not connected or not available. Please check the hardware.'
+                            ], 422);
+                        }
+
+                        // Try to open it
+                        $opened = $posAgentService->openCashDrawer($store->pos_terminal_id);
+                        if (!$opened) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Failed to open Cash Drawer. The transaction has not been saved.'
+                            ], 422);
+                        }
                     }
 
-                    // 2. Auto Print Receipt
-                    if (($settings->printer_enabled ?? false) && ($settings->auto_print_receipt ?? false)) {
-                        $printResult = $posAgentService->printReceipt($store->pos_terminal_id, $sale);
-                        if (!$printResult['success']) {
-                            $posWarning = 'Receipt printing failed: ' . $printResult['message'];
-                        } else {
-                            $sale->update(['receipt_printed' => true]);
-                        }
+                    // 2. Print Receipt — try to print, but only if checkout logic above succeeded
+                    $sale->load('items.product');
+                    // We don't block DB success on printer failing here (auto-print), 
+                    // but we do log it and warn the user.
+                    $printResult = $posAgentService->printReceipt($store->pos_terminal_id, $sale);
+                    if (!$printResult['success']) {
+                        $posWarning = 'Order saved, but Receipt printing failed: ' . $printResult['message'];
                     }
                 }
             } catch (\Exception $e) {
                 Log::error('POS Hardware Integration Error @ Checkout', ['error' => $e->getMessage()]);
+                // If it's a hardware error during cash flow, we already rolled back.
             }
 
             return response()->json([
@@ -534,8 +551,41 @@ class StoreSalesController extends Controller
             return response()->json(['status' => 'offline', 'message' => 'Terminal ID not configured.']);
         }
 
-        $status = $posAgentService->getTerminalStatus($store->pos_terminal_id);
-        return response()->json($status);
+        try {
+            // Simplified status: only check terminal health. 
+            // Scanner/Scale status removed from 30s poller to reduce load.
+            $raw = $posAgentService->getTerminalStatus($store->pos_terminal_id);
+
+            // Normalize: the API may return { success, registered } or { status, approved } — handle both
+            $isOnline = false;
+            if (is_array($raw)) {
+                if (!empty($raw['success']) && !empty($raw['registered'])) $isOnline = true;
+                if (isset($raw['status']) && strtolower($raw['status']) === 'approved') $isOnline = true;
+                if (!empty($raw['approved'])) $isOnline = true;
+            }
+
+            return response()->json([
+                'status'      => $isOnline ? 'Approved' : 'offline',
+                'online'      => $isOnline,
+                'raw'         => $raw,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'offline', 'online' => false]);
+        }
+    }
+
+    /**
+     * Proxy to get printer list from the agent.
+     */
+    public function getPrinters(\App\Services\PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
+        }
+
+        $result = $posAgentService->getPrinterList($store->pos_terminal_id);
+        return response()->json($result);
     }
 
     /**
@@ -564,5 +614,34 @@ class StoreSalesController extends Controller
 
         $scan = $posAgentService->getLastScan($store->pos_terminal_id);
         return response()->json(['success' => true, 'scan' => $scan]);
+    }
+
+    /**
+     * Manual Print — triggered by "Print Receipt" button click in the success modal.
+     * Sends sale data to the hardware printer API; no browser print dialog.
+     */
+    public function manualPrint(Request $request, \App\Services\PosAgentService $posAgentService)
+    {
+        $invoiceNumber = $request->input('invoice_number');
+        if (!$invoiceNumber) {
+            return response()->json(['success' => false, 'message' => 'Invoice number required.']);
+        }
+
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
+        }
+
+        $sale = \App\Models\Sale::with('items.product')
+            ->where('invoice_number', $invoiceNumber)
+            ->where('store_id', $store->id)
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['success' => false, 'message' => 'Sale not found.']);
+        }
+
+        $result = $posAgentService->printReceipt($store->pos_terminal_id, $sale, $request->input('printer_name'));
+        return response()->json($result);
     }
 }

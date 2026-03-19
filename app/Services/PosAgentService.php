@@ -121,40 +121,39 @@ class PosAgentService
     /**
      * Print receipt for a sale.
      */
-    public function printReceipt($terminalId, $sale)
+    public function printReceipt($terminalId, $sale, $printerName = null)
     {
         try {
-            // Prepare items data
+            // Prepare items data (Postman spec: qty, price as numbers)
             $items = $sale->items->map(function ($item) {
                 return [
-                    'name' => $item->product->name ?? 'Unknown Item',
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                    'total' => $item->total,
+                    'name'  => $item->product->product_name ?? $item->product->name ?? 'Unknown Item',
+                    'qty'   => (float) $item->quantity,
+                    'price' => (float) $item->price,
                 ];
             })->toArray();
 
+            $cashier = \Illuminate\Support\Facades\Auth::user()->name ?? 'Cashier';
+
             $payload = [
-                'title' => 'Southwest Farmers Store',
-                'invoice_number' => $sale->invoice_number,
-                'items' => $items,
-                'subtotal' => $sale->subtotal,
-                'tax' => $sale->tax_amount,
-                'discount' => $sale->discount_amount,
-                'total' => $sale->total_amount,
-                'payment_method' => $sale->payment_method,
-                'date' => $sale->created_at->format('Y-m-d H:i:s'),
+                'store_name'     => 'Southwest Farmers',
+                'cashier'        => $cashier,
+                'order_id'       => $sale->invoice_number,
+                'items'          => $items,
+                'total'          => (float) $sale->total_amount,
+                'payment_method' => strtoupper($sale->payment_method),
+                'auth_code'      => $sale->card_auth_code ?? '',
             ];
 
-            // HMAC Signature generation using the agent secret
-            $signature = hash_hmac('sha256', json_encode($payload), $this->agentSecret);
+            if ($printerName) {
+                $payload['printer_name'] = $printerName;
+            }
 
             $response = Http::withHeaders([
                 'x-terminal-id' => $terminalId,
                 'x-agent-secret' => $this->agentSecret,
-                'x-agent-signature' => $signature,
                 'Content-Type' => 'application/json',
-            ])->timeout(60)->post($this->baseUrl . '/api/printer/print', $payload);
+            ])->timeout(15)->post($this->baseUrl . '/api/printer/print', $payload);
 
             if ($response->successful()) {
                 Log::info('POS Receipt printed successfully', ['invoice' => $sale->invoice_number]);
@@ -269,12 +268,33 @@ class PosAgentService
             $response = Http::withHeaders([
                 'x-terminal-id' => $terminalId,
                 'x-agent-secret' => $this->agentSecret,
-            ])->timeout(100)->get($this->baseUrl . '/api/scanner/last');
+            ])->timeout(10)->get($this->baseUrl . '/api/scanner/last');
 
             return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
             Log::error('POS Scanner Last Scan Error', ['error' => $e->getMessage()]);
             return null;
+        }
+    }
+
+    /**
+     * Get list of available printers from the agent.
+     */
+    public function getPrinterList($terminalId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-terminal-id' => $terminalId,
+                'x-agent-secret' => $this->agentSecret,
+            ])->timeout(10)->get($this->baseUrl . '/api/printer/list');
+
+            if ($response->successful()) {
+                return $response->json(); // Expected: { success: true, printers: [...] }
+            }
+            return ['success' => false, 'message' => 'Status: ' . $response->status()];
+        } catch (\Exception $e) {
+            Log::error('POS Printer List Error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 }

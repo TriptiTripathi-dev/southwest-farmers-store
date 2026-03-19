@@ -854,8 +854,14 @@
                         <small class="text-muted d-block">{{ Auth::user()->store->address ?? 'Store Panel' }}</small>
                     </div>
                     <div class="col-auto d-none d-sm-flex align-items-center gap-2">
-                        <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;" id="hardwareStatusBadge">
+                        <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;" id="hardwareStatusBadge" title="Agent Connection">
                             <i class="mdi mdi-robot-confused-outline me-1"></i>Agent: Checking...
+                        </span>
+                        <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;" id="scannerStatusBadge" title="Scanner Connection">
+                            <i class="mdi mdi-barcode-scan me-1"></i>Scanner: -
+                        </span>
+                        <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;" id="scaleStatusBadge" title="Scale Connection">
+                            <i class="mdi mdi-scale me-1"></i>Scale: -
                         </span>
                         <span class="badge bg-light text-dark border fw-bold" style="font-size:11px;">
                             <i class="mdi mdi-calendar me-1"></i>{{ now()->format('M d, Y') }}
@@ -1299,13 +1305,37 @@
 
                     {{-- Action buttons (screen only) --}}
                     <div class="d-grid gap-2 mt-3 d-print-none">
-                        <button class="btn btn-primary fw-bold" onclick="window.print()">
+                        <button class="btn btn-primary fw-bold" id="hwPrintBtn" onclick="printReceiptViaHardware()">
                             <i class="mdi mdi-printer me-2"></i>Print Receipt
                         </button>
                         <button class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">
                             <i class="mdi mdi-plus me-2"></i>New Sale
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Printer Selection Modal --}}
+    <div class="modal fade" id="printerSelectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold"><i class="mdi mdi-printer me-2"></i>Select Printer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Available hardware printers detected by the POS Agent:</p>
+                    <div id="printerListContainer" class="list-group list-group-flush border rounded overflow-hidden" style="max-height: 300px; overflow-y: auto;">
+                        <div class="p-4 text-center text-muted">Fetching printer list...</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light fw-bold w-100" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary fw-bold w-100 d-none" id="confirmPrintBtn" onclick="confirmHardwarePrint()">
+                        Print Now
+                    </button>
                 </div>
             </div>
         </div>
@@ -1396,11 +1426,31 @@
                 unauthorized: { text: "Agent: Unapproved", class: "bg-warning text-dark border-0", icon: "mdi-robot-confused-outline" }
             };
 
-            function updateHardwareUI(status) {
+            function updateHardwareUI(status, scannerOnline = false, scaleOnline = false) {
                 const badge = $('#hardwareStatusBadge');
                 const config = hardwareStatusMap[status] || hardwareStatusMap.offline;
                 badge.attr('class', `badge fw-bold ${config.class}`).css('font-size', '11px');
                 badge.html(`<i class="mdi ${config.icon} me-1"></i>${config.text}`);
+
+                // Update Scanner Badge
+                const scannerBadge = $('#scannerStatusBadge');
+                if (scannerOnline) {
+                    scannerBadge.attr('class', 'badge bg-success text-white border-0 fw-bold').css('font-size', '11px');
+                    scannerBadge.html('<i class="mdi mdi-barcode-scan me-1"></i>Scanner: OK');
+                } else {
+                    scannerBadge.attr('class', 'badge bg-light text-muted border fw-bold').css('font-size', '11px');
+                    scannerBadge.html('<i class="mdi mdi-barcode-scan me-1"></i>Scanner: Offline');
+                }
+
+                // Update Scale Badge
+                const scaleBadge = $('#scaleStatusBadge');
+                if (scaleOnline) {
+                    scaleBadge.attr('class', 'badge bg-success text-white border-0 fw-bold').css('font-size', '11px');
+                    scaleBadge.html('<i class="mdi mdi-scale me-1"></i>Scale: OK');
+                } else {
+                    scaleBadge.attr('class', 'badge bg-light text-muted border fw-bold').css('font-size', '11px');
+                    scaleBadge.html('<i class="mdi mdi-scale me-1"></i>Scale: Offline');
+                }
             }
 
             function checkTerminalStatus() {
@@ -1410,22 +1460,25 @@
                 }
                 $.get("{{ route('store.sales.terminal-status') }}")
                     .done(function(data) {
-                        if (data && data.status === 'Approved') {
+                        // Controller returns normalized: { status: 'Approved', online: true }
+                        // Also handle pattern: { success: true, registered: true }
+                        const isOnline = (data && data.online === true) ||
+                                         (data && data.status === 'Approved') ||
+                                         (data && data.success === true && data.registered === true);
+
+                        if (isOnline) {
                             hardwareAgent.online = true;
                             hardwareAgent.approved = true;
-                            updateHardwareUI('online');
-                        } else if (data && (data.status === 'PendingApproval' || data.status === 'Registered')) {
-                            hardwareAgent.online = true;
-                            hardwareAgent.approved = false;
-                            updateHardwareUI('unauthorized');
+                            updateHardwareUI('online', data.scanner, data.scale);
                         } else {
                             hardwareAgent.online = false;
-                            updateHardwareUI('offline');
+                            hardwareAgent.approved = false;
+                            updateHardwareUI('offline', false, false);
                         }
                     })
                     .fail(function() {
                         hardwareAgent.online = false;
-                        updateHardwareUI('offline');
+                        updateHardwareUI('offline', false, false);
                     });
             }
 
@@ -2324,6 +2377,9 @@
                     method: 'POST',
                     data: payload,
                     success: function(res) {
+                        // Track invoice for manual hardware re-print
+                        window.lastInvoiceNumber = res.invoice;
+
                         // Populate invoice modal
                         $('#modalInvoiceNo').text(res.invoice);
                         $('#modalAmount').text('$' + total.toFixed(2));
@@ -2388,5 +2444,93 @@
                 });
             }
         </script>
+    @endpush
+
+    @push('scripts')
+    <script>
+        let selectedPrinter = null;
+
+        function printReceiptViaHardware() {
+            const invoiceNo = window.lastInvoiceNumber;
+            if (!invoiceNo) {
+                toastr.error('No invoice found. Please complete a sale first.');
+                return;
+            }
+
+            const btn = document.getElementById('hwPrintBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Checking...';
+
+            // 1. Fetch Printers First
+            $.get("{{ route('store.sales.get-printers') }}")
+                .done(function(res) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+
+                    if (!res.success || !res.printers || res.printers.length === 0) {
+                        toastr.error('No printers found on POS Agent.');
+                        return;
+                    }
+
+                    // 2. Show Modal & Populate
+                    $('#printerListContainer').empty();
+                    res.printers.forEach(p => {
+                        const item = $(`<button class="list-group-item list-group-item-action py-3">
+                            <i class="mdi mdi-printer me-2 text-primary"></i>${p}
+                        </button>`);
+                        item.on('click', function() {
+                            $('#printerListContainer .list-group-item').removeClass('active bg-primary text-white');
+                            $(this).addClass('active bg-primary text-white');
+                            selectedPrinter = p;
+                            $('#confirmPrintBtn').removeClass('d-none');
+                        });
+                        $('#printerListContainer').append(item);
+                    });
+
+                    new bootstrap.Modal(document.getElementById('printerSelectModal')).show();
+                })
+                .fail(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    toastr.error('Failed to reach POS Agent to fetch printers.');
+                });
+        }
+
+        function confirmHardwarePrint() {
+            if (!selectedPrinter) return;
+            const invoiceNo = window.lastInvoiceNumber;
+            const btn = document.getElementById('confirmPrintBtn');
+            const originalHtml = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Printing...';
+
+            $.ajax({
+                url: "{{ route('store.sales.manual-print') }}",
+                method: 'POST',
+                data: {
+                    _token: csrfToken,
+                    invoice_number: invoiceNo,
+                    printer_name: selectedPrinter
+                },
+                success: function(res) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    if (res.success) {
+                        toastr.success('Receipt sent to ' + selectedPrinter);
+                        bootstrap.Modal.getInstance(document.getElementById('printerSelectModal')).hide();
+                    } else {
+                        toastr.error('Printer error: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    toastr.error('Failed to reach printer. Check agent connection.');
+                }
+            });
+        }
+    </script>
     @endpush
 </x-app-layout>
