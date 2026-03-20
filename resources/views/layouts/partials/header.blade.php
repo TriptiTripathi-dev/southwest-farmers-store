@@ -92,7 +92,7 @@
                     </div>
                 </li>
                 <li class="dropdown notification-list topbar-dropdown">
-                    <a class="nav-link dropdown-toggle arrow-none" href="{{ route('sales.pos') }}" role="button">
+                    <a class="nav-link dropdown-toggle arrow-none" href="{{ route('store.sales.pos') }}" role="button">
                         <i class="mdi mdi-cart-outline noti-icon"></i>
                         @if(isset($cartCount) && $cartCount > 0)
                         <span class="badge bg-danger rounded-circle noti-icon-badge mb-5">

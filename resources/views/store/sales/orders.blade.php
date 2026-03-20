@@ -11,7 +11,7 @@
                 
                 <div class="d-flex">
                     @if(Auth::user()->hasPermission('create_order') || Auth::user()->hasPermission('access_pos'))
-                    <a href="{{ route('sales.pos') }}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center transition-all">
+                    <a href="{{ route('store.sales.pos') }}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center transition-all">
                         <i class="mdi mdi-plus fs-5 me-1"></i> Create New Order
                     </a>
                     @endif

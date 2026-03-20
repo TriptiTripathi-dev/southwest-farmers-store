@@ -58,8 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('customers', StoreCustomerController::class);
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
-    Route::get('/pos', [StoreSalesController::class, 'index'])->name('sales.pos');
-    Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('sales.search');
+    Route::get('/pos', [StoreSalesController::class, 'index'])->name('store.sales.pos');
+    Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     // Notifications
     Route::get('/notifications', [StoreNotificationController::class, 'index'])->name('store.notifications.index');
@@ -183,6 +183,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/sales/weekly', [StoreSalesController::class, 'weeklySales'])->name('sales.weekly');
         Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
+        Route::get('/pos/checkout', [StoreSalesController::class, 'checkoutPage'])->name('sales.checkout-page');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');

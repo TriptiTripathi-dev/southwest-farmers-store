@@ -226,7 +226,7 @@
                 @if ($can('access_pos') || $can('view_orders') || $can('process_return'))
                 <li>
                     @php
-                    $isPosActive = request()->routeIs('sales.pos');
+                    $isPosActive = request()->routeIs('store.sales.pos');
                     $isOrdersRoute = request()->is('orders*') || request()->routeIs('store.sales.orders');
                     $isOrdersActive = $isPosActive || $isOrdersRoute;
                     @endphp
@@ -245,7 +245,7 @@
                         <ul class="nav-second-level">
                             @if ($can('access_pos'))
                             <li>
-                                <a href="{{ route('sales.pos') }}"
+                                <a href="{{ route('store.sales.pos') }}"
                                     class="tp-link {{ $isPosActive ? 'active' : '' }}">
                                     Create Order (POS)
                                 </a>

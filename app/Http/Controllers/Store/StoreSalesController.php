@@ -23,16 +23,50 @@ class StoreSalesController extends Controller
 {
     public function index()
     {  
-         $categories = ProductCategory::select('id', 'name')->distinct()->orderBy('name')->get();
+        $categories = ProductCategory::select('id', 'name')->distinct()->orderBy('name')->get();
+        $storeId = Auth::user()->store_id;
 
         // Fetch active cart for logged in user
         $currentCart = Cart::where('user_id', Auth::id())
-            ->where('store_id', Auth::user()->store_id)
+            ->where('store_id', $storeId)
+            ->where('status', 'active')
+            ->with(['items.product.storeStocks'])
+            ->first();
+
+        // Pre-load first 24 products with stock > 0 for instant rendering
+        $initialProducts = Product::where('is_active', true)
+            ->whereHas('storeStocks', function($q) use ($storeId) {
+                $q->where('store_id', $storeId)->where('quantity', '>', 0);
+            })
+            ->with(['storeStocks' => function($q) use ($storeId) {
+                $q->where('store_id', $storeId);
+            }])
+            ->orderBy('product_name', 'asc')
+            ->limit(24)
+            ->get();
+        
+        return view('store.sales.pos', compact('categories', 'currentCart', 'initialProducts'));
+    }
+
+    public function checkoutPage()
+    {
+        $storeId = Auth::user()->store_id;
+
+        // Fetch active cart
+        $currentCart = Cart::where('user_id', Auth::id())
+            ->where('store_id', $storeId)
             ->where('status', 'active')
             ->with('items.product')
             ->first();
-        
-        return view('store.sales.pos', compact('categories', 'currentCart'));
+
+        if (!$currentCart || $currentCart->items->isEmpty()) {
+            return redirect()->route('store.sales.pos')->with('error', 'Cart is empty. Add items before checkout.');
+        }
+
+        // Fetch customers for selection
+        $customers = StoreCustomer::where('store_id', $storeId)->orderBy('name')->get();
+
+        return view('store.sales.checkout', compact('currentCart', 'customers'));
     }
 
     // ... inside StoreSalesController class ...
@@ -277,51 +311,47 @@ class StoreSalesController extends Controller
         $category = $request->category;
         $storeId = Auth::user()->store_id;
 
-        $query = StoreStock::query()
-            // FIX: Specify table name to avoid ambiguity
-            ->where('store_stocks.store_id', $storeId)
-            ->where('store_stocks.quantity', '>', 0)
-            ->join('products', 'store_stocks.product_id', '=', 'products.id')
-            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id');
+        // Base query for active products
+        $query = Product::where('products.is_active', true);
+
+        // Filter by Category
         if ($category && $category !== 'all') {
-            $query->where('product_categories.id', $category);
+            $query->where('products.category_id', $category);
         }
 
+        // Search Term
         if ($term) {
             $query->where(function ($q) use ($term) {
-                $q->where('products.product_name', 'ILIKE', "%{$term}%")
-                    ->orWhere('products.upc', 'ILIKE', "%{$term}%")
-                    ->orWhere('products.barcode', 'ILIKE', "%{$term}%");
+                $q->where('products.product_name', 'LIKE', "%{$term}%")
+                    ->orWhere('products.barcode', 'LIKE', "%{$term}%")
+                    ->orWhere('products.upc', 'LIKE', "%{$term}%");
             });
         }
 
-        $products = $query->groupBy(
-                'store_stocks.product_id',
-                'store_stocks.selling_price',
-                'products.product_name',
-                'products.sku',
-                'products.barcode',
-                'products.upc',
-                'products.price',
-                'products.icon',
-                'product_categories.name'
-            )
-            ->select(
-                'store_stocks.product_id',
-                DB::raw('SUM(store_stocks.quantity) as quantity'),
-                'store_stocks.selling_price',
-                'products.product_name',
-                'products.sku',
-                'products.barcode',
-                'products.upc',
-                'products.price',
-                'products.icon',
-                'product_categories.name as category_name'
-            )
-            ->orderBy('quantity', 'asc')
+        // Requirement: stock > 0
+        // We join or use whereHas to ensure we only get products with stock in THIS store
+        $products = $query->whereHas('storeStocks', function($q) use ($storeId) {
+                $q->where('store_id', $storeId)
+                  ->where('quantity', '>', 0);
+            })
+            ->with(['storeStocks' => function($q) use ($storeId) {
+                $q->where('store_id', $storeId);
+            }])
             ->orderBy('products.product_name', 'asc')
-            ->limit(20)
-            ->get();
+            ->limit(32)
+            ->get()
+            ->map(function($p) {
+                $stock = $p->storeStocks->first();
+                return [
+                    'id' => $p->id,
+                    'product_name' => $p->product_name,
+                    'barcode' => $p->barcode,
+                    'upc' => $p->upc,
+                    'selling_price' => ($stock && $stock->selling_price > 0) ? $stock->selling_price : $p->price,
+                    'quantity' => $stock ? $stock->quantity : 0,
+                    'icon' => $p->icon,
+                ];
+            });
 
         return response()->json($products);
     }
@@ -532,6 +562,7 @@ class StoreSalesController extends Controller
 
             return response()->json([
                 'success' => true,
+                'sale_id' => $sale->id,
                 'invoice' => $invoiceNumber,
                 'message' => 'Sale completed successfully!' . ($posWarning ? " ($posWarning)" : '')
             ]);
