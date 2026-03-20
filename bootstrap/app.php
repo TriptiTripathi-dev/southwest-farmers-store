@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if (auth('customer')->check()) {
                 return route('website.home');
             }
-            return '/dashboard';
+            return route('dashboard');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
