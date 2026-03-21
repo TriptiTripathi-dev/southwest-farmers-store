@@ -325,18 +325,20 @@
         }
 
         function loadSideCart() {
-            fetch('{{ route('website.cart.index') }}', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.text())
-            .then(html => {
-                // Since our CartController@index returns a full view, we should ideally have a partial or just use the data.
-                // For now, let's fetch JSON if we want more efficiency, but I'll implement a quick reload of the items.
-                updateSideCartUI(); 
-            });
+            @if(auth('customer')->check())
+                updateSideCartUI();
+            @endif
         }
 
         function updateSideCartUI() {
+            @if(!auth('customer')->check())
+                // Not logged in — show login prompt in sidebar
+                const sideItems = document.getElementById('sideCartItems');
+                sideItems.innerHTML = '<div class="text-center py-4 text-muted"><i class="mdi mdi-lock-outline fs-3 d-block mb-2"></i><small>Please <a href="{{ route('website.login') }}" class="text-theme fw-bold">login</a> to use your cart.</small></div>';
+                document.getElementById('checkoutBtn').disabled = true;
+                return;
+            @endif
+
             // We'll fetch the cart data as JSON for the sidebar
             fetch('{{ route('website.cart.index') }}', {
                 headers: { 
@@ -344,8 +346,20 @@
                     'X-Requested-With': 'XMLHttpRequest' 
                 }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    // Non-2xx (e.g. 401) — show empty state and bail
+                    const sideItems = document.getElementById('sideCartItems');
+                    sideItems.innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
+                    document.getElementById('sideCartTotal').textContent = '$0.00';
+                    document.getElementById('checkoutBtn').disabled = true;
+                    return null;
+                }
+                return res.json();
+            })
             .then(data => {
+                if (!data) return;
+
                 const sideItems = document.getElementById('sideCartItems');
                 const sideTotal = document.getElementById('sideCartTotal');
                 const checkoutBtn = document.getElementById('checkoutBtn');
@@ -369,13 +383,21 @@
 
                 sideTotal.textContent = `$${parseFloat(data.cart.total_amount).toFixed(2)}`;
                 checkoutBtn.disabled = false;
+            })
+            .catch(() => {
+                // Network error — silently show empty state
+                document.getElementById('sideCartItems').innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
+                document.getElementById('sideCartTotal').textContent = '$0.00';
+                document.getElementById('checkoutBtn').disabled = true;
             });
         }
 
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
-            updateSideCartUI();
+            @if(auth('customer')->check())
+                updateSideCartUI();
+            @endif
         });
     </script>
     @endpush
