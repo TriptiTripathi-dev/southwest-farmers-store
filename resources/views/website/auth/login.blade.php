@@ -51,11 +51,6 @@
                                                 Remember me
                                             </label>
                                         </div>
-                                        @if (Route::has('password.request'))
-                                            <a class="text-theme text-decoration-none fw-bold small" href="{{ route('password.request') }}">
-                                                Forgot password?
-                                            </a>
-                                        @endif
                                     </div>
 
                                     <button type="submit" class="btn btn-theme w-100 py-3 rounded-pill fw-bold fs-5 shadow-sm mb-4">

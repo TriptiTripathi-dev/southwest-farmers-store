@@ -33,15 +33,14 @@
                     <i class="mdi mdi-magnify fs-5"></i>
                 </a>
 
-                @if(!auth('customer')->check() && !auth('store')->check())
+                @if(!auth('customer')->check())
                     <div class="d-flex align-items-center gap-2 ms-lg-2">
                         <a href="{{ route('website.login') }}" class="btn btn-outline-dark rounded-pill px-4 fw-bold btn-sm">Login</a>
                         <a href="{{ route('website.register') }}" class="btn btn-theme rounded-pill px-4 fw-bold btn-sm">Sign Up</a>
                     </div>
                 @else
                     @php
-                        $currentUser = auth('customer')->check() ? auth('customer')->user() : auth('store')->user();
-                        $isCustomer = auth('customer')->check();
+                        $currentUser = auth('customer')->user();
                     @endphp
                     <div class="dropdown ms-lg-2">
                         <a class="text-dark text-decoration-none hover-lift p-2 dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -49,13 +48,6 @@
                             <span class="fw-bold small d-none d-md-inline">{{ $currentUser->name }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-3 rounded-4">
-                            @if(!$isCustomer)
-                            <li>
-                                <a class="dropdown-item py-2 fw-semibold" href="{{ route('dashboard') }}">
-                                    <i class="mdi mdi-view-dashboard-outline me-2 text-muted"></i> Dashboard
-                                </a>
-                            </li>
-                            @else
                             @if(Route::has('website.dashboard'))
                             <li>
                                 <a class="dropdown-item py-2 fw-semibold" href="{{ route('website.dashboard') }}">
@@ -63,15 +55,14 @@
                                 </a>
                             </li>
                             @endif
-                            @endif
                             <li>
-                                <a class="dropdown-item py-2 fw-semibold" href="{{ $isCustomer ? '#' : route('profile.edit') }}">
+                                <a class="dropdown-item py-2 fw-semibold" href="#">
                                     <i class="mdi mdi-cog-outline me-2 text-muted"></i> Profile
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ $isCustomer ? route('website.logout') : route('logout') }}">
+                                <form method="POST" action="{{ route('website.logout') }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item py-2 fw-bold text-danger">
                                         <i class="mdi mdi-logout me-2"></i> Logout
