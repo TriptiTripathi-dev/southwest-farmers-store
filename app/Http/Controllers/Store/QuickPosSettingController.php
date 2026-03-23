@@ -43,6 +43,7 @@ class QuickPosSettingController extends Controller
             'subtitle' => 'nullable|string',
             'pos_terminal_id' => 'nullable|string|max:255',
             'pos_agent_secret' => 'nullable|string|max:255',
+            'pos_store_id' => 'nullable|string|max:255',
             'pos_hardware_url' => 'nullable|url|max:255',
         ]);
 
@@ -54,6 +55,7 @@ class QuickPosSettingController extends Controller
             'scanner_enabled' => $request->has('scanner_enabled'),
             'scale_enabled' => $request->has('scale_enabled'),
             'cash_drawer_enabled' => $request->has('cash_drawer_enabled'),
+            'pax_enabled' => $request->has('pax_enabled'),
             'auto_print_receipt' => $request->has('auto_print_receipt'),
         ];
 
@@ -63,6 +65,7 @@ class QuickPosSettingController extends Controller
         $storeUpdates = [];
         if ($request->has('pos_terminal_id')) $storeUpdates['pos_terminal_id'] = $request->pos_terminal_id;
         if ($request->has('pos_agent_secret')) $storeUpdates['pos_agent_secret'] = $request->pos_agent_secret;
+        if ($request->has('pos_store_id')) $storeUpdates['pos_store_id'] = $request->pos_store_id;
         if ($request->has('pos_hardware_url')) $storeUpdates['pos_hardware_url'] = $request->pos_hardware_url;
 
         if (!empty($storeUpdates)) {

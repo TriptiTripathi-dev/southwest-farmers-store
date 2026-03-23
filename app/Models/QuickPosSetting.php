@@ -13,7 +13,8 @@ class QuickPosSetting extends Model
         'scanner_enabled',
         'scale_enabled',
         'cash_drawer_enabled',
-        'auto_print_receipt'
+        'auto_print_receipt',
+        'pax_enabled'
     ];
 
     protected $casts = [
@@ -22,5 +23,6 @@ class QuickPosSetting extends Model
         'scale_enabled' => 'boolean',
         'cash_drawer_enabled' => 'boolean',
         'auto_print_receipt' => 'boolean',
+        'pax_enabled' => 'boolean',
     ];
 }

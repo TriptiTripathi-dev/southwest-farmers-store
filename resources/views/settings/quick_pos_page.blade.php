@@ -67,6 +67,13 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium text-muted">POS Agent Store ID</label>
+                                <input type="text" name="pos_store_id" class="form-control bg-light border-0"
+                                    value="{{ old('pos_store_id', $store->pos_store_id ?? '') }}"
+                                    placeholder="e.g. 0500039605484205000396054842">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium text-muted">Local Hardware Device URL</label>
                                 <input type="url" name="pos_hardware_url" class="form-control bg-light border-0"
                                     value="{{ old('pos_hardware_url', $store->pos_hardware_url ?? 'http://localhost:3001') }}"
@@ -132,6 +139,14 @@
                                         {{ old('auto_print_receipt', $settings->auto_print_receipt) ? 'checked' : '' }}>
                                     <label class="form-check-label ms-2 mt-1" for="auto_print_receipt">Auto Print
                                         Receipt</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        name="pax_enabled" id="pax_enabled"
+                                        {{ old('pax_enabled', $settings->pax_enabled) ? 'checked' : '' }}>
+                                    <label class="form-check-label ms-2 mt-1 text-primary fw-bold" for="pax_enabled">PAX Card Payment</label>
                                 </div>
                             </div>
                         </div>

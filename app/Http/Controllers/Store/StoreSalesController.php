@@ -18,10 +18,12 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\StoreNotification;
+use App\Services\PosAgentService;
+use Illuminate\Support\Facades\Validator;
 
 class StoreSalesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {  
         $categories = ProductCategory::select('id', 'name')->distinct()->orderBy('name')->get();
         $storeId = Auth::user()->store_id;
@@ -45,6 +47,14 @@ class StoreSalesController extends Controller
             ->limit(24)
             ->get();
         
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'currentCart' => $currentCart,
+                'initialProducts' => $initialProducts,
+                'categories' => $categories
+            ]);
+        }
+        
         return view('store.sales.pos', compact('categories', 'currentCart', 'initialProducts'));
     }
 
@@ -66,7 +76,11 @@ class StoreSalesController extends Controller
         // Fetch customers for selection
         $customers = StoreCustomer::where('store_id', $storeId)->orderBy('name')->get();
 
-        return view('store.sales.checkout', compact('currentCart', 'customers'));
+        // Fetch global settings for PAX toggle
+        $settings = \App\Models\QuickPosSetting::first();
+        $paxEnabled = $settings ? $settings->pax_enabled : false;
+
+        return view('store.sales.checkout', compact('currentCart', 'customers', 'paxEnabled'));
     }
 
     // ... inside StoreSalesController class ...
@@ -231,8 +245,8 @@ class StoreSalesController extends Controller
         ]);
     }
 
-    // 4. Clear Cart
-    public function clearCart()
+    // 4. Clear Cart / Hold Cart
+    public function clearCart(Request $request)
     {
         $cart = Cart::where('user_id', Auth::id())
             ->where('store_id', Auth::user()->store_id)
@@ -240,9 +254,17 @@ class StoreSalesController extends Controller
             ->first();
 
         if ($cart) {
-            $cart->items()->delete();
-            $cart->total_amount = 0;
-            $cart->save();
+            if ($request->has('hold') && $request->hold) {
+                // If cart is empty, don't hold
+                if (!$cart->items()->exists()) {
+                    return response()->json(['success' => false, 'message' => 'Cart is empty.']);
+                }
+                $cart->update(['status' => 'held']);
+            } else {
+                $cart->items()->delete();
+                $cart->total_amount = 0;
+                $cart->save();
+            }
         }
 
         return response()->json(['success' => true]);
@@ -273,6 +295,18 @@ class StoreSalesController extends Controller
     {
         $storeId = Auth::user()->store_id;
 
+        // If status is held, return held carts instead of sales
+        if ($request->status === 'held') {
+            $heldCarts = Cart::where('store_id', $storeId)
+                ->where('user_id', Auth::id())
+                ->where('status', 'held')
+                ->withCount('items')
+                ->orderBy('updated_at', 'desc')
+                ->get();
+
+            return response()->json($heldCarts);
+        }
+
         $query = Sale::where('store_id', $storeId)
             ->with(['customer', 'items']) // Eager load relationships
             ->orderBy('created_at', 'desc');
@@ -288,7 +322,60 @@ class StoreSalesController extends Controller
 
         $orders = $query->paginate(10);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($orders);
+        }
+
         return view('store.sales.orders', compact('orders'));
+    }
+
+    /**
+     * Restore a held order (Cart) to active status
+     */
+    public function restoreHeldOrder($id)
+    {
+        $storeId = Auth::user()->store_id;
+        $heldCart = Cart::where('id', $id)
+            ->where('store_id', $storeId)
+            ->where('status', 'held')
+            ->firstOrFail();
+
+        // 1. Clear current active cart (or hold it if preferred, here we just clear it for simplicity)
+        $activeCart = Cart::where('user_id', Auth::id())
+            ->where('store_id', $storeId)
+            ->where('status', 'active')
+            ->first();
+
+        DB::transaction(function () use ($heldCart, $activeCart) {
+            if ($activeCart) {
+                $activeCart->items()->delete();
+                $activeCart->delete();
+            }
+
+            // 2. Set this held cart to active
+            $heldCart->update(['status' => 'active']);
+        });
+
+        return response()->json(['success' => true, 'message' => 'Order restored successfully.']);
+    }
+
+    /**
+     * Delete a held order (Cart)
+     */
+    public function deleteHeldOrder($id)
+    {
+        $storeId = Auth::user()->store_id;
+        $heldCart = Cart::where('id', $id)
+            ->where('store_id', $storeId)
+            ->where('status', 'held')
+            ->firstOrFail();
+
+        DB::transaction(function () use ($heldCart) {
+            $heldCart->items()->delete();
+            $heldCart->delete();
+        });
+
+        return response()->json(['success' => true, 'message' => 'Held order deleted.']);
     }
 
     // ... existing methods ...
@@ -468,7 +555,7 @@ class StoreSalesController extends Controller
                 'tax_amount' => $request->tax_amount,
                 'discount_amount' => $request->discount_amount,
                 'total_amount' => $request->total_amount,
-                'payment_method' => $paymentMethod,
+                'payment_method' => strtoupper($paymentMethod), // Fixed typo: use $paymentMethod and convert to uppercase
                 'created_by' => Auth::id(),
             ]);
 
@@ -515,50 +602,57 @@ class StoreSalesController extends Controller
                 'url' => route('store.sales.orders.show', $sale->id),
             ]);
 
-            DB::commit();
-
-            // POS Hardware Integration (Strict Mode)
+            // POS Hardware Integration (Strict Response-Driven Flow)
+            // Hardware actions decide whether to commit or rollback the database logic based EXACTLY on responses.
             $posWarning = null;
             try {
                 $store = \App\Models\StoreDetail::where('id', $storeId)->first();
+                $terminalId = $store ? $store->pos_terminal_id : null;
 
-                if ($store && $store->pos_terminal_id) {
-                    // 1. Handle Cash Payment Strict Flow
+                if ($terminalId) {
                     if ($paymentMethod === 'cash') {
-                        // Check status first
-                        $drawerStatus = $posAgentService->getCashDrawerStatus($store->pos_terminal_id);
-                        if (!$drawerStatus || ($drawerStatus['connected'] ?? false) === false) {
+                        // 1. Check Drawer Status
+                        $drawerStatus = $posAgentService->getCashDrawerStatus($terminalId);
+                        Log::info('POS Checkout: Cash Drawer Status Response', ['response' => $drawerStatus]);
+                        
+                        // Strict check on 'success' key; 'configured' is preferred but we fallback to success
+                        if (!$drawerStatus || empty($drawerStatus['success'])) {
                             DB::rollBack();
+                            $errMsg = $drawerStatus['message'] ?? 'Cash Drawer is offline or not configured.';
                             return response()->json([
                                 'success' => false,
-                                'message' => 'Cash Drawer is not connected or not available. Please check the hardware.'
+                                'message' => $errMsg
                             ], 422);
                         }
 
-                        // Try to open it
-                        $opened = $posAgentService->openCashDrawer($store->pos_terminal_id);
-                        if (!$opened) {
+                        // 2. Open Cash Drawer
+                        $opened = $posAgentService->openCashDrawer($terminalId);
+                        Log::info('POS Checkout: Open Cash Drawer Response', ['response' => $opened]);
+
+                        if (!$opened || empty($opened['success'])) {
                             DB::rollBack();
+                            $errMsg = $opened['message'] ?? 'Failed to open Cash Drawer via Agent.';
                             return response()->json([
                                 'success' => false,
-                                'message' => 'Failed to open Cash Drawer. The transaction has not been saved.'
+                                'message' => $errMsg
                             ], 422);
                         }
                     }
-
-                    // 2. Print Receipt — try to print, but only if checkout logic above succeeded
-                    $sale->load('items.product');
-                    // We don't block DB success on printer failing here (auto-print), 
-                    // but we do log it and warn the user.
-                    $printResult = $posAgentService->printReceipt($store->pos_terminal_id, $sale);
-                    if (!$printResult['success']) {
-                        $posWarning = 'Order saved, but Receipt printing failed: ' . $printResult['message'];
-                    }
+                    
+                    // Note: Receipt printing is deferred to the frontend modal which hits `/store/pos/manual-print`
+                    // after this checkout responds successfully, matching the requested workflow.
                 }
             } catch (\Exception $e) {
+                DB::rollBack();
                 Log::error('POS Hardware Integration Error @ Checkout', ['error' => $e->getMessage()]);
-                // If it's a hardware error during cash flow, we already rolled back.
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hardware Cloud Agent Exception: ' . $e->getMessage()
+                ], 422);
             }
+
+            // Commit only if cash drawer succeeded (or if card payment)
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -578,16 +672,15 @@ class StoreSalesController extends Controller
     public function terminalStatus(\App\Services\PosAgentService $posAgentService)
     {
         $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
+        $terminalId = $store ? $store->pos_terminal_id : null;
+
+        if (!$terminalId) {
             return response()->json(['status' => 'offline', 'message' => 'Terminal ID not configured.']);
         }
 
         try {
-            // Simplified status: only check terminal health. 
-            // Scanner/Scale status removed from 30s poller to reduce load.
-            $raw = $posAgentService->getTerminalStatus($store->pos_terminal_id);
+            $raw = $posAgentService->getTerminalStatus($terminalId);
 
-            // Normalize: the API may return { success, registered } or { status, approved } — handle both
             $isOnline = false;
             if (is_array($raw)) {
                 if (!empty($raw['success']) && !empty($raw['registered'])) $isOnline = true;
@@ -611,11 +704,13 @@ class StoreSalesController extends Controller
     public function getPrinters(\App\Services\PosAgentService $posAgentService)
     {
         $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
+        $terminalId = $store ? $store->pos_terminal_id : null;
+
+        if (!$terminalId) {
             return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
         }
 
-        $result = $posAgentService->getPrinterList($store->pos_terminal_id);
+        $result = $posAgentService->getPrinterList($terminalId);
         return response()->json($result);
     }
 
@@ -625,12 +720,14 @@ class StoreSalesController extends Controller
     public function getWeight(\App\Services\PosAgentService $posAgentService)
     {
         $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
+        $terminalId = $store ? $store->pos_terminal_id : null;
+
+        if (!$terminalId) {
             return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
         }
 
-        $weight = $posAgentService->getWeight($store->pos_terminal_id);
-        return response()->json(['success' => true, 'weight' => $weight]);
+        $response = $posAgentService->getWeight($terminalId);
+        return response()->json($response ?: ['success' => false, 'weight' => null]);
     }
 
     /**
@@ -639,12 +736,20 @@ class StoreSalesController extends Controller
     public function getLastScan(\App\Services\PosAgentService $posAgentService)
     {
         $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
+        $terminalId = $store ? $store->pos_terminal_id : null;
+
+        if (!$terminalId) {
             return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
         }
 
-        $scan = $posAgentService->getLastScan($store->pos_terminal_id);
-        return response()->json(['success' => true, 'scan' => $scan]);
+        $response = $posAgentService->getLastScan($terminalId);
+        
+        if (isset($response['scan']['value'])) {
+             // Map value to barcode to match existing frontend expectation
+             $response['scan']['barcode'] = $response['scan']['value'];
+        }
+
+        return response()->json($response ?: ['success' => false]);
     }
 
     /**
@@ -659,7 +764,9 @@ class StoreSalesController extends Controller
         }
 
         $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
+        $terminalId = $store ? $store->pos_terminal_id : null;
+
+        if (!$terminalId) {
             return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
         }
 
@@ -672,7 +779,62 @@ class StoreSalesController extends Controller
             return response()->json(['success' => false, 'message' => 'Sale not found.']);
         }
 
-        $result = $posAgentService->printReceipt($store->pos_terminal_id, $sale, $request->input('printer_name'));
+        $result = $posAgentService->printReceipt($terminalId, $sale, $request->input('printer_name'));
+        return response()->json($result);
+    }
+    /**
+     * Check PAX terminal status for current store
+     */
+    public function checkPaxStatus(PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
+        }
+
+        $status = $posAgentService->getPaymentStatus($store->pos_terminal_id);
+        return response()->json($status);
+    }
+
+    /**
+     * Initiate PAX payment
+     */
+    public function initiatePaxPayment(Request $request, PosAgentService $posAgentService)
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|numeric|min:0.01',
+            'order_id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
+        }
+
+        $result = $posAgentService->initiatePayment(
+            $store->pos_terminal_id,
+            $request->amount,
+            $request->order_id
+        );
+
+        return response()->json($result);
+    }
+
+    /**
+     * Cancel PAX payment
+     */
+    public function cancelPaxPayment(PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
+        }
+
+        $result = $posAgentService->cancelPayment($store->pos_terminal_id);
         return response()->json($result);
     }
 }

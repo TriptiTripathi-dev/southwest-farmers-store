@@ -1065,7 +1065,8 @@
                                     <div class="product-card clickable-product" data-id="{{ $p->id }}"
                                         data-name="{{ str_replace('"', '&quot;', $p->product_name) }}"
                                         data-price="{{ $displayPrice }}" data-stock="{{ $qty }}">
-                                        <div class="product-img" style="background-image:url('{{ $img }}');">
+                                        <div class="product-img position-relative" style="background-image:url('{{ $img }}');">
+                                            <span class="position-absolute top-0 end-0 m-2 badge bg-primary rounded-circle d-flex align-items-center justify-content-center cart-qty-badge d-none" style="width: 24px; height: 24px; font-size: 11px; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">0</span>
                                         </div>
                                         <div class="product-content">
                                             <div class="text-muted mb-1" style="font-size:10px;font-family:monospace;">
@@ -1082,10 +1083,10 @@
                                                         stock</small>
                                                 </div>
                                                 <div class="d-flex gap-1">
-                                                    <button class="remove-from-cart-btn" onclick="event.stopPropagation(); decreaseCartQty({{ $p->id }})">
+                                                    <button class="remove-from-cart-btn btn-cart-control" onclick="event.stopPropagation(); decreaseCartQty({{ $p->id }})">
                                                         <i class="mdi mdi-minus"></i>
                                                     </button>
-                                                    <button class="add-to-cart-btn">
+                                                    <button class="add-to-cart-btn btn-cart-control">
                                                         <i class="mdi mdi-plus"></i>
                                                     </button>
                                                 </div>
@@ -1139,7 +1140,11 @@
                         <div class="text-primary fw-bold" id="barGrandTotal">$0.00</div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-warning fw-bold px-3 py-3 rounded-3 d-flex align-items-center gap-2" onclick="holdCart()">
+                        <i class="mdi mdi-pause-circle-outline fs-5"></i>
+                        <span class="d-none d-sm-inline">HOLD</span>
+                    </button>
                     <a href="{{ route('store.sales.checkout-page') }}" id="proceedToCheckoutBtn"
                         class="btn btn-primary fw-bold px-4 py-3 rounded-3 shadow-sm d-flex align-items-center gap-2 disabled">
                         <span class="d-none d-sm-inline">PROCEED TO CHECKOUT</span>
@@ -1418,11 +1423,28 @@
             console.log("POS SCRIPT START");
             let cart = @json($cartArray);
             let currentCategory = 'all';
+            let isCartUpdating = false;
             let csrfToken = $('meta[name="csrf-token"]').attr('content') || "{{ csrf_token() }}";
             let heldCarts = JSON.parse(localStorage.getItem('heldCarts')) || [];
             const TAX_RATE = 0.08;
 
-            // --- GLOBAL CORE FUNCTIONS ---
+            window.updateProductCartIndicators = function() {
+                $('.product-card').each(function() {
+                    let card = $(this);
+                    let id = card.data('id');
+                    let badge = card.find('.cart-qty-badge');
+                    let item = cart.find(i => (i.product_id == id || i.id == id));
+                    
+                    if (item && item.quantity > 0) {
+                        badge.text(item.quantity).removeClass('d-none');
+                        card.addClass('border-primary shadow-sm');
+                    } else {
+                        badge.addClass('d-none');
+                        card.removeClass('border-primary shadow-sm');
+                    }
+                });
+            };
+
             window.filterCategory = function(slug, btn) {
                 $('.cat-btn').removeClass('active');
                 $(btn).addClass('active');
@@ -1459,7 +1481,9 @@
 
                                 html += `<div class="col-6 col-md-3">
                                     <div class="product-card clickable-product" data-id="${id}" data-name="${name}" data-price="${displayPrice}" data-stock="${qty}">
-                                        <div class="product-img" style="background-image:url('${img}');"></div>
+                                        <div class="product-img position-relative" style="background-image:url('${img}');">
+                                            <span class="position-absolute top-0 end-0 m-2 badge bg-primary rounded-circle d-flex align-items-center justify-content-center cart-qty-badge d-none" style="width: 24px; height: 24px; font-size: 11px; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">0</span>
+                                        </div>
                                         <div class="product-content">
                                             <div class="text-muted mb-1 small" style="font-size:9px;"><i class="mdi mdi-barcode"></i> ${bc}</div>
                                             <div class="product-name fw-bold small text-truncate" title="${name}">${name}</div>
@@ -1469,10 +1493,10 @@
                                                     <small class="text-muted-green" style="font-size:9px;">${qty} in stock</small>
                                                 </div>
                                                 <div class="d-flex gap-1">
-                                                    <button class="remove-from-cart-btn" onclick="event.stopPropagation(); decreaseCartQty(${id})">
+                                                    <button class="remove-from-cart-btn btn-cart-control" onclick="event.stopPropagation(); decreaseCartQty(${id})">
                                                         <i class="mdi mdi-minus"></i>
                                                     </button>
-                                                    <button class="add-to-cart-btn">
+                                                    <button class="add-to-cart-btn btn-cart-control">
                                                         <i class="mdi mdi-plus"></i>
                                                     </button>
                                                 </div>
@@ -1483,6 +1507,7 @@
                             });
                         }
                         $('#productGrid').html(html);
+                        updateProductCartIndicators();
                     },
                     error: function() {
                         toastr.error('Failed to load products.');
@@ -1491,6 +1516,7 @@
             };
 
             window.addToCart = function(id, name, price, maxStock) {
+                if (isCartUpdating) return;
                 if (maxStock <= 0) return Swal.fire('Out of Stock', 'Unavailable', 'error');
                 let existing = cart.find(i => (i.product_id == id || i.id == id));
                 if (existing && (existing.quantity + 1) > maxStock) {
@@ -1510,7 +1536,11 @@
                         max: maxStock
                     });
                 }
+                
+                isCartUpdating = true;
+                $('.btn-cart-control').prop('disabled', true);
                 renderCart();
+                
                 $.ajax({
                     url: "{{ route('store.sales.cart.add') }}",
                     method: 'POST',
@@ -1519,21 +1549,37 @@
                         product_id: id,
                         quantity: 1
                     },
+                    success: function(res) {
+                        if (res && res.cart) {
+                            cart = preserveMaxStock(res.cart);
+                            renderCart();
+                        }
+                        toastr.success('Item added to cart successfully');
+                    },
                     error: function() {
                         toastr.error('Sync error.');
+                    },
+                    complete: function() {
+                        isCartUpdating = false;
+                        $('.btn-cart-control').prop('disabled', false);
                     }
                 });
             };
 
             window.updateQty = function(index, change, manualQty = null) {
+                if (isCartUpdating) return;
                 let item = cart[index];
                 if (!item) return;
                 let newQty = manualQty !== null ? parseFloat(manualQty) : (item.quantity + change);
                 if (isNaN(newQty) || newQty < 1) return removeFromCart(index);
                 if (item.max && newQty > item.max) return toastr.warning('Stock limit reached');
 
+                isCartUpdating = true;
+                $('.btn-cart-control').prop('disabled', true);
+                
                 item.quantity = newQty;
                 renderCart();
+                
                 $.ajax({
                     url: "{{ route('store.sales.cart.update') }}",
                     method: 'POST',
@@ -1542,18 +1588,35 @@
                         item_id: item.item_id || item.id,
                         quantity: newQty
                     },
+                    success: function(res) {
+                        if (res && res.cart) {
+                            cart = preserveMaxStock(res.cart);
+                            renderCart();
+                        }
+                        toastr.success('Cart quantity updated successfully');
+                    },
                     error: function() {
                         toastr.error('Update failed.');
+                    },
+                    complete: function() {
+                        isCartUpdating = false;
+                        $('.btn-cart-control').prop('disabled', false);
                     }
                 });
             };
 
             window.removeFromCart = function(index) {
+                if (isCartUpdating) return;
                 let item = cart[index];
                 if (!item) return;
+                
+                isCartUpdating = true;
+                $('.btn-cart-control').prop('disabled', true);
+                
                 let id = item.item_id || item.id;
                 cart.splice(index, 1);
                 renderCart();
+                
                 $.ajax({
                     url: "{{ route('store.sales.cart.remove') }}",
                     method: 'POST',
@@ -1561,8 +1624,19 @@
                         _token: csrfToken,
                         item_id: id
                     },
+                    success: function(res) {
+                        if (res && res.cart) {
+                            cart = preserveMaxStock(res.cart);
+                            renderCart();
+                        }
+                        toastr.success('Item removed from cart successfully');
+                    },
                     error: function() {
                         toastr.error('Remove failed.');
+                    },
+                    complete: function() {
+                        isCartUpdating = false;
+                        $('.btn-cart-control').prop('disabled', false);
                     }
                 });
             };
@@ -1600,6 +1674,7 @@
                     mobileContainer.html(mobileHtml);
                 }
                 updateTotals(subtotal, totalItems);
+                updateProductCartIndicators();
             };
 
             window.updateTotals = function(subtotal, totalItems) {
@@ -1618,6 +1693,7 @@
             };
 
             window.decreaseCartQty = function(productId) {
+                if (isCartUpdating) return;
                 let index = cart.findIndex(i => (i.product_id == productId || i.id == productId));
                 if (index !== -1) {
                     updateQty(index, -1);
@@ -1627,7 +1703,10 @@
             };
 
             $(document).on('click', '.clickable-product', function(e) {
+                if (isCartUpdating) return;
                 const card = $(this);
+                if ($(e.target).closest('.remove-from-cart-btn').length) return; // Ignore if clicked on minus button
+
                 addToCart(card.data('id'), card.data('name'), card.data('price'), card.data('stock'));
                 card.addClass('active-pulse');
                 setTimeout(() => card.removeClass('active-pulse'), 150);
@@ -2147,8 +2226,61 @@
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('heldOrdersModal')).show();
             }
 
+            // Sync cart from backend (active status)
+            window.fetchCartSync = function() {
+                $.ajax({
+                    url: "{{ route('store.sales.pos') }}",
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(res) {
+                        // Assuming the index returns JSON if AJAX
+                        if (res.currentCart) {
+                            cart = preserveMaxStock(res.currentCart.items.map(i => ({
+                                id: i.product_id,
+                                product_id: i.product_id,
+                                name: i.product.product_name,
+                                price: parseFloat(i.price),
+                                quantity: i.quantity
+                            })));
+                            renderCart();
+                        } else {
+                            cart = [];
+                            renderCart();
+                        }
+                    }
+                });
+            }
+
             window.restoreHeld = function(id) {
-                Swal.fire('Restoring Order', 'Restoring held order #' + id, 'info');
+                Swal.fire({
+                    title: 'Restore this order?',
+                    text: "This will replace your current active cart.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#019934',
+                    confirmButtonText: 'Restore'
+                }).then(r => {
+                    if (r.isConfirmed) {
+                        $.ajax({
+                            url: `/store/orders/held/${id}/restore`,
+                            method: 'POST',
+                            data: { _token: csrfToken },
+                            success: function(res) {
+                                if (res.success) {
+                                    toastr.success(res.message);
+                                    let modal = bootstrap.Modal.getInstance(document.getElementById('heldOrdersModal'));
+                                    if (modal) modal.hide();
+                                    
+                                    // Full page reload or manual sync? 
+                                    // Manual sync is better for UX
+                                    location.reload(); // Simplest way to ensure all state is reset correctly
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
             }
 
             window.deleteHeld = function(id) {
@@ -2161,8 +2293,19 @@
                     confirmButtonText: 'Yes, delete it'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        toastr.success('Held order deleted');
-                        renderHeldCarts();
+                        $.ajax({
+                            url: `/store/orders/held/${id}`,
+                            method: 'DELETE',
+                            data: { _token: csrfToken },
+                            success: function(res) {
+                                if (res.success) {
+                                    toastr.success(res.message);
+                                    renderHeldCarts();
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            }
+                        });
                     }
                 });
             }

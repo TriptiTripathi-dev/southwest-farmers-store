@@ -60,10 +60,16 @@
     @endpush
 
     <div class="checkout-container">
-        <a href="{{ route('store.sales.pos') }}" class="back-btn">
-            <i class="mdi mdi-arrow-left"></i>
-            <span>RETURN TO CATALOG</span>
-        </a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ route('store.sales.pos') }}" class="back-btn m-0">
+                <i class="mdi mdi-arrow-left"></i>
+                <span>RETURN TO CATALOG</span>
+            </a>
+            <button class="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 rounded-pill px-3" onclick="openHeldOrders()">
+                <i class="mdi mdi-pause-circle-outline fs-5"></i>
+                <span>HELD ORDERS <span class="badge bg-warning text-dark ms-1" id="heldCountBadge">0</span></span>
+            </button>
+        </div>
 
         <div class="row g-4">
             {{-- Order Details Section --}}
@@ -174,6 +180,7 @@
                         <input type="hidden" id="paymentMethodValue" value="cash">
 
                         {{-- Card Terminal UI --}}
+                        @if($paxEnabled)
                         <div id="cardTerminalPanel" class="d-none mb-3 p-3 rounded-4 border-2 border-dashed bg-light text-center">
                             <div class="text-muted small fw-bold mb-2">PAX TERMINAL STATUS</div>
                             <div id="cardStatusText" class="fw-bold text-primary mb-3">Awaiting Authorization</div>
@@ -181,6 +188,7 @@
                                 <i class="mdi mdi-lock-outline me-1"></i>Start Auth
                             </button>
                         </div>
+                        @endif
 
                         <div class="summary-box">
                             @php
@@ -214,6 +222,11 @@
                         <button id="btnCompleteSale" class="btn-checkout-finalize" onclick="initiateFinalCheckout()">
                             <i class="mdi mdi-check-circle-outline"></i>
                             <span>FINALIZE TRANSACTION</span>
+                        </button>
+
+                        <button class="btn btn-outline-secondary w-100 rounded-4 py-3 fw-bold mt-3 d-flex align-items-center justify-content-center gap-2" style="border-width: 2px;" onclick="holdCart()">
+                            <i class="mdi mdi-pause-circle-outline fs-4"></i>
+                            <span>HOLD ORDER FOR LATER</span>
                         </button>
                     </div>
                 </div>
@@ -250,37 +263,26 @@
         </div>
     </div>
 
-    <!-- Card Auth Modal -->
-    <div class="modal fade" id="cardAuthModal" tabindex="-1">
+    <!-- Card Auth Modal (PAX Integration) -->
+    <div class="modal fade" id="cardAuthModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold fs-4">PAX Simulation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4 text-center">
-                    <div class="mb-4">
-                        <i class="mdi mdi-nfc-variant text-primary" style="font-size: 64px;"></i>
-                        <p class="text-muted">Simulating user swipe/tap on Pax A35</p>
+            <div class="modal-content border-0 shadow-lg rounded-4 text-center">
+                <div class="modal-body py-5">
+                    <div id="paxStatusIcon" class="mb-4">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
                     </div>
-                    <div class="mb-4 text-start">
-                        <label class="form-label fw-bold text-muted small">Terminal Response</label>
-                        <select id="simResult" class="form-select form-select-lg">
-                            <option value="approved">Approved</option>
-                            <option value="declined">Declined</option>
-                            <option value="partial">Partial ($5.00 only)</option>
-                        </select>
+                    <h4 id="paxStatusTitle" class="fw-bold mb-2">Connecting to PAX...</h4>
+                    <p id="paxStatusDesc" class="text-muted mb-4">Please wait while we reach the payment terminal.</p>
+                    
+                    <div id="paxAmountDisplay" class="d-none badge bg-light text-primary fs-5 px-4 py-2 rounded-pill border mb-4">
+                        AMOUNT: <span id="paxAmountVal">$0.00</span>
                     </div>
-                    <div class="text-start">
-                        <label class="form-label fw-bold text-muted small">Auth Amount</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text">$</span>
-                            <input type="number" id="simAmount" class="form-control" step="0.01">
-                        </div>
+
+                    <div class="d-grid gap-2 px-4">
+                        <button id="btnCancelPax" class="btn btn-outline-danger rounded-pill py-2 fw-bold d-none" onclick="cancelPaxPayment()">
+                            <i class="mdi mdi-close-circle-outline me-1"></i>CANCEL PAYMENT
+                        </button>
                     </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button class="btn btn-primary btn-lg w-100 fw-bold" onclick="finalizeCardSimulation()">Confirm Response</button>
                 </div>
             </div>
         </div>
@@ -305,6 +307,26 @@
                     <button type="button" class="btn btn-primary px-4 fw-bold" id="executePrintBtn" disabled onclick="triggerHardwarePrint()">
                         <i class="mdi mdi-printer-check me-1"></i>Confirm Print
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Held Orders Modal -->
+    <div class="modal fade" id="heldOrdersModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-warning text-dark py-3">
+                    <h5 class="modal-title fw-extrabold"><i class="mdi mdi-pause-circle-outline me-2"></i>Held Orders List</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="modalHeldCartsList" class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        <div class="p-5 text-center text-muted">
+                            <i class="mdi mdi-loading mdi-spin fs-1 mb-3 d-block"></i>
+                            <div class="fw-bold">Fetching held orders...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -381,30 +403,112 @@
 
             // Payment Logic
             let activePayment = 'cash';
+            const paxEnabled = {{ $paxEnabled ? 'true' : 'false' }};
             window.setPaymentMethod = function(method, el) {
                 $('.pay-method-card').removeClass('active');
                 $(el).addClass('active');
                 activePayment = method;
                 $('#paymentMethodValue').val(method);
-                $('#cardTerminalPanel').toggleClass('d-none', method !== 'card');
-            }
 
-            // PAX Card Simulation
-            let cardState = { status: null, amount: 0 };
+                if (paxEnabled) {
+                    $('#cardTerminalPanel').toggleClass('d-none', method !== 'card');
+                } else {
+                    $('#cardTerminalPanel').addClass('d-none');
+                }
+            }
+            
+            // --- PAX REAL INTEGRATION ---
+            let paxModal = null;
+            let cardState = { status: null, amount: 0, ref_num: null };
+
             window.launchCardAuth = function() {
-                let total = parseFloat($('#summaryGrandTotal').text().replace('$',''));
-                $('#simAmount').val(total.toFixed(2));
-                new bootstrap.Modal('#cardAuthModal').show();
+                const total = parseFloat($('#summaryGrandTotal').text().replace('$',''));
+                $('#paxAmountVal').text('$' + total.toFixed(2));
+                
+                // 1. Show processing modal
+                paxModal = new bootstrap.Modal(document.getElementById('cardAuthModal'));
+                paxModal.show();
+                
+                updatePaxUI('Connecting...', 'Checking terminal status...', 'spinner');
+                
+                // 2. Check Status
+                $.get("{{ route('store.sales.payment-status') }}")
+                    .done(res => {
+                        if (res.success && res.online) {
+                            // 3. Initiate Payment
+                            startPaxTransaction(total);
+                        } else {
+                            handlePaxError(res.message || 'Terminal is OFFLINE. Please check connection.');
+                        }
+                    })
+                    .fail(() => handlePaxError('Could not reach PAX Agent.'));
             }
 
-            window.finalizeCardSimulation = function() {
-                cardState = {
-                    status: $('#simResult').val(),
-                    amount: parseFloat($('#simAmount').val() || 0)
-                };
-                let txt = cardState.status === 'approved' ? `APPROVED: $${cardState.amount.toFixed(2)}` : 'CARD DECLINED';
-                $('#cardStatusText').text(txt).toggleClass('text-danger', cardState.status !== 'approved');
-                bootstrap.Modal.getInstance('#cardAuthModal').hide();
+            function startPaxTransaction(amount) {
+                updatePaxUI('Processing...', 'Follow instructions on PAX device.', 'spinner', true);
+                $('#paxAmountDisplay').removeClass('d-none');
+                $('#btnCancelPax').removeClass('d-none');
+
+                const orderId = 'ORD-' + Date.now(); // Unique order ID for initiation
+
+                $.post("{{ route('store.sales.payment-initiate') }}", {
+                    _token: csrfToken,
+                    amount: amount,
+                    order_id: orderId
+                }).done(res => {
+                    if (res.success) {
+                        cardState = {
+                            status: 'approved',
+                            amount: amount,
+                            ref_num: res.refNum || null
+                        };
+                        updatePaxUI('APPROVED', 'Card authorized successfully.', 'success');
+                        setTimeout(() => {
+                            paxModal.hide();
+                            $('#cardStatusText').text(`APPROVED: $${amount.toFixed(2)}`).removeClass('text-danger').addClass('text-success');
+                            // Auto-trigger finalize if you want, or let user click button.
+                            // initiateFinalCheckout(); 
+                        }, 1500);
+                    } else {
+                        handlePaxError(res.message || 'Payment declined or failed.');
+                    }
+                }).fail(xhr => {
+                    handlePaxError(xhr.responseJSON?.message || 'Transaction failed.');
+                });
+            }
+
+            window.cancelPaxPayment = function() {
+                $('#btnCancelPax').prop('disabled', true).text('Cancelling...');
+                $.post("{{ route('store.sales.payment-cancel') }}", { _token: csrfToken })
+                    .always(() => {
+                        handlePaxError('Payment cancelled by user.');
+                    });
+            }
+
+            function updatePaxUI(title, desc, type, showCancel = false) {
+                $('#paxStatusTitle').text(title);
+                $('#paxStatusDesc').text(desc);
+                
+                let iconHtml = '';
+                if (type === 'spinner') {
+                    iconHtml = '<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>';
+                } else if (type === 'success') {
+                    iconHtml = '<i class="mdi mdi-check-circle text-success" style="font-size: 4rem;"></i>';
+                    $('#btnCancelPax').addClass('d-none');
+                } else if (type === 'error') {
+                    iconHtml = '<i class="mdi mdi-alert-circle text-danger" style="font-size: 4rem;"></i>';
+                    $('#btnCancelPax').addClass('d-none');
+                }
+                $('#paxStatusIcon').html(iconHtml);
+            }
+
+            function handlePaxError(msg) {
+                updatePaxUI('Failed', msg, 'error');
+                cardState.status = 'failed';
+                $('#cardStatusText').text('CARD FAILED').addClass('text-danger');
+                setTimeout(() => {
+                    if (paxModal) paxModal.hide();
+                }, 3000);
             }
 
             // FINAL CHECKOUT
@@ -447,11 +551,11 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Payment Successful',
-                    text: `Invoice #${res.invoice_number} created.`,
+                    text: `Invoice #${lastInvoice} created.`,
                     confirmButtonText: 'Print Receipt & Finish',
                     allowEscapeKey: false,
                     allowOutsideClick: false
-                }).then(() => {
+                }).then((res) => {
                     startPrinterFlow();
                 });
             }
@@ -466,11 +570,11 @@
                 $.get("{{ route('store.sales.get-printers') }}")
                     .done(data => {
                         $('#printerSpinner').addClass('d-none');
-                        if (data.success && data.printers.length > 0) {
+                        if (data.success && data.printers && data.printers.length > 0) {
                             data.printers.forEach(p => {
                                 $('#printerList').append(`
-                                    <button class="list-group-item list-group-item-action d-flex justify-content-between p-3" onclick="setTargetPrinter('${p.name}', this)">
-                                        <div class="fw-bold"><i class="mdi mdi-printer-pos me-2 text-primary"></i>${p.name}</div>
+                                    <button class="list-group-item list-group-item-action d-flex justify-content-between p-3" onclick="setTargetPrinter('${p}', this)">
+                                        <div class="fw-bold"><i class="mdi mdi-printer-pos me-2 text-primary"></i>${p}</div>
                                         <div class="text-success small fw-bold">Ready</div>
                                     </button>
                                 `);
@@ -502,16 +606,167 @@
                     invoice_number: lastInvoice,
                     printer_name: printerToUse
                 }).done(res => {
-                    if (res.success) window.location.href = "{{ route('store.sales.pos') }}";
-                    else Swal.fire('Print Error', res.message, 'error').then(() => window.location.href = "{{ route('store.sales.pos') }}");
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Print Success',
+                            text: 'Receipt sent to printer successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = "{{ route('store.sales.pos') }}";
+                        });
+                    } else {
+                        Swal.fire('Print Error', res.message, 'error').then(() => {
+                            window.location.href = "{{ route('store.sales.pos') }}";
+                        });
+                    }
                 }).fail(() => {
-                    Swal.fire('Agent Error', 'Could not reach hardware agent.', 'error').then(() => window.location.href = "{{ route('store.sales.pos') }}");
+                    Swal.fire('Agent Error', 'Could not reach hardware agent.', 'error').then(() => {
+                        window.location.href = "{{ route('store.sales.pos') }}";
+                    });
                 });
             }
 
             window.skipPrinting = function() {
                 window.location.href = "{{ route('store.sales.pos') }}";
             }
+
+            // --- HELD ORDERS LOGIC ---
+            window.openHeldOrders = function() {
+                renderHeldCarts();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('heldOrdersModal')).show();
+            }
+
+            window.holdCart = function() {
+                Swal.fire({
+                    title: 'Hold this order?',
+                    text: "You can restore it later from the POS or Checkout screen.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffc107',
+                    confirmButtonText: 'Yes, Hold it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post("{{ route('store.sales.cart.clear') }}", { 
+                            _token: csrfToken, 
+                            hold: true 
+                        }, function(res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Order Held',
+                                    text: 'This order has been moved to Held Orders.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.href = "{{ route('store.sales.pos') }}";
+                                });
+                            } else {
+                                Swal.fire('Error', res.message || 'Could not hold order.', 'error');
+                            }
+                        });
+                    }
+                });
+            }
+
+            window.renderHeldCarts = function() {
+                $.ajax({
+                    url: "{{ route('store.sales.orders') }}",
+                    method: 'GET',
+                    data: { status: 'held' },
+                    success: function(res) {
+                        let orders = res.data || res;
+                        let count = orders.length;
+                        $('#heldCountBadge').text(count);
+                        
+                        let container = $('#modalHeldCartsList');
+                        if (count === 0) {
+                            container.html('<div class="p-5 text-center text-muted">No held orders found.</div>');
+                        } else {
+                            let html = orders.map(o => `
+                                <div class="list-group-item p-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold text-dark">Held Order #${o.id}</h6>
+                                            <div class="text-muted small">Items: ${o.items_count} | Total: $${parseFloat(o.total_amount).toFixed(2)}</div>
+                                            <div class="text-muted tiny mt-1" style="font-size: 10px;">${new Date(o.updated_at).toLocaleString()}</div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-primary px-3 fw-bold rounded-pill" onclick="restoreHeld(${o.id})">
+                                                RESTORE
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger px-2 rounded-circle" onclick="deleteHeld(${o.id})">
+                                                <i class="mdi mdi-trash-can-outline"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            container.html(html);
+                        }
+                    }
+                });
+            }
+
+            window.restoreHeld = function(id) {
+                Swal.fire({
+                    title: 'Restore this order?',
+                    text: "This will replace your current active cart items.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#019934',
+                    confirmButtonText: 'Restore'
+                }).then(r => {
+                    if (r.isConfirmed) {
+                        $.ajax({
+                            url: `/store/orders/held/${id}/restore`,
+                            method: 'POST',
+                            data: { _token: csrfToken },
+                            success: function(res) {
+                                if (res.success) {
+                                    toastr.success(res.message);
+                                    let modal = bootstrap.Modal.getInstance(document.getElementById('heldOrdersModal'));
+                                    if (modal) modal.hide();
+                                    location.reload(); 
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            window.deleteHeld = function(id) {
+                Swal.fire({
+                    title: 'Delete Held Order?',
+                    text: "This cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Yes, delete it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/store/orders/held/${id}`,
+                            method: 'DELETE',
+                            data: { _token: csrfToken },
+                            success: function(res) {
+                                if (res.success) {
+                                    toastr.success(res.message);
+                                    renderHeldCarts();
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Initial badge sync
+            renderHeldCarts();
         });
     </script>
     <style>

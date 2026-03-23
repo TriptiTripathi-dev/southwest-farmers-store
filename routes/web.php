@@ -175,6 +175,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/returns/search-invoice', [StoreReturnController::class, 'searchInvoice'])->name('sales.returns.search');
         Route::get('/reports/sales', [StoreSalesController::class, 'salesReport'])->name('reports.sales');
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
+        Route::post('/orders/held/{id}/restore', [StoreSalesController::class, 'restoreHeldOrder'])->name('sales.orders.held.restore');
+        Route::delete('/orders/held/{id}', [StoreSalesController::class, 'deleteHeldOrder'])->name('sales.orders.held.delete');
         Route::post('/pos/add', [StoreSalesController::class, 'addToCart'])->name('sales.cart.add');
         Route::post('/pos/update', [StoreSalesController::class, 'updateCart'])->name('sales.cart.update');
         Route::post('/pos/remove', [StoreSalesController::class, 'removeCartItem'])->name('sales.cart.remove');
@@ -191,6 +193,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pos/get-printers', [StoreSalesController::class, 'getPrinters'])->name('sales.get-printers');
         Route::get('/pos/scale-weight', [StoreSalesController::class, 'getWeight'])->name('sales.scale-weight');
         Route::get('/pos/scanner-scan', [StoreSalesController::class, 'getLastScan'])->name('sales.scanner-scan');
+        Route::get('/pos/payment/status', [StoreSalesController::class, 'checkPaxStatus'])->name('sales.payment-status');
+        Route::post('/pos/payment/initiate', [StoreSalesController::class, 'initiatePaxPayment'])->name('sales.payment-initiate');
+        Route::post('/pos/payment/cancel', [StoreSalesController::class, 'cancelPaxPayment'])->name('sales.payment-cancel');
         Route::post('/pos/manual-print', [StoreSalesController::class, 'manualPrint'])->name('sales.manual-print');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
