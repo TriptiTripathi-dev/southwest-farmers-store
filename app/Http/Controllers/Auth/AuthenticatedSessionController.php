@@ -28,6 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Redirect based on role
+        if ($request->user()->hasRole('Cashier')) {
+            return redirect()->route('store.sales.pos');
+        }
+
         // After successful store login, always redirect to store/dashboard
         return redirect()->route('dashboard');
     }

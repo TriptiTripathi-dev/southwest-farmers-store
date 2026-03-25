@@ -40,9 +40,11 @@
 
         @include('layouts.partials.header')
 
-        @include('layouts.partials.sidebar')
+        @if(!auth()->user()->hasRole('Cashier'))
+            @include('layouts.partials.sidebar')
+        @endif
 
-        <div class="content-page">
+        <div class="content-page" @if(auth()->user()->hasRole('Cashier')) style="margin-left: 0 !important; padding: 0 !important;" @endif>
             <div class="content">
 
                 {{ $slot }}

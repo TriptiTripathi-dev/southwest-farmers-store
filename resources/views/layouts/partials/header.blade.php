@@ -17,20 +17,67 @@
 
             {{-- LEFT --}}
             <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
+                @if(!auth()->user()->hasRole('Cashier'))
                 <li>
                     <button type="button" class="button-toggle-menu nav-link">
                         <iconify-icon icon="tabler:align-left"
                             class="fs-20 align-middle text-dark topbar-button"></iconify-icon>
                     </button>
                 </li>
+                @endif
                 <li class="ms-2 d-flex align-items-center">
                     <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="rounded border bg-white p-1 me-2" style="width: 34px; height: 34px; object-fit: contain;">
                     <span class="fw-bold text-dark d-none d-md-inline">{{ $brandName }}</span>
                 </li>
+
+                @if(auth()->user()->hasRole('Cashier'))
+                <li class="ms-4 d-none d-lg-flex align-items-center gap-2">
+                    <a href="{{ route('store.sales.pos') }}" class="btn btn-sm btn-{{ request()->routeIs('store.sales.pos') ? 'primary' : 'outline-primary' }} rounded-pill px-3">
+                        <i class="mdi mdi-calculator me-1"></i> POS
+                    </a>
+                    <a href="{{ route('store.sales.orders') }}" class="btn btn-sm btn-{{ request()->routeIs('store.sales.orders') ? 'outline-secondary' : 'outline-secondary' }} border-0 px-3">
+                        <i class="mdi mdi-basket-outline me-1"></i> All Orders
+                    </a>
+                    <a href="{{ route('store.sales.returns.index') }}" class="btn btn-sm btn-outline-secondary border-0 px-3">
+                        <i class="mdi mdi-keyboard-return me-1"></i> Returns
+                    </a>
+                </li>
+                @endif
             </ul>
 
             {{-- RIGHT --}}
             <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
+                <style>
+                    .notification-dropdown-menu {
+                        min-width: 320px;
+                        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+                    }
+                    .notification-item {
+                        transition: all 0.2s ease;
+                        border-bottom: 1px solid #f1f1f1;
+                    }
+                    .notification-item:last-child {
+                        border-bottom: none;
+                    }
+                    .notification-item:hover {
+                        background-color: #f8f9fa !important;
+                    }
+                    .notification-item.unread {
+                        background-color: rgba(1, 153, 52, 0.04);
+                    }
+                    .avatar-title.bg-soft-primary {
+                        background-color: rgba(1, 153, 52, 0.1) !important;
+                        color: #019934 !important;
+                    }
+                    .avatar-title.bg-soft-danger {
+                        background-color: rgba(239, 71, 111, 0.1) !important;
+                        color: #ef476f !important;
+                    }
+                    .avatar-title.bg-soft-warning {
+                        background-color: rgba(255, 209, 102, 0.1) !important;
+                        color: #ffd166 !important;
+                    }
+                </style>
 
                 {{-- NOTIFICATIONS --}}
                 {{-- Notification Dropdown --}}
@@ -43,50 +90,55 @@
                         </span>
                         @endif
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg p-0">
-                        <div class="p-3 border-bottom">
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg p-0 border-0 shadow notification-dropdown-menu rounded-3">
+                        <div class="p-3 border-bottom bg-white rounded-top-3">
                             <div class="row align-items-center">
                                 <div class="col">
-                                    <h6 class="m-0 fw-bold"> Notifications </h6>
+                                    <h6 class="m-0 fw-bold fs-15">Notifications <span class="badge bg-soft-primary text-primary ms-1">{{ $headerUnreadCount ?? 0 }}</span></h6>
                                 </div>
                                 <div class="col-auto">
                                     <form action="{{ route('store.notifications.readAll') }}" method="POST">
                                         @csrf
-                                        <button class="text-reset small btn btn-link p-0 text-decoration-none"> Mark all as read</button>
+                                        <button class="btn btn-link p-0 text-primary text-decoration-none small fw-medium fs-13">Mark all as read</button>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                        <div data-simplebar style="max-height: 230px;">
+                        <div data-simplebar style="max-height: 280px;">
                             @if(isset($headerNotifications) && $headerNotifications->count() > 0)
                             @foreach($headerNotifications as $notif)
-                            <a href="{{ route('store.notifications.read', $notif->id) }}" class="text-reset notification-item">
-                                <div class="d-flex align-items-start p-3 border-bottom bg-light">
-                                    <div class="avatar-xs me-3">
-                                        <span class="avatar-title bg-{{ $notif->type == 'error' ? 'danger' : ($notif->type == 'warning' ? 'warning' : 'primary') }} rounded-circle font-size-16">
+                            <a href="{{ route('store.notifications.read', $notif->id) }}" class="text-reset notification-item d-block {{ $notif->read_at ? '' : 'unread' }}">
+                                <div class="d-flex align-items-start p-3">
+                                    <div class="avatar-xs me-3 flex-shrink-0">
+                                        <span class="avatar-title bg-soft-{{ $notif->type == 'error' ? 'danger' : ($notif->type == 'warning' ? 'warning' : 'primary') }} rounded-circle fs-16">
                                             <i class="mdi {{ $notif->type == 'error' ? 'mdi-alert-circle-outline' : 'mdi-bell-outline' }}"></i>
                                         </span>
                                     </div>
-                                    <div class="flex-1">
-                                        <h6 class="mt-0 mb-1 font-size-14">{{ $notif->title }}</h6>
-                                        <div class="font-size-12 text-muted">
-                                            <p class="mb-1">{{ Str::limit($notif->message, 50) }}</p>
-                                            <p class="mb-0"><i class="mdi mdi-clock-outline"></i> {{ $notif->created_at->diffForHumans() }}</p>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h6 class="mt-0 mb-1 fs-14 fw-semibold text-dark">{{ $notif->title }}</h6>
+                                        <div class="fs-12 text-muted">
+                                            <p class="mb-1 text-truncate">{{ $notif->message }}</p>
+                                            <p class="mb-0 fs-11 text-muted-80"><i class="mdi mdi-clock-outline me-1"></i>{{ $notif->created_at->diffForHumans() }}</p>
                                         </div>
                                     </div>
                                 </div>
                             </a>
                             @endforeach
                             @else
-                            <div class="p-4 text-center text-muted">
-                                <i class="mdi mdi-bell-sleep-outline fs-1"></i>
-                                <p class="mb-0">No new notifications</p>
+                            <div class="p-5 text-center text-muted">
+                                <div class="avatar-md mx-auto mb-3">
+                                    <span class="avatar-title bg-light text-muted rounded-circle fs-24">
+                                        <i class="mdi mdi-bell-sleep-outline"></i>
+                                    </span>
+                                </div>
+                                <h6 class="fw-medium">No new notifications</h6>
+                                <p class="mb-0 fs-13">We'll let you know when something happens.</p>
                             </div>
                             @endif
                         </div>
-                        <div class="p-2 border-top d-grid">
-                            <a class="btn btn-sm btn-link font-size-14 text-center" href="{{ route('store.notifications.index') }}">
-                                <i class="mdi mdi-arrow-right-circle me-1"></i> View all
+                        <div class="p-2 border-top bg-light-subtle d-grid rounded-bottom-3">
+                            <a class="btn btn-sm btn-link fs-13 text-center text-primary fw-bold" href="{{ route('store.notifications.index') }}">
+                                View all <i class="mdi mdi-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
