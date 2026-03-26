@@ -1065,8 +1065,11 @@
                                     <div class="product-card clickable-product" data-id="{{ $p->id }}"
                                         data-name="{{ str_replace('"', '&quot;', $p->product_name) }}"
                                         data-price="{{ $displayPrice }}" data-stock="{{ $qty }}">
-                                        <div class="product-img position-relative" style="background-image:url('{{ $img }}');">
-                                            <span class="position-absolute top-0 end-0 m-2 badge bg-primary rounded-circle d-flex align-items-center justify-content-center cart-qty-badge d-none" style="width: 24px; height: 24px; font-size: 11px; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">0</span>
+                                        <div class="product-img position-relative"
+                                            style="background-image:url('{{ $img }}');">
+                                            <span
+                                                class="position-absolute top-0 end-0 m-2 badge bg-primary rounded-circle d-flex align-items-center justify-content-center cart-qty-badge d-none"
+                                                style="width: 24px; height: 24px; font-size: 11px; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">0</span>
                                         </div>
                                         <div class="product-content">
                                             <div class="text-muted mb-1" style="font-size:10px;font-family:monospace;">
@@ -1083,7 +1086,8 @@
                                                         stock</small>
                                                 </div>
                                                 <div class="d-flex gap-1">
-                                                    <button class="remove-from-cart-btn btn-cart-control" onclick="event.stopPropagation(); decreaseCartQty({{ $p->id }})">
+                                                    <button class="remove-from-cart-btn btn-cart-control"
+                                                        onclick="event.stopPropagation(); decreaseCartQty({{ $p->id }})">
                                                         <i class="mdi mdi-minus"></i>
                                                     </button>
                                                     <button class="add-to-cart-btn btn-cart-control">
@@ -1141,7 +1145,8 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-warning fw-bold px-3 py-3 rounded-3 d-flex align-items-center gap-2" onclick="holdCart()">
+                    <button class="btn btn-outline-warning fw-bold px-3 py-3 rounded-3 d-flex align-items-center gap-2"
+                        onclick="holdCart()">
                         <i class="mdi mdi-pause-circle-outline fs-5"></i>
                         <span class="d-none d-sm-inline">HOLD</span>
                     </button>
@@ -1393,6 +1398,65 @@
         </div>
     </div>
 
+    {{-- ═══════════════════════════════════════════════════════════
+         CART REVIEW MODAL
+    ════════════════════════════════════════════════════════════ --}}
+    <div class="modal fade" id="cartReviewModal" tabindex="-1" aria-labelledby="cartReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:540px;">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+
+                {{-- Header --}}
+                <div class="modal-header border-0 pb-2 px-4 pt-4">
+                    <div>
+                        <h5 class="modal-title fw-bold fs-5" id="cartReviewModalLabel">
+                            <i class="mdi mdi-cart-check me-2 text-primary"></i>Review Cart
+                        </h5>
+                        <small class="text-muted">
+                            <span id="reviewItemCount">0</span> item(s) ·
+                            <span class="text-success fw-bold" id="reviewHardwareBadge"></span>
+                        </small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                {{-- Items list --}}
+                <div class="modal-body px-4 py-2" style="max-height:55vh; overflow-y:auto;">
+                    <div id="cartReviewBody" class="d-flex flex-column gap-2">
+                        {{-- Injected by openCartReview() --}}
+                    </div>
+                </div>
+
+                {{-- Totals + actions --}}
+                <div class="modal-footer flex-column border-0 pt-0 pb-4 px-4 gap-2">
+                    <div class="w-100 bg-light rounded-3 p-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted fw-semibold">Subtotal</span>
+                            <span class="fw-bold" id="reviewSubtotal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span class="text-muted fw-semibold">Tax (8%)</span>
+                            <span class="fw-bold" id="reviewTax">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2 mt-1">
+                            <span class="fw-bold fs-6">Total</span>
+                            <span class="fw-bold fs-5 text-primary" id="reviewGrand">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 w-100">
+                        <button class="btn btn-light fw-bold flex-grow-1 rounded-3" data-bs-dismiss="modal">
+                            <i class="mdi mdi-arrow-left me-1"></i>Shop More
+                        </button>
+                        <a href="{{ route('store.sales.checkout-page') }}"
+                           class="btn btn-primary fw-bold flex-grow-1 rounded-3"
+                           id="reviewCheckoutBtn">
+                            Checkout <i class="mdi mdi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <input type="hidden" id="paymentMethod" value="cash">
 
     @push('scripts')
@@ -1434,7 +1498,7 @@
                     let id = card.data('id');
                     let badge = card.find('.cart-qty-badge');
                     let item = cart.find(i => (i.product_id == id || i.id == id));
-                    
+
                     if (item && item.quantity > 0) {
                         badge.text(item.quantity).removeClass('d-none');
                         card.addClass('border-primary shadow-sm');
@@ -1455,7 +1519,7 @@
             window.loadProducts = function(term = '') {
                 $('#productGrid').html(
                     '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 small">Searching...</p></div>'
-                    );
+                );
                 $.ajax({
                     url: "/pos/search-products",
                     method: 'GET',
@@ -1536,11 +1600,11 @@
                         max: maxStock
                     });
                 }
-                
+
                 isCartUpdating = true;
                 $('.btn-cart-control').prop('disabled', true);
                 renderCart();
-                
+
                 $.ajax({
                     url: "{{ route('store.sales.cart.add') }}",
                     method: 'POST',
@@ -1576,10 +1640,10 @@
 
                 isCartUpdating = true;
                 $('.btn-cart-control').prop('disabled', true);
-                
+
                 item.quantity = newQty;
                 renderCart();
-                
+
                 $.ajax({
                     url: "{{ route('store.sales.cart.update') }}",
                     method: 'POST',
@@ -1609,14 +1673,14 @@
                 if (isCartUpdating) return;
                 let item = cart[index];
                 if (!item) return;
-                
+
                 isCartUpdating = true;
                 $('.btn-cart-control').prop('disabled', true);
-                
+
                 let id = item.item_id || item.id;
                 cart.splice(index, 1);
                 renderCart();
-                
+
                 $.ajax({
                     url: "{{ route('store.sales.cart.remove') }}",
                     method: 'POST',
@@ -1686,7 +1750,7 @@
                 $('#subTotal').text('$' + subtotal.toFixed(2));
                 $('#grandTotal, #mobileTotal, #barGrandTotal').text('$' + grand.toFixed(2));
                 $('#mobileItemCount, #barItemCount').text(totalItems);
-                
+
                 // Toggle disabled state for buttons and links
                 $('#payBtn, #mobilePayBtn').prop('disabled', totalItems === 0);
                 $('#proceedToCheckoutBtn').toggleClass('disabled', totalItems === 0);
@@ -1785,10 +1849,12 @@
                             hardwareAgent.online = true;
                             hardwareAgent.approved = true;
                             updateHardwareUI('online', data.scanner, data.scale);
+                            startScannerPoll(); // begin auto-polling barcode scanner
                         } else {
                             hardwareAgent.online = false;
                             hardwareAgent.approved = false;
                             updateHardwareUI('offline', false, false);
+                            stopScannerPoll();  // halt polling when agent goes offline
                         }
                     })
                     .fail(function() {
@@ -1797,7 +1863,32 @@
                     });
             }
 
-            let lastBarcode = null;
+            let lastBarcode       = null;
+            let scannerPollTimer  = null;
+
+            function startScannerPoll() {
+                if (scannerPollTimer) return; // already running
+                // Primer: silently read the scanner's current/cached barcode once
+                // to set a baseline — prevents a stale buffer from triggering addToCart.
+                $.get("{{ route('store.sales.scanner-scan') }}")
+                    .done(function(data) {
+                        if (data && data.success && data.scan && data.scan.barcode) {
+                            lastBarcode = data.scan.barcode; // baseline, NOT added to cart
+                        }
+                    })
+                    .always(function() {
+                        // Start the regular poll only after the baseline is captured
+                        if (!scannerPollTimer) {
+                            scannerPollTimer = setInterval(pollScanner, 2000);
+                        }
+                    });
+            }
+
+            function stopScannerPoll() {
+                clearInterval(scannerPollTimer);
+                scannerPollTimer = null;
+                lastBarcode = null; // reset baseline so next connection primes fresh
+            }
 
             function pollScanner() {
                 if (!hardwareAgent.online || !hardwareAgent.approved) return;
@@ -1815,26 +1906,30 @@
             }
 
             function processScannedBarcode(barcode) {
-                // Find product by barcode
-                $.get("{{ route('store.sales.search') }}", {
-                        search: barcode
-                    })
+                // Find product by barcode — pass all required args to addToCart
+                $.get("{{ route('store.sales.search') }}", { search: barcode })
                     .done(function(data) {
                         if (data && data.length > 0) {
-                            const product = data[0];
-                            addToCart(product.id);
-                            toastr.success(`Scanned: ${product.product_name}`);
+                            const product     = data[0];
+                            const price       = parseFloat(product.selling_price || 0);
+                            const displayPrice = Math.floor(price) + 0.9;
+                            const stock       = parseInt(product.quantity || 0);
+                            addToCart(product.id, product.product_name, displayPrice, stock);
+                            toastr.success(`✅ Scanned: ${product.product_name}`);
                         } else {
-                            toastr.warning(`Barcode ${barcode} not found.`);
+                            toastr.warning(`⚠️ Barcode "${barcode}" not found in inventory.`);
                         }
+                    })
+                    .fail(function() {
+                        toastr.error('Failed to look up barcode.');
                     });
             }
 
-            // Mobile/Manual Sync Trigger
+            // Mobile/Manual Sync Trigger — only checks terminal status.
+            // Scanner polling is managed automatically by startScannerPoll/stopScannerPoll.
             function syncHardwareManual() {
                 toastr.info('Checking hardware connectivity...');
                 checkTerminalStatus();
-                pollScanner();
             }
 
             // Initial check on load
@@ -2050,6 +2145,165 @@
                     });
             };
 
+            /* ─── CART REVIEW MODAL ────────────────────────────── */
+            window.openCartReview = function() {
+                if (cart.length === 0) {
+                    toastr.info('Your cart is empty. Add products first.');
+                    return;
+                }
+
+                // Update hardware badge inside modal
+                const hwBadge = $('#reviewHardwareBadge');
+                if (hardwareAgent.online && hardwareAgent.approved) {
+                    hwBadge.html('<i class="mdi mdi-scale text-success me-1"></i>Scale Ready');
+                } else {
+                    hwBadge.html('<i class="mdi mdi-scale text-muted me-1"></i>Scale Offline');
+                }
+
+                // Build items HTML
+                let html = '';
+                cart.forEach(function(item, index) {
+                    const lineTotal   = (item.price * item.quantity).toFixed(2);
+                    const unitLabel   = item.unit_type ? item.unit_type : 'unit';
+                    const isWeighable = ['kg','lb','lbs','g','gram','pound'].includes(
+                                           String(unitLabel).toLowerCase());
+
+                    html += `
+                    <div class="review-item" id="review-item-${index}">
+                        <div class="review-item-info">
+                            <div class="review-item-name">${item.name}</div>
+                            <div class="review-item-price">$${item.price.toFixed(2)} / ${unitLabel}</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                            <div class="review-qty-controls">
+                                <button class="review-qty-btn" onclick="reviewQtyChange(${index}, -1)">
+                                    <i class="mdi mdi-minus" style="font-size:12px;"></i>
+                                </button>
+                                <span class="review-qty-val" id="review-qty-${index}">${item.quantity}</span>
+                                <button class="review-qty-btn" onclick="reviewQtyChange(${index}, 1)">
+                                    <i class="mdi mdi-plus" style="font-size:12px;"></i>
+                                </button>
+                            </div>
+                            <button class="review-scale-btn" onclick="readScaleReview(${index})" title="Read weight from scale">
+                                <i class="mdi mdi-scale me-1"></i>Weigh
+                            </button>
+                            <span class="fw-bold small text-dark" id="review-line-${index}">$${lineTotal}</span>
+                            <button class="btn btn-sm p-1 border-0 text-danger" onclick="reviewRemoveItem(${index})" title="Remove item">
+                                <i class="mdi mdi-close-circle-outline fs-5"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                });
+
+                $('#cartReviewBody').html(html);
+                updateReviewTotals();
+                bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById('cartReviewModal')
+                ).show();
+            };
+
+            window.reviewQtyChange = function(index, change) {
+                if (!cart[index]) return;
+                const newQty = parseFloat(cart[index].quantity) + change;
+                if (newQty < 1) {
+                    reviewRemoveItem(index);
+                    return;
+                }
+                if (cart[index].max && newQty > cart[index].max) {
+                    toastr.warning('Stock limit reached');
+                    return;
+                }
+                cart[index].quantity = newQty;
+                $(`#review-qty-${index}`).text(newQty);
+                $(`#review-line-${index}`).text('$' + (cart[index].price * newQty).toFixed(2));
+                updateReviewTotals();
+                renderCart();
+                // Sync with server
+                $.post("{{ route('store.sales.cart.update') }}", {
+                    _token: csrfToken,
+                    item_id: cart[index].item_id || cart[index].id,
+                    quantity: newQty
+                });
+            };
+
+            window.reviewRemoveItem = function(index) {
+                const modal = bootstrap.Modal.getInstance(
+                    document.getElementById('cartReviewModal')
+                );
+                if (modal) modal.hide();
+                setTimeout(function() {
+                    removeFromCart(index);
+                    // Re-open if items remain
+                    if (cart.length > 0) {
+                        setTimeout(openCartReview, 350);
+                    }
+                }, 250);
+            };
+
+            window.readScaleReview = function(index) {
+                if (!hardwareAgent.online || !hardwareAgent.approved) {
+                    toastr.error('Hardware Agent not connected. Connect the POS Agent and click Sync.');
+                    return;
+                }
+                if (!cart[index]) return;
+
+                const btn = $(`#review-item-${index} .review-scale-btn`);
+                btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span>Reading...'
+                );
+
+                $.get("{{ route('store.sales.scale-weight') }}")
+                    .done(function(data) {
+                        if (data && data.success && data.weight !== null) {
+                            const weight = parseFloat(data.weight);
+                            if (weight > 0) {
+                                cart[index].quantity = weight;
+                                $(`#review-qty-${index}`).text(weight);
+                                $(`#review-line-${index}`).text(
+                                    '$' + (cart[index].price * weight).toFixed(2)
+                                );
+                                updateReviewTotals();
+                                renderCart();
+                                // Sync to server
+                                $.post("{{ route('store.sales.cart.update') }}", {
+                                    _token: csrfToken,
+                                    item_id: cart[index].item_id || cart[index].id,
+                                    quantity: weight
+                                });
+                                toastr.success(`⚖ Weight captured: ${weight} lbs`);
+                            } else {
+                                toastr.warning('No weight detected. Place item on scale and try again.');
+                            }
+                        } else {
+                            toastr.error('Failed to read from scale. Check scale connection.');
+                        }
+                    })
+                    .fail(function() {
+                        toastr.error('Scale error. Check POS Agent is running.');
+                    })
+                    .always(function() {
+                        btn.prop('disabled', false).html(
+                            '<i class="mdi mdi-scale me-1"></i>Weigh'
+                        );
+                    });
+            };
+
+            function updateReviewTotals() {
+                let subtotal   = 0;
+                let totalItems = 0;
+                cart.forEach(function(i) {
+                    subtotal   += i.price * i.quantity;
+                    totalItems += parseFloat(i.quantity);
+                });
+                const discount = parseFloat($('#discountInput').val() || 0);
+                const taxable  = Math.max(0, subtotal - discount);
+                const tax      = taxable * TAX_RATE;
+                const grand    = taxable + tax;
+                $('#reviewSubtotal').text('$' + subtotal.toFixed(2));
+                $('#reviewTax').text('$' + tax.toFixed(2));
+                $('#reviewGrand').text('$' + grand.toFixed(2));
+                $('#reviewItemCount').text(totalItems % 1 === 0 ? totalItems : totalItems.toFixed(2));
+            }
 
             /* ─── PAYMENT ──────────────────────────────────────── */
             function selectPayment(method, element) {
@@ -2231,7 +2485,9 @@
                 $.ajax({
                     url: "{{ route('store.sales.pos') }}",
                     method: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     success: function(res) {
                         // Assuming the index returns JSON if AJAX
                         if (res.currentCart) {
@@ -2264,16 +2520,20 @@
                         $.ajax({
                             url: `/store/orders/held/${id}/restore`,
                             method: 'POST',
-                            data: { _token: csrfToken },
+                            data: {
+                                _token: csrfToken
+                            },
                             success: function(res) {
                                 if (res.success) {
                                     toastr.success(res.message);
-                                    let modal = bootstrap.Modal.getInstance(document.getElementById('heldOrdersModal'));
+                                    let modal = bootstrap.Modal.getInstance(document.getElementById(
+                                        'heldOrdersModal'));
                                     if (modal) modal.hide();
-                                    
+
                                     // Full page reload or manual sync? 
                                     // Manual sync is better for UX
-                                    location.reload(); // Simplest way to ensure all state is reset correctly
+                                    location
+                                .reload(); // Simplest way to ensure all state is reset correctly
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
                                 }
@@ -2296,7 +2556,9 @@
                         $.ajax({
                             url: `/store/orders/held/${id}`,
                             method: 'DELETE',
-                            data: { _token: csrfToken },
+                            data: {
+                                _token: csrfToken
+                            },
                             success: function(res) {
                                 if (res.success) {
                                     toastr.success(res.message);
