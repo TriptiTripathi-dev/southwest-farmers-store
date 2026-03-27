@@ -13,11 +13,9 @@
                 <li class="nav-item px-2">
                     <a class="nav-link {{ request()->routeIs('website.home') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.home') }}">Home</a>
                 </li>
+
                 <li class="nav-item px-2">
-                    <a class="nav-link {{ request()->routeIs('website.products.index') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.index') }}">Shop Products</a>
-                </li>
-                <li class="nav-item px-2">
-                    <a class="nav-link {{ request()->routeIs('website.products.pos') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.pos') }}">Quick Shop (POS)</a>
+                    <a class="nav-link {{ request()->routeIs('website.products.pos') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.products.pos') }}">Products</a>
                 </li>
                 <li class="nav-item px-2">
                     <a class="nav-link {{ request()->routeIs('website.about') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.about') }}">About Us</a>

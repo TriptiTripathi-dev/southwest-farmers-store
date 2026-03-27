@@ -1,4 +1,4 @@
-<x-website-layout title="{{ $posSettings->title ?? 'Quick Shop POS' }}">
+<x-website-layout title="{{ $posSettings->title ?? 'Products' }}">
     @push('styles')
     <style>
         :root {
@@ -179,7 +179,7 @@
                 <!-- Sidebar -->
                 <div class="col-lg-3 d-none d-lg-block">
                     <div class="category-sidebar">
-                        <h5 class="fw-black mb-4">{{ $posSettings->title ?? 'Quick Shop POS' }}</h5>
+                        <h5 class="fw-black mb-4">{{ $posSettings->title ?? 'Products' }}</h5>
                         <p class="text-muted small mb-4">{{ $posSettings->subtitle ?? 'Quickly browse and add products to your cart.' }}</p>
                         <hr class="mb-4">
                         <h6 class="fw-bold mb-3">Categories</h6>

@@ -20,7 +20,7 @@
                 <h6 class="fw-bold text-uppercase mb-4 text-white">Quick Links</h6>
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="{{ route('website.home') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Home</a></li>
-                    <li class="mb-2"><a href="{{ route('website.products.index') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Shop Products</a></li>
+                    <li class="mb-2"><a href="{{ route('website.products.pos') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Products</a></li>
                     <li class="mb-2"><a href="{{ route('website.about') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">About Us</a></li>
                     <li class="mb-2"><a href="{{ route('website.contact') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Contact Us</a></li>
                     <li class="mb-2"><a href="{{ route('website.legal', 'privacy-policy') }}" class="text-white-50 text-decoration-none text-white-hover transition-all">Privacy Policy</a></li>
