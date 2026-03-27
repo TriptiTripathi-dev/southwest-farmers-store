@@ -81,8 +81,9 @@ class OrderController extends Controller
                 'discount_amount' => $cart->discount_amount ?? 0,
                 'total_amount' => $cart->total_amount,
                 'payment_method' => $request->payment_method,
-                'status' => 'pending', // Initial status for website orders
-                'created_by' => null, // Created by customer
+                'status' => 'pending',   // Initial status for website orders
+                'source' => 'website',   // Distinguish from POS sales
+                'created_by' => null,    // Created by customer
             ]);
 
             foreach ($cart->items as $item) {

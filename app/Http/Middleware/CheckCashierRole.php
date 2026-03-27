@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class CheckCashierRole
 {
@@ -16,7 +17,11 @@ class CheckCashierRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->hasRole('Cashier')) {
+        $user = Auth::user();
+
+        // Only apply Cashier role check to store staff (User model).
+        // StoreCustomers (website buyers) use a separate guard and have no hasRole().
+        if ($user instanceof User && $user->hasRole('Cashier')) {
             // Allowed routes for cashier
             $allowedRoutes = [
                 'store.sales.pos',
