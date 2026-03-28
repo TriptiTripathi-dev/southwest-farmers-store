@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\StoreDetail;
 use App\Models\StoreNotification;
 use App\Services\PosAgentService;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Validator;
 class StoreSalesController extends Controller
 {
     public function index(Request $request)
-    {  
+    {
         $categories = ProductCategory::select('id', 'name')->distinct()->orderBy('name')->get();
         $storeId = Auth::user()->store_id;
 
@@ -37,16 +38,16 @@ class StoreSalesController extends Controller
 
         // Pre-load first 24 products with stock > 0 for instant rendering
         $initialProducts = Product::where('is_active', true)
-            ->whereHas('storeStocks', function($q) use ($storeId) {
+            ->whereHas('storeStocks', function ($q) use ($storeId) {
                 $q->where('store_id', $storeId)->where('quantity', '>', 0);
             })
-            ->with(['storeStocks' => function($q) use ($storeId) {
+            ->with(['storeStocks' => function ($q) use ($storeId) {
                 $q->where('store_id', $storeId);
             }])
             ->orderBy('product_name', 'asc')
             ->limit(24)
             ->get();
-        
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'currentCart' => $currentCart,
@@ -54,8 +55,11 @@ class StoreSalesController extends Controller
                 'categories' => $categories
             ]);
         }
-        
-        return view('store.sales.pos', compact('categories', 'currentCart', 'initialProducts'));
+
+        $posSettings = \App\Models\QuickPosSetting::first();
+        $store = $storeId ? StoreDetail::find($storeId) : null;
+
+        return view('store.sales.pos', compact('categories', 'currentCart', 'initialProducts', 'store', 'posSettings'));
     }
 
     public function checkoutPage()
@@ -80,7 +84,9 @@ class StoreSalesController extends Controller
         $settings = \App\Models\QuickPosSetting::first();
         $paxEnabled = $settings ? $settings->pax_enabled : false;
 
-        return view('store.sales.checkout', compact('currentCart', 'customers', 'paxEnabled'));
+        $store = $storeId ? StoreDetail::find($storeId) : null;
+
+        return view('store.sales.checkout', compact('currentCart', 'customers', 'paxEnabled', 'store'));
     }
 
     // ... inside StoreSalesController class ...
@@ -89,7 +95,7 @@ class StoreSalesController extends Controller
     public function salesReport(Request $request)
     {
         $storeId = Auth::user()->store_id;
-        
+
         // Default: Current Month
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -97,8 +103,8 @@ class StoreSalesController extends Controller
 
         // Base Query
         $query = Sale::where('store_id', $storeId)
-                     ->whereDate('created_at', '>=', $startDate)
-                     ->whereDate('created_at', '<=', $endDate);
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate);
 
         // Optional Filter: Payment Method
         if ($paymentMethod && $paymentMethod !== 'all') {
@@ -116,8 +122,14 @@ class StoreSalesController extends Controller
         $sales = $query->with('customer')->latest()->paginate(20)->withQueryString();
 
         return view('store.reports.sales', compact(
-            'sales', 'totalRevenue', 'totalTax', 'totalDiscount', 'totalOrders', 
-            'startDate', 'endDate', 'paymentMethod'
+            'sales',
+            'totalRevenue',
+            'totalTax',
+            'totalDiscount',
+            'totalOrders',
+            'startDate',
+            'endDate',
+            'paymentMethod'
         ));
     }
     public function dailySales(Request $request)
@@ -145,7 +157,7 @@ class StoreSalesController extends Controller
     public function weeklySales(Request $request)
     {
         $storeId = Auth::user()->store_id;
-        
+
         // Default to current week (Monday to Sunday)
         $startOfWeek = $request->input('start_date', now()->startOfWeek()->format('Y-m-d'));
         $endOfWeek = $request->input('end_date', now()->endOfWeek()->format('Y-m-d'));
@@ -390,8 +402,26 @@ class StoreSalesController extends Controller
             ->with(['items.product', 'customer'])
             ->findOrFail($id);
 
-        return view('store.sales.show', compact('sale'));
+        $store = $storeId ? StoreDetail::find($storeId) : null;
+
+        return view('store.sales.show', compact('sale', 'store'));
     }
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,processing,completed,cancelled'
+        ]);
+
+        $storeId = Auth::user()->store_id;
+        $sale = Sale::where('store_id', $storeId)->findOrFail($id);
+
+        $sale->update([
+            'status' => $request->status
+        ]);
+
+        return back()->with('success', 'Order status updated successfully!');
+    }
+
     public function searchProduct(Request $request)
     {
         $term = $request->term;
@@ -417,17 +447,17 @@ class StoreSalesController extends Controller
 
         // Requirement: stock > 0
         // We join or use whereHas to ensure we only get products with stock in THIS store
-        $products = $query->whereHas('storeStocks', function($q) use ($storeId) {
-                $q->where('store_id', $storeId)
-                  ->where('quantity', '>', 0);
-            })
-            ->with(['storeStocks' => function($q) use ($storeId) {
+        $products = $query->whereHas('storeStocks', function ($q) use ($storeId) {
+            $q->where('store_id', $storeId)
+                ->where('quantity', '>', 0);
+        })
+            ->with(['storeStocks' => function ($q) use ($storeId) {
                 $q->where('store_id', $storeId);
             }])
             ->orderBy('products.product_name', 'asc')
             ->limit(32)
             ->get()
-            ->map(function($p) {
+            ->map(function ($p) {
                 $stock = $p->storeStocks->first();
                 return [
                     'id' => $p->id,
@@ -614,7 +644,7 @@ class StoreSalesController extends Controller
                         // 1. Check Drawer Status
                         $drawerStatus = $posAgentService->getCashDrawerStatus($terminalId);
                         Log::info('POS Checkout: Cash Drawer Status Response', ['response' => $drawerStatus]);
-                        
+
                         // Strict check on 'success' key; 'configured' is preferred but we fallback to success
                         if (!$drawerStatus || empty($drawerStatus['success'])) {
                             DB::rollBack();
@@ -638,7 +668,7 @@ class StoreSalesController extends Controller
                             ], 422);
                         }
                     }
-                    
+
                     // Note: Receipt printing is deferred to the frontend modal which hits `/store/pos/manual-print`
                     // after this checkout responds successfully, matching the requested workflow.
                 }
@@ -671,7 +701,7 @@ class StoreSalesController extends Controller
      */
     public function terminalStatus(\App\Services\PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        $store = StoreDetail::where('id', Auth::user()->store_id)->first();
         $terminalId = $store ? $store->pos_terminal_id : null;
 
         if (!$terminalId) {
@@ -743,10 +773,10 @@ class StoreSalesController extends Controller
         }
 
         $response = $posAgentService->getLastScan($terminalId);
-        
+
         if (isset($response['scan']['value'])) {
-             // Map value to barcode to match existing frontend expectation
-             $response['scan']['barcode'] = $response['scan']['value'];
+            // Map value to barcode to match existing frontend expectation
+            $response['scan']['barcode'] = $response['scan']['value'];
         }
 
         return response()->json($response ?: ['success' => false]);

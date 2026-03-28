@@ -15,8 +15,8 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
-        $cart = Cart::with('items.product')
-            ->where('user_id', auth()->id())
+        $cart = Cart::with(['items.product', 'store'])
+            ->where('user_id', auth('customer')->id())
             ->first();
 
         if ($request->wantsJson()) {
@@ -131,6 +131,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cart updated!',
+            'cart_count' => $cart->items()->count(),
             'cart_total' => number_format($cart->total_amount, 2),
             'cart_subtotal' => number_format($subtotal, 2),
             'discount' => number_format($discount, 2),
@@ -144,7 +145,7 @@ class CartController extends Controller
     public function destroy($id)
     {
         $cartItem = CartItem::whereHas('cart', function($q) {
-            $q->where('user_id', auth()->id());
+            $q->where('user_id', auth('customer')->id());
         })->findOrFail($id);
 
         $cart = $cartItem->cart;
@@ -164,10 +165,13 @@ class CartController extends Controller
             'total_amount' => $subtotal - $discount
         ]);
 
+        $cart->load(['items.product', 'store']);
+
         return response()->json([
             'success' => true,
             'message' => 'Item removed!',
-            'cart_count' => $cart->items()->count(),
+            'cart' => $cart,
+            'cart_count' => $cart->items->count(),
             'cart_total' => number_format($cart->total_amount, 2),
             'cart_subtotal' => number_format($subtotal, 2),
             'discount' => number_format($discount, 2)

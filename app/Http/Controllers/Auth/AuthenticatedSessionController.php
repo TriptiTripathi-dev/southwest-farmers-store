@@ -44,9 +44,8 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('store')->logout();
 
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
+        // Specific store session keys can be cleared here if needed
+        // but DO NOT invalidate the entire session to keep customer logged in
 
         return redirect('/');
     }

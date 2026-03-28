@@ -118,10 +118,48 @@
                             <span class="fw-bold text-dark">#{{ $sale->id }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Source</span>
+                            <span class="badge bg-{{ ($sale->source ?? 'pos') === 'website' ? 'info' : 'secondary' }} bg-opacity-10 text-{{ ($sale->source ?? 'pos') === 'website' ? 'info' : 'secondary' }} text-uppercase">
+                                {{ $sale->source ?? 'POS' }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Date</span>
                             <span class="fw-bold text-dark">{{ $sale->created_at->format('M d, Y h:i A') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Status</span>
+                            @php
+                                $statusClass = match($sale->status ?? 'paid') {
+                                    'pending' => 'warning',
+                                    'processing' => 'info',
+                                    'completed', 'paid' => 'success',
+                                    'cancelled' => 'danger',
+                                    default => 'secondary'
+                                };
+                            @endphp
+                            <span class="badge bg-{{ $statusClass }} bg-opacity-10 text-{{ $statusClass }} text-uppercase">{{ $sale->status ?? 'PAID' }}</span>
+                        </div>
+
+                        {{-- Status Update Form for Website Orders --}}
+                        @if(($sale->source ?? 'pos') === 'website')
+                            <form action="{{ route('store.sales.orders.update-status', $sale->id) }}" method="POST" class="mb-3 border-top pt-3">
+                                @csrf
+                                @method('PATCH')
+                                <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Update Fulfillment Status</label>
+                                <div class="input-group">
+                                    <select name="status" class="form-select form-select-sm">
+                                        <option value="pending" {{ $sale->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="processing" {{ $sale->status === 'processing' ? 'selected' : '' }}>Processing</option>
+                                        <option value="completed" {{ $sale->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                        <option value="cancelled" {{ $sale->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-dark">Update</button>
+                                </div>
+                            </form>
+                        @endif
+
+                        <div class="d-flex justify-content-between mb-3 border-top pt-3">
                             <span class="text-muted">Payment</span>
                             <span
                                 class="badge bg-success bg-opacity-10 text-success text-uppercase">{{ $sale->payment_method }}</span>

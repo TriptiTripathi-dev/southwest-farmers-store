@@ -43,6 +43,8 @@
                                 <tr>
                                     <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Invoice No</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Customer</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Source</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Status</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Date & Time</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase text-center" style="letter-spacing: 0.5px;">Items</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total Amount</th>
@@ -68,6 +70,31 @@
                                                 <small class="text-muted"><i class="mdi mdi-phone-outline me-1"></i>{{ $order->customer->phone ?? 'N/A' }}</small>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td>
+                                        @if(($order->source ?? 'pos') === 'website')
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-1 fw-bold">
+                                                <i class="mdi mdi-web me-1"></i> Website
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-3 py-1 fw-bold">
+                                                <i class="mdi mdi-monitor me-1"></i> POS
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $statusClass = match($order->status ?? 'paid') {
+                                                'pending' => 'warning',
+                                                'processing' => 'info',
+                                                'completed', 'paid' => 'success',
+                                                'cancelled' => 'danger',
+                                                default => 'secondary'
+                                            };
+                                        @endphp
+                                        <span class="badge bg-{{ $statusClass }} bg-opacity-10 text-{{ $statusClass }} border border-{{ $statusClass }} border-opacity-25 rounded-pill px-3 py-1 fw-bold text-uppercase">
+                                            {{ $order->status ?? 'PAID' }}
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="fw-semibold text-dark">{{ $order->created_at->format('M d, Y') }}</div>

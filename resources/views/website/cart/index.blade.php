@@ -29,7 +29,7 @@
                         <div class="bg-white rounded-4 border-0 shadow-sm overflow-hidden">
                             <!-- Header -->
                             <div class="bg-light px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold mb-0">{{ $cart->items->count() }} Item{{ $cart->items->count() !== 1 ? 's' : '' }}</h5>
+                                <h5 class="fw-bold mb-0" id="cart-items-count">{{ $cart->items->count() }} Item{{ $cart->items->count() !== 1 ? 's' : '' }}</h5>
                                 <span class="badge bg-primary-subtle text-primary fs-6 fw-bold">
                                     <i class="mdi mdi-package-variant me-1"></i>Ready to checkout
                                 </span>
@@ -48,7 +48,14 @@
 
                                         <!-- Product Info -->
                                         <div class="flex-grow-1">
-                                            <h5 class="fw-bold mb-2 text-dark">{{ $item->product->product_name }}</h5>
+                                            <h5 class="fw-bold text-dark mb-1">{{ $item->product->product_name }}</h5>
+                                        @if($cart->store)
+                                        <div class="mb-2">
+                                            <span class="badge bg-theme bg-opacity-10 text-theme fw-bold rounded-pill" style="font-size: 0.75rem;">
+                                                <i class="mdi mdi-storefront me-1"></i> {{ $cart->store->store_name }}
+                                            </span>
+                                        </div>
+                                        @endif
                                             <div class="d-flex gap-3 align-items-center mb-3">
                                                 <span class="fs-5 fw-bold text-primary">${{ number_format($item->product->price, 2) }}</span>
                                                 @if($item->product->upc)
@@ -218,10 +225,28 @@
                     const summaryDiscount = document.getElementById('summary-discount');
                     if (parseFloat(data.discount) > 0) {
                         discountRow.classList.remove('d-none');
-                        summaryDiscount.textContent = `-$${data.discount}`;
+                        summaryDiscount.textContent = `-${data.discount}`;
                     } else {
                         discountRow.classList.add('d-none');
                     }
+
+                    // Real-time update of header badge and cart items count
+                    const badge = document.getElementById('cart-badge');
+                    if (badge) badge.textContent = data.cart_count;
+
+                    const countEl = document.getElementById('cart-items-count');
+                    if (countEl) countEl.textContent = `${data.cart_count} Item${data.cart_count !== 1 ? 's' : ''}`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Cart quantity updated.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
                 } else {
                     qtyEl.textContent = originalQty;
                 }
@@ -302,53 +327,79 @@
         }
 
         function removeItem(itemId) {
-            if (!confirm('Remove this item from your cart?')) return;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Remove this item from your cart?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#019934',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, remove it!',
+                cancelButtonText: 'Cancel',
+                borderRadius: '15px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const itemEl = document.getElementById(`item-${itemId}`);
+                    if(itemEl) itemEl.style.opacity = '0.5';
 
-            const itemEl = document.getElementById(`item-${itemId}`);
-            itemEl.style.opacity = '0.5';
+                    fetch(`{{ route('website.cart.index') }}/${itemId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            if(itemEl) {
+                                itemEl.style.transition = 'all 0.3s ease';
+                                itemEl.style.opacity = '0';
+                                itemEl.style.height = '0';
+                                itemEl.style.padding = '0';
+                                itemEl.style.margin = '0';
+                                setTimeout(() => itemEl.remove(), 300);
+                            }
+                            
+                            document.getElementById('summary-subtotal').textContent = `$${data.cart_subtotal}`;
+                            document.getElementById('summary-total').textContent = `$${data.cart_total}`;
+                            
+                            const discountRow = document.getElementById('discount-row');
+                            const summaryDiscount = document.getElementById('summary-discount');
+                            if (parseFloat(data.discount) > 0) {
+                                discountRow.classList.remove('d-none');
+                                summaryDiscount.textContent = `-$${data.discount}`;
+                            } else {
+                                discountRow.classList.add('d-none');
+                            }
 
-            fetch(`{{ route('website.cart.index') }}/${itemId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    itemEl.style.transition = 'all 0.3s ease';
-                    itemEl.style.opacity = '0';
-                    itemEl.style.height = '0';
-                    itemEl.style.padding = '0';
-                    itemEl.style.margin = '0';
-                    
-                    setTimeout(() => {
-                        itemEl.remove();
-                        document.getElementById('summary-subtotal').textContent = `$${data.cart_subtotal}`;
-                        document.getElementById('summary-total').textContent = `$${data.cart_total}`;
-                        
-                        const discountRow = document.getElementById('discount-row');
-                        const summaryDiscount = document.getElementById('summary-discount');
-                        if (parseFloat(data.discount) > 0) {
-                            discountRow.classList.remove('d-none');
-                            summaryDiscount.textContent = `-$${data.discount}`;
+                            const badge = document.getElementById('cart-badge');
+                            if (badge) badge.textContent = data.cart_count;
+
+                            const countEl = document.getElementById('cart-items-count');
+                            if (countEl) countEl.textContent = `${data.cart_count} Item${data.cart_count !== 1 ? 's' : ''}`;
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed!',
+                                text: 'Item removed successfully.',
+                                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
+                            });
+
+                            if (data.cart_count === 0) {
+                                setTimeout(() => location.reload(), 300);
+                            }
                         } else {
-                            discountRow.classList.add('d-none');
+                            if(itemEl) itemEl.style.opacity = '1';
+                            Swal.fire('Error', data.message || 'Could not remove item.', 'error');
                         }
-
-                        const badge = document.querySelector('.navbar .badge');
-                        if (badge) badge.textContent = data.cart_count;
-
-                        if (data.cart_count === 0) {
-                            setTimeout(() => location.reload(), 300);
-                        }
-                    }, 300);
+                    })
+                    .catch(err => {
+                        if(itemEl) itemEl.style.opacity = '1';
+                        Swal.fire('Error', 'Network error. Please try again.', 'error');
+                    });
                 }
-            })
-            .catch(err => {
-                itemEl.style.opacity = '1';
-                alert('Error removing item');
             });
         }
     </script>

@@ -24,9 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->redirectUsersTo(function ($request) {
-            if (auth('customer')->check()) {
+            // If visiting customer guest routes while logged in as customer, redirect to website home
+            if ($request->is('customer*') && auth('customer')->check()) {
                 return route('website.home');
             }
+
+            // If visiting admin guest routes while logged in as store user, redirect to dashboard
+            if (($request->is('admin*') || $request->is('store*')) && auth('store')->check()) {
+                return route('dashboard');
+            }
+
+            // Minimal fallback logic
+            if (auth('customer')->check() && !$request->is('admin*') && !$request->is('store*')) {
+                return route('website.home');
+            }
+
             return route('dashboard');
         });
     })

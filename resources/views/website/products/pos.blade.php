@@ -61,24 +61,23 @@
             border: 1px solid var(--pos-border);
             overflow: hidden;
             transition: all 0.3s ease;
-            height: 100%;
             display: flex;
             flex-direction: column;
         }
 
         .pos-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
             border-color: var(--pos-primary);
         }
 
         .pos-img-container {
-            aspect-ratio: 1/1;
+            height: 85px !important;
             background: #f1f5f9;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            padding: 0.2rem;
         }
 
         .pos-img {
@@ -88,10 +87,10 @@
         }
 
         .pos-content {
-            padding: 1rem;
-            flex-grow: 1;
+            padding: 0.75rem;
             display: flex;
             flex-direction: column;
+            gap: 0.25rem;
         }
 
         .pos-title {
@@ -179,7 +178,12 @@
                 <!-- Sidebar -->
                 <div class="col-lg-3 d-none d-lg-block">
                     <div class="category-sidebar">
-                        <h5 class="fw-black mb-4">{{ $posSettings->title ?? 'Products' }}</h5>
+                        <h5 class="fw-black mb-1">{{ $posSettings->title ?? 'Products' }}</h5>
+                        @if($currentStore)
+                        <div class="badge bg-theme bg-opacity-10 text-theme mb-3 rounded-pill px-3 py-2 fw-bold">
+                            <i class="mdi mdi-storefront me-1"></i> {{ $currentStore->name }}
+                        </div>
+                        @endif
                         <p class="text-muted small mb-4">{{ $posSettings->subtitle ?? 'Quickly browse and add products to your cart.' }}</p>
                         <hr class="mb-4">
                         <h6 class="fw-bold mb-3">Categories</h6>
@@ -274,20 +278,24 @@
                 }
 
                 grid.innerHTML = products.map(p => `
-                    <div class="col-6 col-md-4 col-xl-3">
-                        <div class="pos-card shadow-sm h-100 d-flex flex-column">
-                            <div class="pos-img-container position-relative overflow-hidden" style="height: 140px; padding: 0.5rem;">
+                    <div class="col-6 col-md-4 col-xl-4">
+                        <div class="pos-card shadow-sm d-flex flex-column">
+                            <div class="pos-img-container position-relative overflow-hidden">
                                 <img src="${p.image ? '/storage/' + p.image : 'https://placehold.co/200x200/e6ffef/009A36?text=' + encodeURIComponent(p.product_name)}" 
                                      class="pos-img w-100 h-100 object-fit-contain" alt="${p.product_name}">
-                                ${p.stock <= 5 && p.stock !== null ? '<span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm rounded-pill">Low Stock</span>' : ''}
+                                ${p.stock <= 5 && p.stock !== null ? '<span class="badge bg-danger position-absolute top-0 end-0 m-1 shadow-sm rounded-pill" style="font-size: 0.5rem; padding: 0.15rem 0.35rem;">Low</span>' : ''}
                             </div>
-                            <div class="pos-content p-3 d-flex flex-column flex-grow-1 border-top border-light">
-                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.85rem; line-height: 1.25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5rem;">${p.product_name}</h3>
-                                <p class="text-muted small mb-3" style="font-size: 0.75rem;">${p.barcode ? '<i class="mdi mdi-barcode me-1"></i>'+p.barcode : '&nbsp;'}</p>
-                                <div class="mt-auto d-flex justify-content-between align-items-center bg-light rounded-pill p-1 ps-3">
-                                    <span class="fw-black text-theme" style="font-size: 1rem;">$${parseFloat(p.price).toFixed(2)}</span>
-                                    <button type="button" class="btn btn-theme rounded-circle shadow-sm d-flex align-items-center justify-content-center hover-lift" style="width: 32px; height: 32px; padding: 0;" onclick="addToCart(${p.id}, this)">
-                                        <i class="mdi mdi-cart-plus fs-5"></i>
+                            <div class="pos-content p-1 px-2 d-flex flex-column flex-grow-1 border-top border-light text-center">
+                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.8rem; line-height: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.product_name}</h3>
+                                
+                                <div class="badge bg-theme bg-opacity-10 text-theme mb-2 py-1 px-2 rounded-pill mx-auto" style="font-size: 0.65rem; width: fit-content; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <i class="mdi mdi-storefront me-1"></i> ${p.store_name}
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 ps-2 mt-2">
+                                    <span class="fw-black text-theme" style="font-size: 0.9rem;">$${parseFloat(p.price).toFixed(2)}</span>
+                                    <button type="button" class="btn btn-theme rounded-circle shadow-sm d-flex align-items-center justify-content-center hover-lift" style="width: 24px; height: 24px; padding: 0;" onclick="addToCart(${p.id}, this)">
+                                        <i class="mdi mdi-cart-plus" style="font-size: 0.8rem;"></i>
                                     </button>
                                 </div>
                             </div>
@@ -318,8 +326,19 @@
                 if (data.success) {
                     loadSideCart();
                     // Update global badge
-                    const badge = document.querySelector('.navbar .badge');
+                    const badge = document.getElementById('cart-badge');
                     if (badge) badge.textContent = data.cart_count;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added!',
+                        text: 'Product added to cart.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
                 }
             });
         }
@@ -330,65 +349,102 @@
             @endif
         }
 
-        function updateSideCartUI() {
-            @if(!auth('customer')->check())
-                // Not logged in — show login prompt in sidebar
-                const sideItems = document.getElementById('sideCartItems');
-                sideItems.innerHTML = '<div class="text-center py-4 text-muted"><i class="mdi mdi-lock-outline fs-3 d-block mb-2"></i><small>Please <a href="{{ route('website.login') }}" class="text-theme fw-bold">login</a> to use your cart.</small></div>';
-                document.getElementById('checkoutBtn').disabled = true;
+        function renderSideCart(cart) {
+            const sideItems = document.getElementById('sideCartItems');
+            const sideTotal = document.getElementById('sideCartTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            if (!cart || !cart.items || cart.items.length === 0) {
+                sideItems.innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
+                sideTotal.textContent = '$0.00';
+                checkoutBtn.disabled = true;
                 return;
-            @endif
+            }
 
-            // We'll fetch the cart data as JSON for the sidebar
-            fetch('{{ route('website.cart.index') }}', {
-                headers: { 
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest' 
-                }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    // Non-2xx (e.g. 401) — show empty state and bail
-                    const sideItems = document.getElementById('sideCartItems');
-                    sideItems.innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
-                    document.getElementById('sideCartTotal').textContent = '$0.00';
-                    document.getElementById('checkoutBtn').disabled = true;
-                    return null;
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (!data) return;
-
-                const sideItems = document.getElementById('sideCartItems');
-                const sideTotal = document.getElementById('sideCartTotal');
-                const checkoutBtn = document.getElementById('checkoutBtn');
-
-                if (!data.cart || data.cart.items.length === 0) {
-                    sideItems.innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
-                    sideTotal.textContent = '$0.00';
-                    checkoutBtn.disabled = true;
-                    return;
-                }
-
-                sideItems.innerHTML = data.cart.items.map(item => `
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
-                        <div class="pe-3">
-                            <small class="fw-bold d-block text-dark lh-sm mb-1">${item.product.product_name}</small>
-                            <small class="text-muted d-block">${item.quantity} x <span class="text-theme fw-semibold">$${parseFloat(item.price).toFixed(2)}</span></small>
-                        </div>
-                        <span class="fw-bold text-dark bg-light px-2 py-1 rounded-pill" style="font-size: 0.9rem;">$${parseFloat(item.total).toFixed(2)}</span>
+            let storeHtml = '';
+            if (cart.store) {
+                storeHtml = `
+                    <div class="alert alert-success py-1 px-2 border-0 rounded-pill mb-3" style="font-size: 0.7rem; background: var(--theme-light);">
+                        <i class="mdi mdi-storefront me-1"></i> Store: <span class="fw-bold">${cart.store.store_name}</span>
                     </div>
-                `).join('');
+                `;
+            }
 
-                sideTotal.textContent = `$${parseFloat(data.cart.total_amount).toFixed(2)}`;
-                checkoutBtn.disabled = false;
+            sideItems.innerHTML = storeHtml + cart.items.map(item => `
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light" id="side-item-${item.id}">
+                    <div class="pe-3 flex-grow-1">
+                        <small class="fw-bold d-block text-dark lh-sm mb-1">${item.product.product_name}</small>
+                        <small class="text-muted d-block">${item.quantity} x <span class="text-theme fw-semibold">$${parseFloat(item.price).toFixed(2)}</span></small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-dark bg-light px-2 py-1 rounded-pill" style="font-size: 0.9rem;">$${parseFloat(item.total).toFixed(2)}</span>
+                        <button class="btn btn-sm btn-light border-0 text-danger p-0 delete-btn" onclick="removeFromCart(${item.id})">
+                            <i class="mdi mdi-delete-outline fs-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            sideTotal.textContent = `$${parseFloat(cart.total_amount).toFixed(2)}`;
+            checkoutBtn.disabled = false;
+        }
+
+        function updateSideCartUI() {
+            fetch('{{ route('website.cart.index') }}', {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .catch(() => {
-                // Network error — silently show empty state
-                document.getElementById('sideCartItems').innerHTML = '<div class="text-center py-4 text-muted">No items added yet</div>';
-                document.getElementById('sideCartTotal').textContent = '$0.00';
-                document.getElementById('checkoutBtn').disabled = true;
+            .then(res => res.json())
+            .then(data => renderSideCart(data.cart))
+            .catch(err => console.error('Error fetching cart:', err));
+        }
+
+        function removeFromCart(itemId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Remove this item from your cart?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#019934',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, remove it!',
+                borderRadius: '15px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Visual feedback
+                    const el = document.getElementById(`side-item-${itemId}`);
+                    if(el) el.style.opacity = '0.5';
+
+                    fetch(`/cart/${itemId}`, {
+                        method: 'DELETE',
+                        headers: { 
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success) {
+                            renderSideCart(data.cart);
+                            const badge = document.getElementById('cart-badge');
+                            if (badge) badge.textContent = data.cart_count;
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed!',
+                                text: 'Item removed successfully.',
+                                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
+                            });
+                        } else {
+                            if(el) el.style.opacity = '1';
+                            Swal.fire('Error', data.message || 'Could not remove item.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        if(el) el.style.opacity = '1';
+                        Swal.fire('Error', 'Network error. Please try again.', 'error');
+                    });
+                }
             });
         }
 

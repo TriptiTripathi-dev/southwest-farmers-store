@@ -24,10 +24,13 @@ class ProductController extends Controller
                 $q->where('store_id', $storeId)->where('quantity', '>', 0);
             });
         }
+        
+        $query->with(['storeStocks.store', 'category']);
 
         $products = $query->paginate(12);
-
-        return view('website.products.index', compact('products'));
+        $currentStore = $storeId ? StoreDetail::find($storeId) : null;
+        
+        return view('website.products.index', compact('products', 'currentStore'));
     }
 
     /**
@@ -77,14 +80,20 @@ class ProductController extends Controller
                 });
             }
 
-            $products = $query->limit(24)->get();
+            $products = $query->with(['storeStocks.store'])->limit(24)->get();
+
+            $products = $products->map(function ($p) {
+                $p->store_name = $p->storeStocks->first()->store->store_name ?? 'N/A';
+                return $p;
+            });
 
             return response()->json($products);
         }
 
         $posSettings = \App\Models\QuickPosSetting::first();
+        $currentStore = $storeId ? StoreDetail::find($storeId) : null;
         
-        return view('website.products.pos', compact('categories', 'posSettings'));
+        return view('website.products.pos', compact('categories', 'posSettings', 'currentStore'));
     }
 
 }

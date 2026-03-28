@@ -98,8 +98,8 @@ class CustomerAuthController extends Controller
     {
         Auth::guard('customer')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Specific customer session keys can be cleared here if needed
+        // but DO NOT invalidate the entire session to keep admin logged in
 
         return redirect()->route('website.home')->with('success', 'You have been logged out.');
     }

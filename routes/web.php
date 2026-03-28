@@ -175,15 +175,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/returns/search-invoice', [StoreReturnController::class, 'searchInvoice'])->name('sales.returns.search');
         Route::get('/reports/sales', [StoreSalesController::class, 'salesReport'])->name('reports.sales');
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
+        Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
+        Route::patch('/orders/{id}/status', [StoreSalesController::class, 'updateOrderStatus'])->name('sales.orders.update-status');
+        
         Route::post('/orders/held/{id}/restore', [StoreSalesController::class, 'restoreHeldOrder'])->name('sales.orders.held.restore');
         Route::delete('/orders/held/{id}', [StoreSalesController::class, 'deleteHeldOrder'])->name('sales.orders.held.delete');
+        
         Route::post('/pos/add', [StoreSalesController::class, 'addToCart'])->name('sales.cart.add');
         Route::post('/pos/update', [StoreSalesController::class, 'updateCart'])->name('sales.cart.update');
         Route::post('/pos/remove', [StoreSalesController::class, 'removeCartItem'])->name('sales.cart.remove');
         Route::post('/pos/clear', [StoreSalesController::class, 'clearCart'])->name('sales.cart.clear');
+        
         Route::get('/sales/daily', [StoreSalesController::class, 'dailySales'])->name('sales.daily');
         Route::get('/sales/weekly', [StoreSalesController::class, 'weeklySales'])->name('sales.weekly');
-        Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
         Route::post('/pos/checkout', [StoreSalesController::class, 'checkout'])->name('sales.checkout');
         Route::get('/pos/checkout', [StoreSalesController::class, 'checkoutPage'])->name('sales.checkout-page');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');

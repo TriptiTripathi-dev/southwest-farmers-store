@@ -111,7 +111,7 @@
         <div class="container">
             <div class="row g-4">
                 @forelse($products as $index => $product)
-                    <div class="col-6 col-md-4 col-lg-3 reveal active" style="transition-delay: {{ ($index % 4) * 0.1 }}s">
+                    <div class="col-6 col-md-3 col-lg-2 reveal active" style="transition-delay: {{ ($index % 6) * 0.1 }}s">
                         <div class="product-card-enhanced h-100">
                             <div class="product-image-container">
                                 <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
@@ -127,12 +127,21 @@
                                     </form>
                                 </div>
                             </div>
-                            <div class="card-body p-4 text-center">
-                                <span class="badge bg-theme-light text-theme rounded-pill p-2 px-3 small mb-2">
+                            <div class="card-body p-3 text-center">
+                                <span class="badge bg-theme-light text-theme rounded-pill px-2 py-1 small mb-2" style="font-size: 0.7rem;">
                                     {{ $product->category->name ?? 'Fresh Produce' }}
                                 </span>
-                                <h5 class="fw-bold text-dark mb-3 text-truncate">{{ $product->product_name ?? $product->name }}</h5>
-                                <p class="h4 fw-black text-theme">${{ number_format($product->price, 2) }}</p>
+                                @if(isset($currentStore))
+                                <div class="fw-bold text-muted mb-2" style="font-size: 0.75rem;">
+                                    <i class="mdi mdi-storefront me-1 text-theme"></i> {{ $currentStore->name }}
+                                </div>
+                                @elseif($product->storeStocks->isNotEmpty())
+                                <div class="fw-bold text-muted mb-2" style="font-size: 0.75rem;">
+                                    <i class="mdi mdi-storefront me-1 text-theme"></i> {{ $product->storeStocks->first()->store->name ?? 'Home Food' }}
+                                </div>
+                                @endif
+                                <h6 class="fw-bold text-dark mb-2 text-truncate" style="font-size: 0.9rem;">{{ $product->product_name ?? $product->name }}</h6>
+                                <p class="fw-black text-theme mb-0" style="font-size: 1.1rem;">${{ number_format($product->price, 2) }}</p>
                             </div>
 
                         </div>
