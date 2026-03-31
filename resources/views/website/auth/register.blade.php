@@ -115,7 +115,7 @@
                                     <p class="text-muted mb-0">Join Southwest Farmers and get fresh groceries delivered fast.</p>
                                 </div>
 
-                                <form method="POST" action="{{ route('website.register') }}"
+                                <form id="registrationForm" method="POST" action="{{ route('website.register') }}"
                                       class="animate-fade-up delay-100" autocomplete="off">
                                     @csrf
 
@@ -203,10 +203,13 @@
                                     </div>
 
                                     {{-- Submit --}}
+                                    <input type="hidden" name="latitude" id="latitude">
+                                    <input type="hidden" name="longitude" id="longitude">
+
                                     <div class="mt-4 animate-fade-up delay-200">
-                                        <button type="submit" class="btn-submit-register w-100 d-flex align-items-center justify-content-center gap-2">
+                                        <button type="submit" id="submitBtn" class="btn-submit-register w-100 d-flex align-items-center justify-content-center gap-2">
+                                            <span id="btnText">Create My Account</span>
                                             <i class="mdi mdi-check-circle-outline fs-5"></i>
-                                            Create My Account
                                         </button>
                                     </div>
 
@@ -272,5 +275,61 @@
             </div>
         </div>
     </section>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            const form = document.getElementById('registrationForm');
+            const btnText = document.getElementById('btnText');
+
+            function captureLocation(callback = null) {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        latInput.value = position.coords.latitude;
+                        lngInput.value = position.coords.longitude;
+                        console.log('Location captured:', position.coords.latitude, position.coords.longitude);
+                        if (callback) callback();
+                    }, function(error) {
+                        console.warn('Geolocation error:', error.message);
+                        if (callback) callback();
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    });
+                } else if (callback) {
+                    callback();
+                }
+            }
+
+            // Capture on focus of any field (proactive)
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    if (!latInput.value) captureLocation();
+                }, { once: true });
+            });
+
+            // Initial capture attempt
+            captureLocation();
+
+            // Intercept submit
+            form.addEventListener('submit', function(e) {
+                if (!latInput.value || !lngInput.value) {
+                    e.preventDefault(); // Stop form
+                    btnText.innerText = "Capturing location...";
+                    
+                    // Force a capture attempt
+                    captureLocation(function() {
+                        btnText.innerText = "Redirecting...";
+                        form.submit(); // Now real submit
+                    });
+                }
+            });
+        });
+    </script>
+    @endpush
 
 </x-website-layout>

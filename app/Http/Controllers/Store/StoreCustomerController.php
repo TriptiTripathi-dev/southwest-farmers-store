@@ -11,20 +11,41 @@ use Illuminate\Support\Facades\Storage;
 
 class StoreCustomerController extends Controller
 {
-   public function index(Request $request)
+    public function index(Request $request)
     {
-        $user = Auth::user()->store_id;
+        $storeId = Auth::user()->store_id;
+        $store = \App\Models\StoreDetail::find($storeId);
         
-        // Ensure we use store_id
-        $query = StoreCustomer::where('store_id', $user);
+        $query = StoreCustomer::query();
+
+        // Location based filtering
+        $query->where(function($q) use ($storeId, $store) {
+            // Priority 1: Customers explicitly belonging to this store
+            $q->where('store_id', $storeId);
+            
+            // Priority 2: Website customers within a 50km radius
+            if ($store && $store->latitude && $store->longitude) {
+                // Use the new scope for consistency with product radius
+                $q->orWhere(function($sq) use ($store) {
+                    $sq->where('source', 'website')
+                       ->whereNotNull('latitude')
+                       ->whereNotNull('longitude')
+                       ->withinDistance($store->latitude, $store->longitude, 50);
+                });
+            }
+
+            // Fallback: If they were assigned to this store on signup but have no coords
+            $q->orWhere(function($sq) use ($storeId) {
+                $sq->where('source', 'website')
+                   ->where('store_id', $storeId);
+            });
+        });
 
         // 1. Search Filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                // Use ilike for PostgreSQL (case-insensitive), like for MySQL
                 $operator = DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
-                
                 $q->where('name', $operator, "%{$search}%")
                   ->orWhere('phone', $operator, "%{$search}%")
                   ->orWhere('email', $operator, "%{$search}%");
@@ -32,19 +53,12 @@ class StoreCustomerController extends Controller
         }
 
         // 2. Sorting Logic
-        $sort = $request->get('sort', 'recent'); // Default to 'recent'
-        
+        $sort = $request->get('sort', 'recent');
         switch ($sort) {
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'due':
-                $query->orderBy('due', 'desc'); // Highest due first
-                break;
+            case 'name': $query->orderBy('name', 'asc'); break;
+            case 'due': $query->orderBy('due', 'desc'); break;
             case 'recent':
-            default:
-                $query->latest(); // Created At Desc
-                break;
+            default: $query->latest(); break;
         }
 
         $customers = $query->paginate(10)->withQueryString();

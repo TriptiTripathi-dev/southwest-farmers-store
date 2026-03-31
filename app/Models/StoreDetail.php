@@ -30,7 +30,8 @@ class StoreDetail extends Model
         'pos_store_id',
         'pos_agent_secret',
         'pos_hardware_url',
-        'pos_terminal_status'
+        'pos_terminal_status',
+        'profile'
     ];
 
     public function setStoreNameAttribute($value)

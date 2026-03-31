@@ -33,6 +33,7 @@
                                 <tr>
                                     <th class="ps-4 py-3 text-muted small fw-semibold">IMAGE</th>
                                     <th class="py-3 text-muted small fw-semibold">CUSTOMER NAME</th>
+                                    <th class="py-3 text-muted small fw-semibold">SOURCE</th>
                                     <th class="py-3 text-muted small fw-semibold">PHONE</th>
                                     <th class="py-3 text-muted small fw-semibold">EMAIL</th>
                                     <th class="py-3 text-muted small fw-semibold">DUE AMOUNT</th>
@@ -42,9 +43,22 @@
                             <tbody>
                                 @forelse($customers as $customer)
                                 <tr class="border-bottom">
-                                    {{-- Data Columns (Unchanged) --}}
                                     <td class="ps-4 py-3"><img src="{{ $customer->image_url }}" class="rounded-circle border" width="45" height="45"></td>
-                                    <td class="py-3"><div class="fw-semibold text-dark">{{ $customer->name }}</div><small class="text-muted">{{ $customer->party_type }}</small></td>
+                                    <td class="py-3">
+                                        <div class="fw-semibold text-dark">{{ $customer->name }}</div>
+                                        <small class="text-muted">{{ $customer->party_type }}</small>
+                                    </td>
+                                    <td class="py-3">
+                                        @if($customer->source === 'website')
+                                            <span class="badge bg-info bg-opacity-10 text-info fw-bold rounded-pill px-3">
+                                                <i class="mdi mdi-web me-1"></i>Website
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold rounded-pill px-3">
+                                                <i class="mdi mdi-account-cog me-1"></i>Admin
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="py-3">{{ $customer->phone }}</td>
                                     <td class="py-3">{{ $customer->email ?? 'N/A' }}</td>
                                     <td class="py-3">

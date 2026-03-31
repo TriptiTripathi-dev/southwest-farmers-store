@@ -60,6 +60,8 @@ class CustomerAuthController extends Controller
             'password'      => ['required', 'confirmed', Password::min(8)],
             'address'       => ['nullable', 'string'],
             'area'          => ['nullable', 'string', 'max:255'],
+            'latitude'      => ['nullable', 'numeric'],
+            'longitude'     => ['nullable', 'numeric'],
         ]);
 
         // Default to the first active store
@@ -67,14 +69,17 @@ class CustomerAuthController extends Controller
         $store_id = $store ? $store->id : 1;
 
         $customer = StoreCustomer::create([
-            'store_id'   => $store_id,
+            'store_id'   => $store_id, // Default assignment, but radius query will override visibility
             'name'       => $request->name,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
             'phone'      => $request->phone,
             'address'    => $request->address,
             'area'       => $request->area,
+            'latitude'   => $request->latitude,
+            'longitude'  => $request->longitude,
             'party_type' => 'Retail',
+            'source'     => 'website',
             'is_active'  => true,
         ]);
 

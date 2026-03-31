@@ -174,7 +174,8 @@ class CartController extends Controller
             'cart_count' => $cart->items->count(),
             'cart_total' => number_format($cart->total_amount, 2),
             'cart_subtotal' => number_format($subtotal, 2),
-            'discount' => number_format($discount, 2)
+            'discount' => number_format($discount, 2),
+            'store_profile' => $cart->store->profile ?? null
         ]);
     }
 

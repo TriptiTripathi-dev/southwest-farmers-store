@@ -33,6 +33,7 @@ class StoreProfileController extends Controller
     {
         $request->validate([
             'store_name' => 'required|string|max:255',
+            'email'      => 'required|email|max:255',
             'phone'      => 'nullable|string|max:20',
             'address'    => 'nullable|string',
             'city'       => 'nullable|string',
@@ -45,6 +46,7 @@ class StoreProfileController extends Controller
         // 3. Prepare data for StoreDetail
         $data = [
             'store_name' => $request->store_name,
+            'email'      => $request->email,
             'phone'      => $request->phone,
             'address'    => $request->address,
             'city'       => $request->city,

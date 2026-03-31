@@ -52,7 +52,7 @@
                             <div class="row mb-4 align-items-center">
                                 <div class="col-md-3 text-center">
                                     @if($store->profile)
-                                        <img src="{{ asset('storage/' . $stores->profile) }}" alt="Store Profile" 
+                                        <img src="{{ asset('storage/' . $store->profile) }}" alt="Store Profile" 
                                              class="img-fluid rounded-circle border shadow-sm" 
                                              style="width: 80px; height: 80px; object-fit: cover;">
                                     @else
@@ -182,9 +182,12 @@
         <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
         <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // --- 1. INITIALIZE MAP (Same as before) ---
-        var lat = parseFloat("{{ $store->latitude ?? 28.6139 }}");
-        var lng = parseFloat("{{ $store->longitude ?? 77.2090 }}");
+        // --- 1. INITIALIZE MAP ---
+        var savedLat = "{{ $store->latitude }}";
+        var savedLng = "{{ $store->longitude }}";
+
+        var lat = parseFloat(savedLat || 28.6139);
+        var lng = parseFloat(savedLng || 77.2090);
 
         var map = L.map('editMap').setView([lat, lng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -193,21 +196,73 @@
 
         var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-        // Update inputs on drag
+        // If no saved coordinates, try geolocation
+        if (!savedLat || !savedLng) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var curLat = position.coords.latitude;
+                    var curLng = position.coords.longitude;
+                    map.setView([curLat, curLng], 14);
+                    marker.setLatLng([curLat, curLng]);
+                    updateCoordinates(curLat, curLng);
+                    reverseGeocode(curLat, curLng);
+                }, function() {
+                    console.log("Geolocation permission denied.");
+                });
+            }
+        }
+
+        // Update inputs on drag end
         marker.on('dragend', function(e) {
             var pos = marker.getLatLng();
             updateCoordinates(pos.lat, pos.lng);
+            reverseGeocode(pos.lat, pos.lng);
         });
 
         // Update inputs on map click
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             updateCoordinates(e.latlng.lat, e.latlng.lng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng);
         });
 
         function updateCoordinates(lat, lng) {
             document.getElementById('latitude').value = lat.toFixed(7);
             document.getElementById('longitude').value = lng.toFixed(7);
+        }
+
+        function reverseGeocode(lat, lng) {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.address) {
+                        fillAddressFields(data);
+                    }
+                })
+                .catch(err => console.error("Reverse geocode error:", err));
+        }
+
+        function fillAddressFields(data) {
+            const addr = data.address;
+            const fullAddress = data.display_name;
+            
+            // Update address textarea
+            const addressInput = document.getElementById('addr_street');
+            addressInput.value = (addr.road || addr.house_number) ? 
+                                 `${addr.house_number ? addr.house_number + ', ' : ''}${addr.road || ''}` : 
+                                 fullAddress.split(',')[0];
+
+            // Update other components
+            document.getElementById('addr_city').value = addr.city || addr.town || addr.village || addr.city_district || addr.county || '';
+            
+            let state = addr.state || addr.state_district || addr.region || '';
+            if (!state && (addr.city === 'Delhi' || addr.city === 'New Delhi')) {
+                state = 'Delhi';
+            }
+            document.getElementById('addr_state').value = state;
+            document.getElementById('addr_country').value = addr.country || '';
+            document.getElementById('addr_pincode').value = addr.postcode || '';
         }
 
         // --- 2. AUTOCOMPLETE LOGIC ---
@@ -219,6 +274,22 @@
             const query = this.value;
             clearTimeout(timeout);
             
+            if (query.length === 0) {
+                // If address is cleared, try geolocation
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        var curLat = position.coords.latitude;
+                        var curLng = position.coords.longitude;
+                        map.setView([curLat, curLng], 14);
+                        marker.setLatLng([curLat, curLng]);
+                        updateCoordinates(curLat, curLng);
+                        reverseGeocode(curLat, curLng);
+                    });
+                }
+                suggestionList.style.display = 'none';
+                return;
+            }
+
             if (query.length < 3) {
                 suggestionList.style.display = 'none';
                 return;
@@ -241,7 +312,9 @@
                         data.forEach(item => {
                             const li = document.createElement('li');
                             li.textContent = item.display_name;
-                            li.addEventListener('click', () => selectAddress(item));
+                            li.addEventListener('click', () => {
+                                selectAddress(item);
+                            });
                             suggestionList.appendChild(li);
                         });
                     } else {
@@ -258,21 +331,7 @@
             map.setView([newLat, newLon], 16);
             marker.setLatLng([newLat, newLon]);
             updateCoordinates(newLat, newLon);
-
-            const addr = item.address;
-            addressInput.value = (addr.road || addr.house_number) ? 
-                                 `${addr.house_number ? addr.house_number + ', ' : ''}${addr.road || ''}` : 
-                                 item.display_name.split(',')[0]; 
-            
-            document.getElementById('addr_city').value = addr.city || addr.town || addr.village || addr.city_district || addr.county || '';
-            
-            let state = addr.state || addr.state_district || addr.region || '';
-            if (!state && (addr.city === 'Delhi' || addr.city === 'New Delhi')) {
-                state = 'Delhi';
-            }
-            document.getElementById('addr_state').value = state;
-            document.getElementById('addr_country').value = addr.country || '';
-            document.getElementById('addr_pincode').value = addr.postcode || '';
+            fillAddressFields(item);
 
             suggestionList.style.display = 'none';
         }

@@ -83,7 +83,9 @@ class ProductController extends Controller
             $products = $query->with(['storeStocks.store'])->limit(24)->get();
 
             $products = $products->map(function ($p) {
-                $p->store_name = $p->storeStocks->first()->store->store_name ?? 'N/A';
+                $store = $p->storeStocks->first()->store ?? null;
+                $p->store_name = $store->store_name ?? 'N/A';
+                $p->store_profile = $store->profile ?? null;
                 return $p;
             });
 

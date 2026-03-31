@@ -98,11 +98,8 @@
             font-weight: 700;
             color: var(--pos-text);
             margin-bottom: 0.5rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 2.5rem;
+            display: block; /* Show full name */
+            overflow: visible;
         }
 
         .pos-price {
@@ -286,10 +283,14 @@
                                 ${p.stock <= 5 && p.stock !== null ? '<span class="badge bg-danger position-absolute top-0 end-0 m-1 shadow-sm rounded-pill" style="font-size: 0.5rem; padding: 0.15rem 0.35rem;">Low</span>' : ''}
                             </div>
                             <div class="pos-content p-1 px-2 d-flex flex-column flex-grow-1 border-top border-light text-center">
-                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.8rem; line-height: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.product_name}</h3>
+                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.8rem; line-height: 1.1rem; min-height: 2.2rem;">${p.product_name}</h3>
                                 
-                                <div class="badge bg-theme bg-opacity-10 text-theme mb-2 py-1 px-2 rounded-pill mx-auto" style="font-size: 0.65rem; width: fit-content; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    <i class="mdi mdi-storefront me-1"></i> ${p.store_name}
+                                <div class="d-flex align-items-center justify-content-center mb-2" style="font-size: 0.65rem;">
+                                    <div class="rounded-circle overflow-hidden border me-1 shadow-sm" style="width: 18px; height: 18px; background: #eee; flex-shrink: 0;">
+                                        <img src="${p.store_profile ? '/storage/' + p.store_profile : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.store_name) + '&background=019934&color=fff'}" 
+                                             class="w-100 h-100 object-fit-cover" alt="S">
+                                    </div>
+                                    <span class="text-truncate fw-bold text-muted">${p.store_name}</span>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 ps-2 mt-2">
@@ -364,8 +365,12 @@
             let storeHtml = '';
             if (cart.store) {
                 storeHtml = `
-                    <div class="alert alert-success py-1 px-2 border-0 rounded-pill mb-3" style="font-size: 0.7rem; background: var(--theme-light);">
-                        <i class="mdi mdi-storefront me-1"></i> Store: <span class="fw-bold">${cart.store.store_name}</span>
+                    <div class="alert alert-success py-2 px-3 border-0 rounded-pill mb-3 d-flex align-items-center" style="font-size: 0.75rem; background: var(--theme-light);">
+                        <div class="rounded-circle overflow-hidden border me-2 shadow-sm" style="width: 24px; height: 24px; background: #fff; flex-shrink: 0;">
+                            <img src="${cart.store.profile ? '/storage/' + cart.store.profile : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(cart.store.store_name) + '&background=019934&color=fff'}" 
+                                 class="w-100 h-100 object-fit-cover" alt="S">
+                        </div>
+                        <span class="text-theme">Store: <span class="fw-bold">${cart.store.store_name}</span></span>
                     </div>
                 `;
             }
