@@ -11,6 +11,7 @@ class PalletizationService
 
     /**
      * Calculate optimal pallet arrangement based on weight, dimensions, and rules.
+     * Core Algorithm: Used for Store PO estimation and logistics optimization.
      * Can be used for Store PO estimation.
      */
     public function calculateOptimalArrangement($items)

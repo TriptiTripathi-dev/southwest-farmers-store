@@ -42,6 +42,7 @@ class OrderController extends Controller
 
     /**
      * Process checkout and create a Sale.
+     * Core Algorithm: Failsafe atomic checkout engine for stock & payment.
      */
     public function store(Request $request)
     {

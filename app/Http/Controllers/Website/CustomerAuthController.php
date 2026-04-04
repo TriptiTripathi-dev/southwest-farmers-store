@@ -42,6 +42,7 @@ class CustomerAuthController extends Controller
     }
 
     // ─── Register ───────────────────────────────────────────────────────
+    // Core Logic: Fault-tolerant customer registration with store radius mapping.
 
     public function showRegistrationForm()
     {

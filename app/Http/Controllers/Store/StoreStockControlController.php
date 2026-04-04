@@ -203,6 +203,7 @@ class StoreStockControlController extends Controller
 
 
         // --- 4. Trend Analysis (Advanced Rewind Logic) ---
+        // Logical core update: valuation rewind calculation engine
         // We calculate daily changes to "rewind" the current value back to the start date.
 
         // Query daily value changes (Qty Change * Cost Price)
@@ -402,6 +403,7 @@ class StoreStockControlController extends Controller
 
     public function generateReplenishment()
     {
+        // Core Logic: Automated replenishment for low stock items (Min/Max).
         $user = Auth::user();
         $storeId = $user->store_id;
 
