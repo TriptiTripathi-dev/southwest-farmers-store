@@ -343,7 +343,7 @@
                                                     <div class="image-upload-wrapper mb-2 position-relative">
                                                         @if ($product->image)
                                                             <img id="imagePreview"
-                                                                src="{{ Storage::url($product->image) }}"
+                                                                src="{{ Storage::disk('r2')->url($product->image) }}"
                                                                 alt="Preview" class="img-fluid rounded-3 mb-3"
                                                                 style="max-height: 180px; object-fit: contain;">
                                                             <div id="uploadPrompt" class="d-none">

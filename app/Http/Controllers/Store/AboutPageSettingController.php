@@ -58,9 +58,9 @@ class AboutPageSettingController extends Controller
 
         if ($request->hasFile('mission_image')) {
             if ($settings->mission_image) {
-                Storage::disk('public')->delete($settings->mission_image);
+                Storage::disk('r2')->delete($settings->mission_image);
             }
-            $data['mission_image'] = $request->file('mission_image')->store('website/about', 'public');
+            $data['mission_image'] = $request->file('mission_image')->store('website/about', 'r2');
         }
 
         $settings->update($data);

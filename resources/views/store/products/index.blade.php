@@ -96,7 +96,7 @@
                                     <tr>
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $item->icon ? Storage::url($item->icon) : asset('assets/images/logo.jpg') }}"
+                                                <img src="{{ $item->icon ? Storage::disk('r2')->url($item->icon) : asset('assets/images/logo.jpg') }}"
                                                     class="rounded-circle border shadow-sm" width="40"
                                                     height="40" style="object-fit: cover;">
                                                 <div class="ms-3">

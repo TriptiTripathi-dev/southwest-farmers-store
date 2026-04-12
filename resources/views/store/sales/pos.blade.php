@@ -944,7 +944,7 @@
         $settings = \App\Models\StoreSetting::first();
         if ($settings) {
             if (!empty($settings->logo)) {
-                $brandLogo = asset('storage/' . $settings->logo);
+                $brandLogo = Storage::disk('r2')->url($settings->logo);
             }
             if (!empty($settings->app_name)) {
                 $brandName = $settings->app_name;
@@ -1057,7 +1057,7 @@
                                     $price = $stock && $stock->selling_price > 0 ? $stock->selling_price : $p->price;
                                     $displayPrice = floor($price) + 0.9;
                                     $img = $p->icon
-                                        ? asset('storage/' . $p->icon)
+                                        ? Storage::disk('r2')->url($p->icon)
                                         : 'https://placehold.co/200x200/ecfdf5/10b981?text=' .
                                             urlencode(substr($p->product_name, 0, 1));
                                 @endphp

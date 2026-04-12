@@ -52,7 +52,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="border rounded p-2 bg-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                                         <img id="logoPreview"
-                                            src="{{ $settings->logo ? asset('storage/'.$settings->logo) : 'https://placehold.co/100x100?text=Logo' }}"
+                                            src="{{ $settings->logo ? Storage::disk('r2')->url($settings->logo) : 'https://placehold.co/100x100?text=Logo' }}"
                                             alt="Logo" class="img-fluid" style="max-height: 100%;">
                                     </div>
                                     <div class="flex-grow-1">
@@ -68,7 +68,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="border rounded p-2 bg-dark d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                                         <img id="faviconPreview"
-                                            src="{{ $settings->favicon ? asset('storage/'.$settings->favicon) : 'https://placehold.co/50x50?text=Fav' }}"
+                                            src="{{ $settings->favicon ? Storage::disk('r2')->url($settings->favicon) : 'https://placehold.co/50x50?text=Fav' }}"
                                             alt="Favicon" class="img-fluid" style="max-height: 100%;">
                                     </div>
                                     <div class="flex-grow-1">
@@ -102,7 +102,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="border rounded p-2 bg-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                                         <img id="loginLogoPreview"
-                                            src="{{ $settings->login_logo ? asset('storage/'.$settings->login_logo) : 'https://placehold.co/100x100?text=Login' }}"
+                                            src="{{ $settings->login_logo ? Storage::disk('r2')->url($settings->login_logo) : 'https://placehold.co/100x100?text=Login' }}"
                                             alt="Login Logo" class="img-fluid" style="max-height: 100%;">
                                     </div>
                                     <div class="flex-grow-1">

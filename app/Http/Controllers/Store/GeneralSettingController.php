@@ -46,9 +46,9 @@ class GeneralSettingController extends Controller
         $uploadFile = function ($fileKey, $path) use ($request, $settings) {
             if ($request->hasFile($fileKey)) {
                 if ($settings->{$fileKey}) {
-                    Storage::disk('public')->delete($settings->{$fileKey});
+                    Storage::disk('r2')->delete($settings->{$fileKey});
                 }
-                return $request->file($fileKey)->store($path, 'public');
+                return $request->file($fileKey)->store($path, 'r2');
             }
             return $settings->{$fileKey};
         };

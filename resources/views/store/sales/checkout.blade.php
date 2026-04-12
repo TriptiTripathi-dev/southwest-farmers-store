@@ -95,7 +95,7 @@
                                 <tr>
                                     <td>
                                         <div class="product-info">
-                                            <img src="{{ $item->product->image ? asset('storage/'.$item->product->image) : 'https://placehold.co/100x100?text=F' }}" class="product-thumb">
+                                            <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/100x100?text=F' }}" class="product-thumb">
                                             <div class="min-w-0">
                                                 <div class="fw-bold text-dark product-name text-truncate" style="font-size: 15px;">{{ $item->product->product_name }}</div>
                                                 <small class="text-muted d-block" style="font-size: 12px;">${{ number_format($rp, 2) }} / {{ $item->product->unit_type }}</small>

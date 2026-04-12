@@ -13,7 +13,7 @@
         $brand_name = 'Home Food Distributors';
         $settings = \App\Models\StoreSetting::first();
         if($settings && $settings->login_logo) {
-            $login_logo = asset('storage/' . $settings->login_logo);
+            $login_logo = Storage::disk('r2')->url($settings->login_logo);
         }
         if($settings && $settings->app_name) {
             $brand_name = $settings->app_name;

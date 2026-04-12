@@ -59,9 +59,9 @@ class HomePageSettingController extends Controller
 
         if ($request->hasFile('hero_image')) {
             if ($settings->hero_image) {
-                Storage::disk('public')->delete($settings->hero_image);
+                Storage::disk('r2')->delete($settings->hero_image);
             }
-            $data['hero_image'] = $request->file('hero_image')->store('website/home', 'public');
+            $data['hero_image'] = $request->file('hero_image')->store('website/home', 'r2');
         }
 
         $settings->update($data);

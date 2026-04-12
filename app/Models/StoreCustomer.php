@@ -40,7 +40,7 @@ class StoreCustomer extends Authenticatable
     public function getImageUrlAttribute()
     {
         return $this->image 
-            ? Storage::url($this->image) 
+            ? Storage::disk('r2')->url($this->image) 
             : 'https://placehold.co/100x100?text=No+Image';
     }
 

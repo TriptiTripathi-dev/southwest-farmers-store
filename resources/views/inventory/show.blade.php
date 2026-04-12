@@ -87,7 +87,7 @@
                                     <label class="small text-muted fw-bold text-uppercase">Your Payment Proof</label>
                                     @if($stockRequest->store_payment_proof)
                                         <div class="mt-2 p-3 border rounded">
-                                            <a href="{{ Storage::url($stockRequest->store_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                            <a href="{{ Storage::disk('r2')->url($stockRequest->store_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
                                                 <i class="mdi mdi-file-document me-1"></i> View Uploaded File
                                             </a>
                                             <div class="mt-2 small text-muted"><strong>Remarks:</strong> {{ $stockRequest->store_remarks }}</div>
@@ -102,7 +102,7 @@
                                     <label class="small text-muted fw-bold text-uppercase">Warehouse Verification</label>
                                     @if($stockRequest->warehouse_payment_proof)
                                         <div class="mt-2 p-3 border rounded">
-                                            <a href="{{ Storage::url($stockRequest->warehouse_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-success w-100">
+                                            <a href="{{ Storage::disk('r2')->url($stockRequest->warehouse_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-success w-100">
                                                 <i class="mdi mdi-check-circle me-1"></i> View Warehouse Receipt
                                             </a>
                                             <div class="mt-2 small text-muted"><strong>Notes:</strong> {{ $stockRequest->warehouse_remarks }}</div>

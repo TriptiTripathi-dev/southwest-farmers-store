@@ -58,7 +58,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="border rounded p-2 bg-white d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
                                     <img id="missionPreview"
-                                        src="{{ $settings->mission_image ? asset('storage/'.$settings->mission_image) : 'https://placehold.co/400x400?text=Mission' }}"
+                                        src="{{ $settings->mission_image ? Storage::disk('r2')->url($settings->mission_image) : 'https://placehold.co/400x400?text=Mission' }}"
                                         alt="Mission Image" class="img-fluid" style="max-height: 100%;">
                                 </div>
                                 <div class="flex-grow-1">

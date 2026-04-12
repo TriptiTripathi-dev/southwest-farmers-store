@@ -67,7 +67,7 @@
                             @foreach($order->items as $item)
                             <div class="p-4 border-bottom d-flex gap-4 align-items-center">
                                 <div class="flex-shrink-0">
-                                    <img src="{{ $item->product->image ? asset('storage/' . $item->product->image) : 'https://placehold.co/80x80/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}" 
+                                    <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/80x80/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}" 
                                          class="rounded-3 border" 
                                          style="width: 80px; height: 80px; object-fit: contain; background: #f8fafc;">
                                 </div>

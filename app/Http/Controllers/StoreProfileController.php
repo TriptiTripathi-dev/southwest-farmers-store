@@ -61,12 +61,12 @@ class StoreProfileController extends Controller
         if ($request->hasFile('profile')) {
             
             // Delete old image if it exists
-            if ($store->profile && Storage::disk('public')->exists($store->profile)) {
-                Storage::disk('public')->delete($store->profile);
+            if ($store->profile && Storage::disk('r2')->exists($store->profile)) {
+                Storage::disk('r2')->delete($store->profile);
             }
 
             // Store new image
-            $path = $request->file('profile')->store('store-profiles', 'public');
+            $path = $request->file('profile')->store('store-profiles', 'r2');
             
             // Add path to StoreDetail data array
             $data['profile'] = $path;

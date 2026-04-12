@@ -7,7 +7,7 @@
                 $settings = \App\Models\StoreSetting::first();
                 if ($settings) {
                     if (!empty($settings->logo)) {
-                        $brandLogo = asset('storage/' . $settings->logo);
+                        $brandLogo = Storage::disk('r2')->url($settings->logo);
                     }
                     if (!empty($settings->app_name)) {
                         $brandName = $settings->app_name;

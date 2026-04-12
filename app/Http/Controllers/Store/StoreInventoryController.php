@@ -328,7 +328,7 @@ class StoreInventoryController extends Controller
         if ($request->hasFile('store_payment_proof')) {
             try {
 
-                $path = Storage::putFile(
+                $path = Storage::disk('r2')->putFile(
                     'payment_proofs',
                     $request->file('store_payment_proof')
                 );

@@ -114,7 +114,7 @@
                     <div class="col-6 col-md-3 col-lg-2 reveal active" style="transition-delay: {{ ($index % 6) * 0.1 }}s">
                         <div class="product-card-enhanced h-100">
                             <div class="product-image-container">
-                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
+                                <img src="{{ $product->image ? Storage::disk('r2')->url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
                                      class="img-fluid" alt="{{ $product->product_name }}">
                                 <div class="cart-overlay">
                                     <form action="{{ route('website.cart.store') }}" method="POST">

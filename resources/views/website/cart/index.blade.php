@@ -45,7 +45,7 @@
                                         id="item-{{ $item->id }}">
                                         <!-- Product Image -->
                                         <div class="flex-shrink-0">
-                                            <img src="{{ $item->product->image ? asset('storage/' . $item->product->image) : 'https://placehold.co/120x120/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}"
+                                            <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/120x120/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}"
                                                 class="rounded-3" alt="{{ $item->product->product_name }}"
                                                 style="width: 120px; height: 120px; object-fit: contain; background: #f8fafc;">
                                         </div>
@@ -58,7 +58,7 @@
                                                     <span class="badge bg-theme bg-opacity-10 text-theme fw-bold rounded-pill d-flex align-items-center gap-1"
                                                         style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
                                                         <div class="rounded-circle overflow-hidden border shadow-sm" style="width: 16px; height: 16px; background: #fff;">
-                                                            <img src="{{ $cart->store->profile ? asset('storage/' . $cart->store->profile) : 'https://ui-avatars.com/api/?name=' . urlencode($cart->store->store_name) . '&background=019934&color=fff' }}" 
+                                                            <img src="{{ $cart->store->profile ? Storage::disk('r2')->url($cart->store->profile) : 'https://ui-avatars.com/api/?name=' . urlencode($cart->store->store_name) . '&background=019934&color=fff' }}" 
                                                                  class="w-100 h-100 object-fit-cover" alt="S">
                                                         </div>
                                                         {{ $cart->store->store_name }}

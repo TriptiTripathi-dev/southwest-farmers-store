@@ -5,7 +5,7 @@
             $logo = asset('assets/images/logo.jpg');
             $settings = \App\Models\StoreSetting::first();
             if ($settings && $settings->logo) {
-                $logo = asset('storage/' . $settings->logo);
+                $logo = Storage::disk('r2')->url($settings->logo);
                 
             }
 

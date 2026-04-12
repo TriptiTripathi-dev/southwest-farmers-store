@@ -110,7 +110,7 @@ class StoreProductController extends Controller
             'price' => $request->selling_price,
             'lead_time_days' => $request->lead_time_days,
             'requires_expiration' => $request->has('requires_expiration'),
-            'icon' => $request->hasFile('image') ? $request->file('image')->store('products', 'public') : null,
+            'icon' => $request->hasFile('image') ? $request->file('image')->store('products', 'r2') : null,
             'is_active' => true
         ]);
 
@@ -181,7 +181,7 @@ class StoreProductController extends Controller
             ]);
 
             if ($request->hasFile('image')) {
-                $product->update(['icon' => $request->file('image')->store('products', 'public')]);
+                $product->update(['icon' => $request->file('image')->store('products', 'r2')]);
             }
         }
 

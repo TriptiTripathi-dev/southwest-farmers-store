@@ -42,7 +42,7 @@
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 @if ($item->product->image)
-                                                    <img src="{{ asset('storage/' . $item->product->image) }}"
+                                                    <img src="{{ Storage::disk('r2')->url($item->product->image) }}"
                                                         class="rounded me-3" width="40" height="40"
                                                         style="object-fit:cover;">
                                                 @else

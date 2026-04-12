@@ -207,7 +207,7 @@
                             </div>
                         </div>
 
-                        <img src="{{ ($homeSettings?->hero_image) ? asset('storage/'.$homeSettings->hero_image) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80' }}" 
+                        <img src="{{ ($homeSettings?->hero_image) ? Storage::disk('r2')->url($homeSettings->hero_image) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80' }}" 
                              alt="Fresh Produce" 
                              class="img-fluid rounded-[3rem] shadow-2xl floating-element"
                              style="border: 15px solid white;">
@@ -259,7 +259,7 @@
                     <div class="col-6 col-md-4 col-lg-3 reveal" style="transition-delay: {{ ($index % 4) * 0.1 }}s">
                         <div class="product-card-enhanced h-100">
                             <div class="product-image-container">
-                                <img src="{{ $product->image ? Storage::url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
+                                <img src="{{ $product->image ? Storage::disk('r2')->url($product->image) : 'https://placehold.co/400x400/e6ffef/009A36?text=Fresh+Product' }}" 
                                      class="img-fluid" alt="{{ $product->product_name }}">
                                 <div class="cart-overlay">
                                     <form action="{{ route('website.cart.store') }}" method="POST">

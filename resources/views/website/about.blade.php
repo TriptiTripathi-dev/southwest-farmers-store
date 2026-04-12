@@ -14,7 +14,7 @@
         <div class="container py-5">
             <div class="row g-5 align-items-center">
                 <div class="col-lg-6">
-                    <img src="{{ $settings->mission_image ? asset('storage/'.$settings->mission_image) : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80' }}" 
+                    <img src="{{ $settings->mission_image ? Storage::disk('r2')->url($settings->mission_image) : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80' }}" 
                          class="img-fluid rounded-4 shadow-lg" alt="Our Farm">
                 </div>
                 <div class="col-lg-6">

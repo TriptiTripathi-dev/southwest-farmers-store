@@ -104,7 +104,7 @@
                 <!-- Product Image -->
                 <div class="col-lg-6">
                     <div class="product-gallery">
-                        <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://placehold.co/600x600/e6ffef/009A36?text=' . urlencode($product->product_name) }}" 
+                        <img src="{{ $product->image ? Storage::disk('r2')->url($product->image) : 'https://placehold.co/600x600/e6ffef/009A36?text=' . urlencode($product->product_name) }}" 
                              class="main-img" alt="{{ $product->product_name }}">
                     </div>
                 </div>

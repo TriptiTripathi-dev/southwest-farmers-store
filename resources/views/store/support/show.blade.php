@@ -103,7 +103,7 @@
                                         @if($msg->attachments->count() > 0)
                                             <div class="mt-2 pt-2 border-top border-secondary border-opacity-10">
                                                 @foreach($msg->attachments as $att)
-                                                    <a href="{{ Storage::url($att->file_path) }}" target="_blank" class="d-inline-flex align-items-center badge bg-white text-dark border p-2 me-1 text-decoration-none shadow-sm mt-1">
+                                                    <a href="{{ Storage::disk('r2')->url($att->file_path) }}" target="_blank" class="d-inline-flex align-items-center badge bg-white text-dark border p-2 me-1 text-decoration-none shadow-sm mt-1">
                                                         <i class="mdi mdi-file-document-outline me-1 text-primary"></i> {{ $att->file_name }}
                                                     </a>
                                                 @endforeach

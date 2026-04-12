@@ -119,7 +119,7 @@ class StoreSupportTicketController extends Controller
         // 3. UPDATE: Handle Attachments
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('support-attachments', 'public');
+                $path = $file->store('support-attachments', 'r2');
                 
                 SupportAttachment::create([
                     'ticket_id' => $ticket->id,

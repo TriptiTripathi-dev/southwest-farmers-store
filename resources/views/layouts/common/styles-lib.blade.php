@@ -8,7 +8,7 @@
     if(auth()->check()) {
         $settings = \App\Models\StoreSetting::where('store_id', auth()->id())->first();
         if($settings && $settings->favicon) {
-            $favicon = asset('storage/' . $settings->favicon);
+            $favicon = Storage::disk('r2')->url($settings->favicon);
         }
     }
 @endphp

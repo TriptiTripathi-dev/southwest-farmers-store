@@ -98,7 +98,7 @@ class StoreCustomerController extends Controller
         $data['store_id'] = $user->store_id;
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('customers', 'public');
+            $data['image'] = $request->file('image')->store('customers', 'r2');
         }
 
         StoreCustomer::create($data);
@@ -134,9 +134,9 @@ class StoreCustomerController extends Controller
 
         if ($request->hasFile('image')) {
             if ($customer->image) {
-                Storage::disk('public')->delete($customer->image);
+                Storage::disk('r2')->delete($customer->image);
             }
-            $data['image'] = $request->file('image')->store('customers', 'public');
+            $data['image'] = $request->file('image')->store('customers', 'r2');
         }
 
         $customer->update($data);
@@ -151,7 +151,7 @@ class StoreCustomerController extends Controller
         $customer = StoreCustomer::where('id', $id)->where('store_id', $user)->firstOrFail();
 
         if ($customer->image) {
-            Storage::disk('public')->delete($customer->image);
+            Storage::disk('r2')->delete($customer->image);
         }
         
         $customer->delete();
