@@ -76,12 +76,15 @@
                                 @endif
                             </td>
                             <td>
-                             
-                                <form action="{{ route('store.promotions.destroy', $promo->id) }}" method="POST" onsubmit="return confirm('Delete this promotion?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>
-                                </form>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ route('store.promotions.destroy', $promo->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-light border shadow-sm text-danger delete-btn" title="Delete Promotion">
+                                            <i class="mdi mdi-trash-can fs-6"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @empty

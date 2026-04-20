@@ -35,14 +35,14 @@
                                     <td>{{ $page->updated_at->format('M d, Y H:i') }}</td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ route('settings.legal.edit', $page->id) }}" class="btn btn-sm btn-light-primary btn-icon rounded-circle">
-                                                <i class="mdi mdi-pencil"></i>
+                                            <a href="{{ route('settings.legal.edit', $page->id) }}" class="btn btn-sm btn-light border shadow-sm text-primary" title="Edit Page">
+                                                <i class="mdi mdi-pencil fs-6"></i>
                                             </a>
-                                            <form action="{{ route('settings.legal.destroy', $page->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                            <form action="{{ route('settings.legal.destroy', $page->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-light-danger btn-icon rounded-circle">
-                                                    <i class="mdi mdi-trash-can"></i>
+                                                <button type="button" class="btn btn-sm btn-light border shadow-sm text-danger delete-btn" title="Delete Page">
+                                                    <i class="mdi mdi-trash-can fs-6"></i>
                                                 </button>
                                             </form>
                                         </div>

@@ -47,6 +47,6 @@ class AuthenticatedSessionController extends Controller
         // Specific store session keys can be cleared here if needed
         // but DO NOT invalidate the entire session to keep customer logged in
 
-        return redirect('/');
+        return redirect()->route('login')->with('success', 'You have been logged out.');
     }
 }

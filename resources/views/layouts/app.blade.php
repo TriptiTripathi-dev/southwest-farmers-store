@@ -137,6 +137,37 @@
             };
         }
     </script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                e.preventDefault();
+                const form = deleteBtn.closest('form');
+                if (!form) return;
+
+                const title = deleteBtn.getAttribute('title') || 'Are you sure?';
+                
+                Swal.fire({
+                    title: title,
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, delete it!',
+                    customClass: {
+                        confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold',
+                        cancelButton: 'btn btn-secondary rounded-pill px-4 ms-2 fw-bold'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            }
+        });
+    </script>
     @stack('scripts')
 
 </body>

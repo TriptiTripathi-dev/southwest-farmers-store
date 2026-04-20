@@ -123,39 +123,12 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-
-            // SweetAlert Delete Confirmation
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const form = this.closest('form');
-                    Swal.fire({
-                        title: 'Delete this Role?',
-                        text: "Users assigned to this role might lose access. You cannot revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#64748b',
-                        confirmButtonText: 'Yes, delete it!',
-                        customClass: {
-                            confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold',
-                            cancelButton: 'btn btn-secondary rounded-pill px-4 ms-2 fw-bold'
-                        },
-                        buttonsStyling: false
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
-                        }
-                    });
-                });
             });
         });
     </script>

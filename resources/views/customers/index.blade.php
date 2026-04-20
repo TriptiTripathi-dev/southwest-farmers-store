@@ -70,16 +70,16 @@
                                     </td>
                                     
                                     <td class=" pe-4 py-3">
-                                        <div class="btn-group shadow-sm" role="group">
+                                        <div class="d-flex justify-content-end gap-2">
                                             @if(Auth::user()->hasPermission('manage_customers'))
-                                            <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-light border" title="Edit">
-                                                <i class="mdi mdi-pencil text-primary"></i>
+                                            <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-light border shadow-sm text-primary" title="Edit Customer">
+                                                <i class="mdi mdi-pencil fs-6"></i>
                                             </a>
                                             
-                                            <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this customer?');">
+                                            <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" class="d-inline">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-light border" title="Delete">
-                                                    <i class="mdi mdi-delete text-danger"></i>
+                                                <button type="button" class="btn btn-sm btn-light border shadow-sm text-danger delete-btn" title="Delete Customer">
+                                                    <i class="mdi mdi-delete fs-6"></i>
                                                 </button>
                                             </form>
                                             @endif

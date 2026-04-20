@@ -50,7 +50,12 @@ class StoreInventoryController extends Controller
             ->groupBy('product_id')
             ->pluck('qty', 'product_id');
 
-        return view('inventory.index', compact('stocks', 'inTransitByProduct'));
+        // Statistics
+        $totalSku = StoreStock::where('store_id', $user->store_id)->count();
+        $outOfStockCount = StoreStock::where('store_id', $user->store_id)->where('quantity', '<=', 0)->count();
+        $totalInTransit = $inTransitByProduct->sum();
+
+        return view('inventory.index', compact('stocks', 'inTransitByProduct', 'totalSku', 'outOfStockCount', 'totalInTransit'));
     }
 
     public function stockReport(Request $request)

@@ -127,10 +127,10 @@
                                         @endif
 
                                         @if($req->status == 'pending')
-                                            <form action="{{ route('inventory.requests.destroy', $req->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this request?');">
+                                            <form action="{{ route('inventory.requests.destroy', $req->id) }}" method="POST" class="d-inline">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel">
-                                                    <i class="mdi mdi-trash-can-outline"></i>
+                                                <button type="button" class="btn btn-sm btn-light border shadow-sm text-danger delete-btn" title="Cancel Request">
+                                                    <i class="mdi mdi-trash-can-outline fs-6"></i>
                                                 </button>
                                             </form>
                                         @endif
@@ -252,8 +252,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
     <script>

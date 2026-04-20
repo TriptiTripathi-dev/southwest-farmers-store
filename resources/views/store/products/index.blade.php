@@ -279,7 +279,6 @@
     @include('store.products._import-modal')
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -328,27 +327,6 @@
                             }
                         });
                     }
-                });
-            });
-
-            // Delete Confirmation
-            $('.delete-btn').click(function() {
-                var form = $(this).closest('form');
-                Swal.fire({
-                    title: 'Delete this product?',
-                    text: "You won't be able to revert this action!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Yes, delete it!',
-                    customClass: {
-                        confirmButton: 'btn btn-danger rounded-pill px-4',
-                        cancelButton: 'btn btn-secondary rounded-pill px-4 ms-2'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) form.submit();
                 });
             });
         </script>

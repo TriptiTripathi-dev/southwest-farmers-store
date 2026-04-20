@@ -44,14 +44,14 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ route('store.enquiries.show', $enquiry->id) }}" class="btn btn-sm btn-soft-primary rounded-pill px-3">
-                                                <i class="mdi mdi-eye-outline me-1"></i> View
+                                            <a href="{{ route('store.enquiries.show', $enquiry->id) }}" class="btn btn-sm btn-light border shadow-sm text-primary" title="View Enquiry">
+                                                <i class="mdi mdi-eye fs-6"></i>
                                             </a>
-                                            <form action="{{ route('store.enquiries.destroy', $enquiry->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this enquiry?')">
+                                            <form action="{{ route('store.enquiries.destroy', $enquiry->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-soft-danger rounded-pill px-3">
-                                                    <i class="mdi mdi-trash-can-outline me-1"></i> Delete
+                                                <button type="button" class="btn btn-sm btn-light border shadow-sm text-danger delete-btn" title="Delete Enquiry">
+                                                    <i class="mdi mdi-trash-can fs-6"></i>
                                                 </button>
                                             </form>
                                         </div>

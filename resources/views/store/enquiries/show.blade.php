@@ -66,10 +66,10 @@
                             </div>
                         </div>
                         <div class="card-footer bg-white border-top py-3">
-                            <form action="{{ route('store.enquiries.destroy', $enquiry->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this enquiry?')">
+                            <form action="{{ route('store.enquiries.destroy', $enquiry->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold">
+                                <button type="button" class="btn btn-outline-danger w-100 rounded-pill py-2 fw-bold delete-btn" title="Delete Enquiry">
                                     <i class="mdi mdi-trash-can-outline me-2"></i> Delete Enquiry
                                 </button>
                             </form>

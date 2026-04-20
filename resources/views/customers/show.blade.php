@@ -117,10 +117,10 @@
                                     <h6 class="text-danger fw-bold mb-1">Delete Customer</h6>
                                     <p class="text-muted small mb-0">Once deleted, this action cannot be undone.</p>
                                 </div>
-                                <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this customer?');">
+                                <form action="{{ route('customers.destroy', $customer->id) }}" method="POST">
                                     @csrf 
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill">
+                                    <button type="button" class="btn btn-outline-danger btn-sm px-3 rounded-pill delete-btn" title="Delete Customer">
                                         <i class="mdi mdi-delete me-1"></i> Delete
                                     </button>
                                 </form>

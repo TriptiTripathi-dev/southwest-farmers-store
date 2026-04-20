@@ -220,8 +220,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
     <script>
@@ -234,29 +232,6 @@
             }).on('select2:select select2:unselect', function (e) {
                 // Auto-submit the form when a category is selected or cleared
                 $(this).closest('form').submit();
-            });
-
-            // Delete Confirmation
-            $('.delete-btn').click(function() {
-                var form = $(this).closest('form');
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "This will delete the subcategory permanently! You won't be able to revert this.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Yes, delete it!',
-                    customClass: {
-                        confirmButton: 'btn btn-danger rounded-pill px-4',
-                        cancelButton: 'btn btn-secondary rounded-pill px-4 ms-2'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
             });
         });
     </script>
