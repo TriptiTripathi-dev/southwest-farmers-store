@@ -109,8 +109,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory/request/generate-po', [StoreInventoryController::class, 'generateWarehousePo'])->name('inventory.request.generate-po');
     Route::get('/reports/stock', [StoreInventoryController::class, 'stockReport'])->name('store.reports.stock');
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
+    Route::get('/inventory/order/create', [StoreInventoryController::class, 'createOrderInventory'])->name('inventory.order.create');
+    Route::post('/inventory/order/store', [StoreInventoryController::class, 'storeOrderInventory'])->name('inventory.order.store');
+    Route::get('/inventory/search-products', [StoreInventoryController::class, 'searchProducts'])->name('inventory.search-products');
     Route::get('/inventory/requests/{id}', [StoreInventoryController::class, 'showRequest'])->name('inventory.requests.show');
     Route::get('/inventory/history/{id}', [StoreInventoryController::class, 'history'])->name('inventory.history');
+    Route::post('/inventory/requests/{id}/review', [StoreInventoryController::class, 'reviewRequest'])->name('inventory.requests.review');
+    Route::post('/inventory/requests/{id}/approve', [StoreInventoryController::class, 'approveRequest'])->name('inventory.requests.approve');
+    Route::post('/inventory/requests/{id}/receive', [StoreInventoryController::class, 'processReceive'])->name('inventory.requests.receive');
     Route::post('/inventory/requests/upload-proof', [StoreInventoryController::class, 'uploadPaymentProof'])->name('inventory.requests.upload_proof');
     Route::delete('/inventory/requests/{id}', [StoreInventoryController::class, 'cancelRequest'])->name('inventory.requests.destroy');
     Route::get('/stocks/requests/sample', [StoreInventoryController::class, 'downloadSampleCsv'])->name('inventory.requests.sample');

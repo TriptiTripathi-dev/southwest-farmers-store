@@ -143,7 +143,13 @@ class StoreInventoryController extends Controller
             ->first();
 
         if (! $stock) {
-            return back()->with('error', 'This product is not mapped to your store inventory yet.');
+            $stock = StoreStock::create([
+                'store_id' => $storeId,
+                'product_id' => $productId,
+                'quantity' => 0,
+                'min_stock' => 0,
+                'max_stock' => 0,
+            ]);
         }
 
         $hasOpenRequest = StockRequest::where('store_id', $storeId)
@@ -265,37 +271,176 @@ class StoreInventoryController extends Controller
         $storeId = $user->store_id ?? $user->id;
         $status = $request->get('status', 'pending');
         $search = $request->input('search');
-        $query = StockRequest::where('store_id', $storeId)->with('product');
+        $departmentId = $request->input('department_id');
+        $progress = $request->input('receiving_progress');
+        $date = $request->input('date');
+
+        $query = StockRequest::where('store_id', $storeId)
+            ->with(['product', 'department', 'items.product', 'requestedBy', 'reviewedBy']);
+
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('id', 'like', "%{$search}%")
-                    ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('upc', 'like', "%{$search}%")->orWhere('barcode', 'like', "%{$search}%"));
+                $q->where('request_number', 'like', "%{$search}%")
+                  ->orWhere('id', 'like', "%{$search}%")
+                  ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('upc', 'like', "%{$search}%"))
+                  ->orWhereHas('items.product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('upc', 'like', "%{$search}%"));
             });
         }
+
+        if ($departmentId) {
+            $query->where('department_id', $departmentId);
+        }
+
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+
         if ($status === 'history') {
             $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
+            if ($request->input('received_by')) {
+                 $query->where('received_by_name', 'like', "%{$request->input('received_by')}%");
+            }
         } elseif ($status === 'in_transit') {
             $query->where('status', StockRequest::STATUS_DISPATCHED);
+            if ($progress) {
+                $query->where('receiving_progress', $progress);
+            }
         } else {
-            $query->where('status', $status);
+            // Pending / Inventory Request
+            $query->whereIn('status', [StockRequest::STATUS_PENDING, StockRequest::STATUS_AWAITING_APPROVAL]);
         }
+
         $requests = $query->latest()->paginate(15)->appends($request->query());
-        $pendingCount = StockRequest::where('store_id', $storeId)->where('status', 'pending')->count();
+
+        $pendingCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['pending', 'awaiting_approval'])->count();
         $inTransitCount = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->count();
-        $completedCount = StockRequest::where('store_id', $storeId)->where('status', 'completed')->count();
-        $rejectedCount = StockRequest::where('store_id', $storeId)->where('status', 'rejected')->count();
-        $products = Product::where('is_active', true)
-            ->select('id', 'product_name', 'sku', 'barcode', 'unit')
-            ->orderBy('product_name')
-            ->get();
+        $completedCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['completed', 'rejected'])->count();
+
+        $departments = \App\Models\Department::where('is_active', true)->orderBy('name')->get();
+
         return view('inventory.requests', compact(
             'requests',
-            'products',
             'pendingCount',
             'inTransitCount',
             'completedCount',
-            'rejectedCount'
+            'departments'
         ));
+    }
+
+    public function createOrderInventory()
+    {
+        $departments = \App\Models\Department::where('is_active', true)->orderBy('name')->get();
+        return view('inventory.create', compact('departments'));
+    }
+
+    public function searchProducts(Request $request)
+    {
+        $term = $request->input('term');
+        $departmentId = $request->input('department_id');
+
+        $query = Product::where('is_active', true);
+
+        if ($departmentId) {
+            $query->where('department_id', $departmentId);
+        }
+
+        if ($term) {
+            $query->where(function ($q) use ($term) {
+                $q->where('product_name', 'ilike', "%{$term}%")
+                  ->orWhere('upc', 'ilike', "%{$term}%")
+                  ->orWhere('sku', 'ilike', "%{$term}%");
+            });
+        }
+
+        $products = $query->limit(20)->get();
+
+        return response()->json($products);
+    }
+
+    public function storeOrderInventory(Request $request)
+    {
+        $request->validate([
+            'department_id' => 'required|exists:departments,id',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'gm_email' => 'nullable|email',
+            'vp_email' => 'nullable|email',
+        ]);
+
+        $user = Auth::user();
+        $storeId = $user->store_id;
+
+        // Requirement: Only 1 order per department per day
+        $exists = StockRequest::where('store_id', $storeId)
+            ->where('department_id', $request->department_id)
+            ->whereDate('created_at', now())
+            ->exists();
+
+        if ($exists) {
+            return back()->with('error', 'An order has already been placed for this department today. You can only place one order per department per day.')->withInput();
+        }
+
+        $stockRequest = StockRequest::create([
+            'store_id' => $storeId,
+            'request_number' => StockRequest::generateRequestNumber($storeId),
+            'department_id' => $request->department_id,
+            'gm_email' => $request->gm_email,
+            'gm_phone' => $request->gm_phone,
+            'vp_email' => $request->vp_email,
+            'vp_phone' => $request->vp_phone,
+            'store_remarks' => $request->remarks,
+            'requested_by' => $user->id,
+            'status' => StockRequest::STATUS_PENDING,
+        ]);
+
+        foreach ($request->products as $item) {
+            $product = Product::find($item['product_id']);
+            StockRequestItem::create([
+                'stock_request_id' => $stockRequest->id,
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'unit_cost' => $product->cost_price ?? 0,
+                'total_cost' => ($product->cost_price ?? 0) * $item['quantity'],
+            ]);
+        }
+
+        $stockRequest->calculateTotals();
+
+        return redirect()->route('inventory.requests')->with('success', 'Order Inventory request created successfully. Please review and mark as Reviewed.');
+    }
+
+    public function reviewRequest($id)
+    {
+        $user = Auth::user();
+        $request = StockRequest::findOrFail($id);
+
+        $request->update([
+            'reviewed' => true,
+            'reviewed_by' => $user->id,
+            'reviewed_at' => now(),
+            'status' => StockRequest::STATUS_AWAITING_APPROVAL
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Order marked as Reviewed and is now Awaiting Approval.']);
+    }
+
+    public function approveRequest($id)
+    {
+        $request = StockRequest::findOrFail($id);
+
+        if (!$request->reviewed) {
+            return response()->json(['success' => false, 'message' => 'Order must be reviewed before approval.'], 422);
+        }
+
+        // Logic for approval - typically changes status to dispatched or approved
+        $request->update([
+            'status' => StockRequest::STATUS_DISPATCHED, // Or some other workflow state
+            'approved_at' => now(),
+            'approved_by' => Auth::id()
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Order approved and sent for dispatch.']);
     }
 
     private function getInTransitQuantity(int $storeId, int $productId): int
@@ -304,6 +449,71 @@ class StoreInventoryController extends Controller
             ->where('product_id', $productId)
             ->where('status', StockRequest::STATUS_DISPATCHED)
             ->sum(DB::raw('COALESCE(fulfilled_quantity, requested_quantity)'));
+    }
+
+    public function processReceive(Request $request, $id)
+    {
+        $request->validate([
+            'received_by_name' => 'required|string|max:255',
+            'items' => 'required|array',
+            'items.*.received_qty' => 'required|integer|min:0',
+        ]);
+
+        $stockRequest = StockRequest::with('items.product')->findOrFail($id);
+        $totalReceived = 0;
+        $totalExpected = 0;
+
+        foreach ($request->items as $itemId => $data) {
+            $item = StockRequestItem::findOrFail($itemId);
+            $qty = (int) $data['received_qty'];
+            
+            if ($qty > 0) {
+                $item->received_quantity = ($item->received_quantity ?? 0) + $qty;
+                $item->save();
+
+                // Update Store Stock
+                $storeStock = StoreStock::firstOrCreate(
+                    ['store_id' => $stockRequest->store_id, 'product_id' => $item->product_id],
+                    ['quantity' => 0]
+                );
+                $storeStock->increment('quantity', $qty);
+            }
+        }
+
+        // Update overall request status
+        $stockRequest->refresh();
+        $allReceived = true;
+        $anyReceived = false;
+        $receivedTotalCount = 0;
+
+        foreach ($stockRequest->items as $item) {
+            $expected = $item->dispatched_quantity ?? $item->quantity;
+            $receivedTotalCount += $item->received_quantity;
+            
+            if ($item->received_quantity < $expected) {
+                $allReceived = false;
+            }
+            if ($item->received_quantity > 0) {
+                $anyReceived = true;
+            }
+        }
+
+        $stockRequest->received_by_name = $request->received_by_name;
+        $stockRequest->received_at = now();
+        $stockRequest->received_qty = $receivedTotalCount;
+        
+        if ($allReceived) {
+            $stockRequest->status = StockRequest::STATUS_COMPLETED;
+            $stockRequest->receiving_progress = 'received';
+        } elseif ($anyReceived) {
+            $stockRequest->receiving_progress = 'partially_received';
+        } else {
+            $stockRequest->receiving_progress = 'open';
+        }
+
+        $stockRequest->save();
+
+        return redirect()->route('inventory.requests', ['status' => 'history'])->with('success', 'Inventory received and store stock updated successfully.');
     }
 
     public function showRequest($id)

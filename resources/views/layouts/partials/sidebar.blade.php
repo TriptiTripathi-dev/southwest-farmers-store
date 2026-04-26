@@ -91,7 +91,7 @@
                             <li>
                                 <a href="{{ route('inventory.requests') }}"
                                     class="tp-link {{ request()->is('inventory/requests') ? 'active' : '' }}">
-                                    Stock Requests
+                                    Order Inventory
                                 </a>
                             </li>
                             @endif

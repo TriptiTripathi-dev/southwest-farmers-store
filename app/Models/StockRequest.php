@@ -12,6 +12,18 @@ class StockRequest extends Model
     protected $fillable = [
         'store_id',
         'request_number',
+        'department_id',
+        'reviewed',
+        'reviewed_by',
+        'reviewed_at',
+        'gm_email',
+        'gm_phone',
+        'vp_email',
+        'vp_phone',
+        'received_by_name',
+        'receiving_progress',
+        'received_at',
+        'received_qty',
         'total_items',
         'total_amount',
         'requested_by',
@@ -34,11 +46,15 @@ class StockRequest extends Model
     protected $casts = [
         'verified_at' => 'datetime',
         'approved_at' => 'datetime',
-        'total_amount' => 'decimal:2'
+        'reviewed_at' => 'datetime',
+        'received_at' => 'datetime',
+        'total_amount' => 'decimal:2',
+        'reviewed' => 'boolean'
     ];
 
     // Constants for Status
     const STATUS_PENDING = 'pending';
+    const STATUS_AWAITING_APPROVAL = 'awaiting_approval'; // New status requested
     const STATUS_DISPATCHED = 'dispatched';
     const STATUS_COMPLETED = 'completed';
     const STATUS_REJECTED = 'rejected';
@@ -54,14 +70,24 @@ class StockRequest extends Model
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
 
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
     public function requestedBy()
     {
-        return $this->belongsTo(User::class, 'requested_by');
+        return $this->belongsTo(StoreUser::class, 'requested_by');
+    }
+
+    public function reviewedBy()
+    {
+        return $this->belongsTo(StoreUser::class, 'reviewed_by');
     }
 
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(StoreUser::class, 'approved_by');
     }
 
     // Old relationship (kept for backward compatibility)
