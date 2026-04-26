@@ -9,6 +9,15 @@
             <small class="text-muted">Manage inventory orders and replenishment from warehouse</small>
         </div>
         <div class="d-flex gap-2">
+            <form action="{{ route('inventory.request.generate-po') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-dark fw-bold px-3 rounded-pill shadow-sm">
+                    <i class="mdi mdi-auto-fix me-1"></i> Generate Warehouse PO
+                </button>
+            </form>
+            <button type="button" class="btn btn-success text-white fw-bold px-3 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="mdi mdi-file-excel me-1"></i> Import
+            </button>
             <a href="{{ route('inventory.order.create') }}" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">
                 <i class="mdi mdi-plus me-1"></i> New Order Inventory
             </a>
@@ -276,6 +285,40 @@
         @endif
     </div>
 </div>
+
+    <!-- Bulk Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="{{ route('inventory.requests.import') }}" method="POST" enctype="multipart/form-data" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Bulk Import Stock Requests</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info border-0 shadow-sm small">
+                        <i class="mdi mdi-information me-1"></i>
+                        Required columns: <strong>upc</strong>, <strong>quantity</strong>
+                    </div>
+                    <div class="text-end mb-2">
+                        <a href="{{ route('inventory.requests.sample') }}" class="btn btn-link btn-sm p-0">
+                            <i class="mdi mdi-download me-1"></i> Download Sample CSV
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select CSV File</label>
+                        <input type="file" name="file" class="form-control" required accept=".csv">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success text-white px-4">
+                        <i class="mdi mdi-file-import me-1"></i> Start Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 @push('scripts')
 <script>
