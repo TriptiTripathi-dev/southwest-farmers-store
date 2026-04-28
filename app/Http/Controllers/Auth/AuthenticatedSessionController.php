@@ -28,8 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+
         // Redirect based on role
-        if ($request->user()->hasRole('Cashier')) {
+        if ($user->is_website_manager) {
+            return redirect()->route('settings.home-page');
+        }
+
+        if ($user->hasRole('Cashier')) {
             return redirect()->route('store.sales.pos');
         }
 

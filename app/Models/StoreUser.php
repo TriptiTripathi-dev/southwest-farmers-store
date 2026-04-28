@@ -26,6 +26,7 @@ class StoreUser extends Authenticatable
         'profile',
         'store_role_id',   // Yahan Role ID store karenge
         'is_active',
+        'is_website_manager', // New field for Website Manager role
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -33,6 +34,7 @@ class StoreUser extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
+        'is_website_manager' => 'boolean',
     ];
 
 

@@ -13,6 +13,8 @@
             $user = auth()->user();
             // Since you are not using Spatie's @can, we use your custom hasPermission method
             $can = fn($perm) => $user->hasPermission($perm);
+            
+            $isWebsiteManager = $user->is_website_manager;
             @endphp
 
             {{-- LOGO SECTION --}}
@@ -32,6 +34,7 @@
 
             <ul class="metismenu list-unstyled" id="main-menu-navigation">
 
+                @if(!$isWebsiteManager)
                 <li class="menu-title">Main</li>
 
                 {{-- DASHBOARD --}}
@@ -506,10 +509,12 @@
                 </li>
                 @endif
 
+                @endif {{-- END OF !$isWebsiteManager --}}
+
                 <li class="menu-title mt-2">System</li>
 
                 {{-- SETTINGS --}}
-                @if ($can('view_settings') || $can('update_settings'))
+                @if ($can('view_settings') || $can('update_settings') || $isWebsiteManager)
                 @php
                 $isProfileActive = request()->routeIs('settings.general');
                 $isStoreSettingsActive = request()->routeIs('store.index') || request()->routeIs('store.edit');
@@ -529,7 +534,7 @@
                     </a>
                     <div class="collapse {{ $isSettingsActive ? 'show' : '' }}" id="sidebarSettings">
                         <ul class="nav-second-level">
-                            @if ($can('view_settings'))
+                            @if ($can('view_settings') && !$isWebsiteManager)
                             <li><a href="{{ route('settings.general') }}"
                                     class="tp-link {{ request()->routeIs('settings.general') ? 'active' : '' }}">General
                                     Settings</a></li>
@@ -538,7 +543,7 @@
                             @php
                             $isHomePageActive = request()->routeIs('settings.home-page');
                             @endphp
-                            @if ($can('view_settings'))
+                            @if ($isWebsiteManager || $user->isAdmin())
                             <li>
                                 <a href="{{ route('settings.home-page') }}"
                                     class="tp-link {{ request()->routeIs('settings.home-page') ? 'active' : '' }}">
@@ -571,7 +576,7 @@
                             </li>
                             @endif
 
-                            @if ($can('update_settings'))
+                            @if ($can('update_settings') && !$isWebsiteManager)
                             <li>
                                 <a href="{{ route('store.index') }}"
                                     class="tp-link {{ $isStoreSettingsActive ? 'active' : '' }}">
