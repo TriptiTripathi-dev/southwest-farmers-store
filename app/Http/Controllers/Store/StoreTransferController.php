@@ -90,22 +90,28 @@ class StoreTransferController extends Controller
             DB::beginTransaction();
 
             // Check if we have enough stock
-            $currentStock = StoreStock::where('store_id', $transfer->from_store_id)
+            $storeStock = StoreStock::where('store_id', $transfer->from_store_id)
                 ->where('product_id', $transfer->product_id)
-                ->value('quantity');
+                ->first();
 
-            if (!$currentStock || $currentStock < $transfer->quantity_sent) {
+            if (!$storeStock || $storeStock->quantity < $transfer->quantity_sent) {
                 return back()->with('error', 'Insufficient Stock to fulfill request.');
             }
 
             // Deduct Stock from My Store (Sender)
-            $stockService->deductStockFIFO(
-                Auth::user()->store_id,
-                $transfer->product_id,
-                $transfer->quantity_sent,
-                "Transfer Out: " . $transfer->transfer_number,
-                Auth::id()
-            );
+            $storeStock->decrement('quantity', $transfer->quantity_sent);
+
+            // Log Transaction
+            StockTransaction::create([
+                'store_id' => Auth::user()->store_id,
+                'product_id' => $transfer->product_id,
+                'type' => 'transfer_out',
+                'quantity_change' => -$transfer->quantity_sent,
+                'running_balance' => $storeStock->quantity,
+                'reference_id' => $transfer->transfer_number,
+                'remarks' => "Transfer Out to Store #" . $transfer->to_store_id,
+                'ware_user_id' => null // Since it's a store user
+            ]);
 
             // Update Transfer Status
             $transfer->update([

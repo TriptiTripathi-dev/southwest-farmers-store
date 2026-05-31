@@ -57,8 +57,13 @@
                             <label class="form-label fw-medium text-muted mb-2">Mission Image</label>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="border rounded p-2 bg-white d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                    @php
+                                        $missionImage = $settings->mission_image ?? null;
+                                        $hasImage = !empty($missionImage) && $missionImage !== 'website/about/Ux3zSisPz2XUQ7cF1zwKIwPIPeittXRrCvnd0LqD.jpg';
+                                        $imageUrl = $hasImage ? Storage::disk('r2')->url($missionImage) : 'https://placehold.co/400x400?text=Mission';
+                                    @endphp
                                     <img id="missionPreview"
-                                        src="{{ $settings->mission_image ? Storage::disk('r2')->url($settings->mission_image) : 'https://placehold.co/400x400?text=Mission' }}"
+                                        src="{{ $imageUrl }}"
                                         alt="Mission Image" class="img-fluid" style="max-height: 100%;">
                                 </div>
                                 <div class="flex-grow-1">

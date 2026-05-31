@@ -151,23 +151,33 @@
 @push('scripts')
 <script>
 function cancelPO(id) {
-    if (confirm('Are you sure you want to cancel this purchase order?')) {
-        fetch(`/store/stock-control/requests/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Failed to cancel PO');
-            }
-        });
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Are you sure you want to cancel this purchase order?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, cancel it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/store/stock-control/requests/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    Swal.fire('Error', 'Failed to cancel PO', 'error');
+                }
+            });
+        }
+    });
 }
 
 // Add cursor pointer style

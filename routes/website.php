@@ -26,6 +26,8 @@ Route::name('website.')->group(function () {
 
     Route::middleware('auth:customer')->group(function () {
         Route::get('dashboard', [CustomerAuthController::class, 'dashboard'])->name('dashboard');
+        Route::get('customer/profile', [CustomerAuthController::class, 'profile'])->name('profile');
+        Route::post('customer/profile', [CustomerAuthController::class, 'updateProfile'])->name('profile.update');
         Route::post('customer/logout', [CustomerAuthController::class, 'logout'])->name('logout');
 
         // Cart
@@ -40,6 +42,7 @@ Route::name('website.')->group(function () {
         Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/my-orders/{id}', [OrderController::class, 'show'])->name('orders.show');
         Route::get('/order-success/{invoice}', [OrderController::class, 'success'])->name('checkout.success');
+        Route::match(['GET', 'POST'], '/payment/callback', [\App\Http\Controllers\Website\PaymentCallbackController::class, 'handle'])->name('payment.callback');
     });
 
     // Public Routes
@@ -50,5 +53,6 @@ Route::name('website.')->group(function () {
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
     Route::post('/contact', [HomeController::class, 'submitContact'])->name('contact.submit');
     Route::get('/about', [HomeController::class, 'about'])->name('about');
+    Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
     Route::get('/{slug}', [HomeController::class, 'legalPage'])->name('legal');
 });

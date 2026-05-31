@@ -1839,16 +1839,12 @@
                 }
                 $.get("{{ route('store.sales.terminal-status') }}")
                     .done(function(data) {
-                        // Controller returns normalized: { status: 'Approved', online: true }
-                        // Also handle pattern: { success: true, registered: true }
-                        const isOnline = (data && data.online === true) ||
-                            (data && data.status === 'Approved') ||
-                            (data && data.success === true && data.registered === true);
+                        const isOnline = data && data.online === true;
 
                         if (isOnline) {
                             hardwareAgent.online = true;
                             hardwareAgent.approved = true;
-                            updateHardwareUI('online', data.scanner, data.scale);
+                            updateHardwareUI('online', data.scanner === true, data.scale === true);
                             startScannerPoll(); // begin auto-polling barcode scanner
                         } else {
                             hardwareAgent.online = false;
@@ -1859,7 +1855,9 @@
                     })
                     .fail(function() {
                         hardwareAgent.online = false;
+                        hardwareAgent.approved = false;
                         updateHardwareUI('offline', false, false);
+                        stopScannerPoll();
                     });
             }
 

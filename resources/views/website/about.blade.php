@@ -14,7 +14,12 @@
         <div class="container py-5">
             <div class="row g-5 align-items-center">
                 <div class="col-lg-6">
-                    <img src="{{ $settings->mission_image ? Storage::disk('r2')->url($settings->mission_image) : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80' }}" 
+                    @php
+                        $missionImage = $settings->mission_image ?? null;
+                        $hasImage = !empty($missionImage) && $missionImage !== 'website/about/Ux3zSisPz2XUQ7cF1zwKIwPIPeittXRrCvnd0LqD.jpg';
+                        $imageUrl = $hasImage ? Storage::disk('r2')->url($missionImage) : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+                    @endphp
+                    <img src="{{ $imageUrl }}" 
                          class="img-fluid rounded-4 shadow-lg" alt="Our Farm">
                 </div>
                 <div class="col-lg-6">

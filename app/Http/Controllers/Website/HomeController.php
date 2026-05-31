@@ -67,9 +67,51 @@ class HomeController extends Controller
         
         return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
     }
+    public function subscribeNewsletter(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        $email = $request->email;
+        $storeId = session('store_id');
+
+        $exists = \App\Models\NewsletterSubscriber::where('email', $email)->exists();
+        if ($exists) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are already subscribed to our newsletter!'
+                ], 422);
+            }
+            return back()->with('error', 'You are already subscribed to our newsletter!');
+        }
+
+        \App\Models\NewsletterSubscriber::create([
+            'email' => $email,
+            'store_id' => $storeId,
+        ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for subscribing to our newsletter!'
+            ]);
+        }
+
+        return back()->with('success', 'Thank you for subscribing to our newsletter!');
+    }
+
     public function legalPage($slug)
     {
-        $page = \App\Models\LegalPage::where('slug', $slug)->firstOrFail();
+        $slugs = [$slug];
+        if ($slug === 'terms-and-conditions') {
+            $slugs[] = 'terms-and-condition';
+        } elseif ($slug === 'terms-and-condition') {
+            $slugs[] = 'terms-and-conditions';
+        }
+
+        $page = \App\Models\LegalPage::whereIn('slug', $slugs)->firstOrFail();
         return view('website.legal', compact('page'));
     }
 }

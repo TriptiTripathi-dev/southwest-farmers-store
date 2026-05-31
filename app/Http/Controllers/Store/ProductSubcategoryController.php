@@ -130,9 +130,37 @@ class ProductSubcategoryController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,csv']);
-        Excel::import(new StoreProductSubcategoryImport, $request->file('file'));
-        return back()->with('success', 'Subcategories imported successfully.');
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,csv',
+                'category_id' => 'required'
+            ]);
+
+            // Create Import Task
+            $task = \App\Models\ImportTask::create([
+                'user_id' => Auth::id(),
+                'type' => 'Subcategory',
+                'status' => \App\Models\ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            Excel::import(
+                new StoreProductSubcategoryImport($request->category_id, Auth::id(), $task->id), 
+                $request->file('file')
+            );
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     public function export()

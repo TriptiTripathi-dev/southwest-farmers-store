@@ -52,7 +52,11 @@
             {{-- ── Header ── --}}
             <div class="row align-items-center mb-5 animate-fade-up">
                 <div class="col-auto">
-                    <div class="avatar-large">{{ strtoupper(substr($customer->name, 0, 1)) }}</div>
+                    @if($customer->image)
+                        <img src="{{ Storage::disk('r2')->url($customer->image) }}" class="avatar-large" style="object-fit: cover; border: 4px solid #fff;" alt="{{ $customer->name }}">
+                    @else
+                        <div class="avatar-large">{{ strtoupper(substr($customer->name, 0, 1)) }}</div>
+                    @endif
                 </div>
                 <div class="col">
                     <h2 class="fw-bold text-dark mb-1">
@@ -136,14 +140,19 @@
                 {{-- Account Details --}}
                 <div class="col-md-8">
                     <div class="account-card bg-white p-4 h-100">
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-3 bg-theme-light text-theme" style="width:52px;height:52px;">
-                                <i class="mdi mdi-account-edit-outline fs-3"></i>
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center rounded-3 bg-theme-light text-theme" style="width:52px;height:52px;">
+                                    <i class="mdi mdi-account-edit-outline fs-3"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-0">Account Details</h5>
+                                    <small class="text-muted">Your registered profile information</small>
+                                </div>
                             </div>
-                            <div>
-                                <h5 class="fw-bold text-dark mb-0">Account Details</h5>
-                                <small class="text-muted">Your registered profile information</small>
-                            </div>
+                            <a href="{{ route('website.profile') }}" class="btn btn-sm btn-outline-theme rounded-pill px-3 fw-bold">
+                                <i class="mdi mdi-pencil me-1"></i> Edit Profile
+                            </a>
                         </div>
 
                         <div class="row g-0">

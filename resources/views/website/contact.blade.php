@@ -69,15 +69,18 @@
             color: white;
         }
 
-        .map-placeholder {
+        .map-container {
             border-radius: 2rem;
             overflow: hidden;
             background: #f1f5f9;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 450px;
             border: 1px solid #e2e8f0;
+        }
+
+        .map-container iframe {
+            width: 100% !important;
+            height: 100% !important;
+            border: 0 !important;
         }
 
         .text-gradient {
@@ -204,14 +207,19 @@
                 </div>
             </div>
 
-            <!-- Map Placeholder -->
+            <!-- Map Section -->
             <div class="mt-5 pt-5 reveal active">
-                <div class="map-placeholder">
-                    <div class="text-center">
-                        <i class="mdi mdi-map-outline fs-1 text-muted mb-3 d-block"></i>
-                        <h5 class="fw-bold text-dark">Interactive Map Coming Soon</h5>
-                        <p class="text-muted">We're integrating Google Maps for easier navigation.</p>
-                    </div>
+                <div class="map-container shadow-sm">
+                    @if(!empty($settings->map_iframe))
+                        @if(str_contains($settings->map_iframe, '<iframe'))
+                            {!! $settings->map_iframe !!}
+                        @else
+                            <iframe src="{{ $settings->map_iframe }}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        @endif
+                    @else
+                        <!-- Fallback Interactive Google Map -->
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d100939.60334812678!2d-122.48530182436894!3d37.7470438183141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80859a6d00690021%3A0x4a501367f076adff!2sSan%20Francisco%2C%20CA!5e0!3m2!1sen!2sus!4v1716674000000!5m2!1sen!2sus" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    @endif
                 </div>
             </div>
         </div>

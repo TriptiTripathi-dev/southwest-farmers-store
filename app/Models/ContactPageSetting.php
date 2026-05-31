@@ -18,6 +18,7 @@ class ContactPageSetting extends Model
         'email_title',
         'email_content',
         'form_title',
+        'map_iframe',
     ];
 
     public function store()

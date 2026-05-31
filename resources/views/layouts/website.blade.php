@@ -61,6 +61,7 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important; 
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -73,6 +74,8 @@
 
     @include('layouts.website.footer')
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>

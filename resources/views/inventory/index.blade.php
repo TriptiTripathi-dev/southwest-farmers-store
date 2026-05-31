@@ -51,6 +51,7 @@
             color: #64748b;
             border-top: none;
             padding: 1.25rem 1rem;
+            white-space: nowrap;
         }
         .product-icon {
             width: 48px;
@@ -64,10 +65,24 @@
             font-size: 1.5rem;
         }
         .status-badge {
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.85rem;
             border-radius: 100px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.75rem;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.02em;
+        }
+        
+        .stock-table td {
+            white-space: nowrap;
+        }
+        
+        .stock-table .product-cell {
+            white-space: normal;
+            min-width: 280px;
         }
         @media (max-width: 991.98px) {
             .stock-table thead { display: none; }
@@ -244,13 +259,13 @@
                                     <td data-label="Status">
                                         @php $inTransitQty = (int) ($inTransitByProduct[$stock->product_id] ?? 0); @endphp
                                         @if($stock->quantity <= 0 && $inTransitQty > 0)
-                                            <span class="status-badge bg-info bg-opacity-10 text-info">In Transit</span>
+                                            <span class="status-badge bg-info bg-opacity-10 text-info"><i class="mdi mdi-truck-delivery-outline me-1 fs-6"></i> In Transit</span>
                                         @elseif($stock->quantity > 10)
-                                            <span class="status-badge bg-success bg-opacity-10 text-success">In Stock</span>
+                                            <span class="status-badge bg-success bg-opacity-10 text-success"><i class="mdi mdi-check-circle-outline me-1 fs-6"></i> In Stock</span>
                                         @elseif($stock->quantity > 0)
-                                            <span class="status-badge bg-warning bg-opacity-10 text-warning">Low Stock</span>
+                                            <span class="status-badge bg-warning bg-opacity-10 text-warning"><i class="mdi mdi-alert-circle-outline me-1 fs-6"></i> Low Stock</span>
                                         @else
-                                            <span class="status-badge bg-danger bg-opacity-10 text-danger">Out of Stock</span>
+                                            <span class="status-badge bg-danger bg-opacity-10 text-danger"><i class="mdi mdi-close-circle-outline me-1 fs-6"></i> Out of Stock</span>
                                         @endif
                                     </td>
                                     <td class="text-center" data-label="Actions">

@@ -93,4 +93,15 @@ class QuickPosSettingController extends Controller
 
         return back()->with('error', 'Failed to connect: ' . ($response['message'] ?? 'Unknown error'));
     }
+
+    public function testDrawer(PosAgentService $posAgentService)
+    {
+        $store = StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
+        }
+
+        $response = $posAgentService->openCashDrawer($store->pos_terminal_id);
+        return response()->json($response);
+    }
 }

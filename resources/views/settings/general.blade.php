@@ -96,6 +96,37 @@
                             </div>
                         </div>
 
+                        <hr class="text-muted opacity-25 my-5">
+
+                        <h6 class="fw-bold text-dark mb-4">Footer Settings</h6>
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-medium text-muted">Footer Description</label>
+                                <textarea name="footer_description" rows="3" class="form-control bg-light border-0" placeholder="Your premier destination for high-quality, fresh...">{{ old('footer_description', $settings->footer_description) }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium text-muted">Facebook URL</label>
+                                <input type="url" name="facebook_url" class="form-control bg-light border-0"
+                                    value="{{ old('facebook_url', $settings->facebook_url) }}" placeholder="https://facebook.com/...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium text-muted">Instagram URL</label>
+                                <input type="url" name="instagram_url" class="form-control bg-light border-0"
+                                    value="{{ old('instagram_url', $settings->instagram_url) }}" placeholder="https://instagram.com/...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium text-muted">Twitter URL</label>
+                                <input type="url" name="twitter_url" class="form-control bg-light border-0"
+                                    value="{{ old('twitter_url', $settings->twitter_url) }}" placeholder="https://twitter.com/...">
+                            </div>
+                        </div>
+
+                        <hr class="text-muted opacity-25 my-5">
+
                         <div class="row g-4 mb-5">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-muted mb-2">Login Page Logo</label>

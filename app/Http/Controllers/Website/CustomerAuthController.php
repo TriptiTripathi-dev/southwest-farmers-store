@@ -98,6 +98,42 @@ class CustomerAuthController extends Controller
         return view('website.customer.dashboard', compact('customer'));
     }
 
+    // ─── Profile ────────────────────────────────────────────────────────
+
+    public function profile()
+    {
+        $customer = Auth::guard('customer')->user();
+        return view('website.customer.profile', compact('customer'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255|unique:store_customers,email,' . $customer->id,
+            'address' => 'nullable|string',
+            'area' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $data = $request->only(['name', 'phone', 'email', 'address', 'area']);
+
+        if ($request->hasFile('image')) {
+            if ($customer->image && \Illuminate\Support\Facades\Storage::disk('r2')->exists($customer->image)) {
+                \Illuminate\Support\Facades\Storage::disk('r2')->delete($customer->image);
+            }
+            $path = $request->file('image')->store('customers/profiles', 'r2');
+            $data['image'] = $path;
+        }
+
+        $customer->update($data);
+
+        return redirect()->route('website.profile')->with('success', 'Profile updated successfully.');
+    }
+
     // ─── Logout ─────────────────────────────────────────────────────────
 
     public function logout(Request $request)

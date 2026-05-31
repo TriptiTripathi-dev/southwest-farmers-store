@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="h4 mb-0">All Notifications</h4>
-        <form action="{{ route('store.notifications.clear') }}" method="POST" onsubmit="return confirm('Clear all notifications?');">
+        <form action="{{ route('store.notifications.clear') }}" method="POST" data-confirm="Clear all notifications?">
             @csrf
             <button class="btn btn-outline-danger btn-sm">Clear All</button>
         </form>

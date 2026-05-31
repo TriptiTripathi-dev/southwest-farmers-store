@@ -22,6 +22,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+use App\Exports\Samples\StoreProductSampleExport;
+
 class StoreProductController extends Controller
 {
     public function index(Request $request)
@@ -29,8 +31,10 @@ class StoreProductController extends Controller
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
-        // Department ko bhi load kiya hai (with 'department')
-        $query = Product::with(['category', 'subcategory', 'storeStocks', 'department']);
+        $query = Product::with(['category', 'subcategory', 'department'])->where(function ($q) use ($storeId) {
+            $q->whereNull('store_id') // Global
+                ->orWhere('store_id', $storeId); // Local
+        });
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -53,8 +57,9 @@ class StoreProductController extends Controller
 
         $products = $query->latest()->paginate(10)->withQueryString();
         $categories = ProductCategory::select('id', 'name')->get();
+        $departments = Department::select('id', 'name')->where('is_active', true)->get();
 
-        return view('store.products.index', compact('products', 'categories'));
+        return view('store.products.index', compact('products', 'categories', 'departments'));
     }
 
     public function create()
@@ -247,16 +252,42 @@ class StoreProductController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,csv',
-            'category_id' => 'required',
-            'subcategory_id' => 'required'
-        ]);
-        Excel::import(new StoreProductImport(
-            $request->category_id,
-            $request->subcategory_id
-        ), $request->file('file'));
-        return back()->with('success', 'Products imported successfully.');
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,csv',
+                'department_id' => 'required',
+                'category_id' => 'required',
+                'subcategory_id' => 'required'
+            ]);
+
+            // Create Import Task
+            $task = \App\Models\ImportTask::create([
+                'user_id' => Auth::id(),
+                'type' => 'Product',
+                'status' => \App\Models\ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            Excel::import(new StoreProductImport(
+                $request->category_id,
+                $request->subcategory_id,
+                $request->department_id,
+                Auth::id(),
+                $task->id
+            ), $request->file('file'));
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     public function export()
@@ -424,5 +455,9 @@ class StoreProductController extends Controller
         } while (Product::where('upc', $upc)->exists());
 
         return response()->json(['upc' => $upc]);
+    }
+    public function sample()
+    {
+        return Excel::download(new StoreProductSampleExport, 'store-products-sample.xlsx');
     }
 }

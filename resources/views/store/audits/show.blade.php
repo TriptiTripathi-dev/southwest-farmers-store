@@ -17,7 +17,7 @@
                         <button type="submit" name="save" value="1" class="btn btn-secondary me-2">Save
                             Progress</button>
                         <button type="submit" name="finalize" value="1" class="btn btn-success"
-                            onclick="return confirm('This will finalize the audit and adjust inventory levels. Continue?')">Finalize
+                            data-confirm="This will finalize the audit and adjust inventory levels. Continue?">Finalize
                             & Adjust Stock</button>
                     </div>
                 @endif

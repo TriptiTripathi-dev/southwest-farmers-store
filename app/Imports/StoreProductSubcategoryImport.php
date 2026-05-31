@@ -2,35 +2,63 @@
 
 namespace App\Imports;
 
-use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use App\Traits\TracksImportProgress;
 
-class StoreProductSubcategoryImport implements ToModel, WithHeadingRow
+class StoreProductSubcategoryImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithEvents
 {
-    public function model(array $row)
+    use TracksImportProgress;
+
+    protected $categoryId;
+    protected $authUserId;
+    protected $storeId;
+
+    public function __construct($categoryId, $authUserId = null, $importTaskId = null)
     {
+        $this->categoryId = $categoryId;
+        $this->authUserId = $authUserId ?? Auth::id();
         $user = Auth::user();
-        $storeId = $user->store_id ?? $user->id;
+        $this->storeId = $user->store_id ?? $user->id;
+        $this->importTaskId = $importTaskId;
+    }
 
-        // Find the parent category by code (must be visible to this store)
-        $category = ProductCategory::where('code', $row['category_code'])
-            ->where(function($q) use ($storeId) {
-                $q->whereNull('store_id')->orWhere('store_id', $storeId);
-            })->first();
+    public function collection(Collection $rows)
+    {
+        foreach ($rows as $row) {
+            if (empty($row['name'])) continue;
 
-        if (!$category) {
-            return null; // Skip if category not found
+            ProductSubcategory::create([
+                'store_id'    => $this->storeId,
+                'category_id' => $this->categoryId,
+                'name'        => $row['name'],
+                'code'        => $row['code'] ?? strtoupper(substr($row['name'], 0, 3)) . rand(100,999),
+                'is_active'   => 1,
+            ]);
         }
 
-        return new ProductSubcategory([
-            'store_id'    => $storeId,
-            'category_id' => $category->id,
-            'name'        => $row['name'],
-            'code'        => $row['code'] ?? strtoupper(substr($row['name'], 0, 3)) . rand(100,999),
-            'is_active'   => true,
-        ]);
+        $this->updateImportProgress($rows->count());
+    }
+
+    public function batchSize(): int
+    {
+        return 50;
+    }
+
+    public function chunkSize(): int
+    {
+        return 50;
+    }
+
+    public function registerEvents(): array
+    {
+        return $this->getImportProgressEvents();
     }
 }

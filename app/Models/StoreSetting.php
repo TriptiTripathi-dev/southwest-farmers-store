@@ -19,5 +19,9 @@ class StoreSetting extends Model
         'login_logo',
         'currency',       // Added
         'vat_percentage', // Added
+        'footer_description',
+        'facebook_url',
+        'instagram_url',
+        'twitter_url',
     ];
 }

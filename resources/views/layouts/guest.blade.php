@@ -10,6 +10,18 @@
     <link rel="icon" href="{{ asset('logo.png') }}?v={{ time() }}" type="image/png">
 
     @include('layouts.common.styles-lib') 
+    <style>
+        /* Hide MDI icons until fonts are fully loaded to prevent boxes */
+        html:not(.fonts-loaded) .mdi::before {
+            color: transparent !important;
+        }
+    </style>
+    <script>
+        // Add fonts-loaded class when all web fonts have finished loading
+        document.fonts.ready.then(function() {
+            document.documentElement.classList.add('fonts-loaded');
+        });
+    </script>
     @stack('styles')
 </head>
 

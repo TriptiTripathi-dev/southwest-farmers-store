@@ -95,6 +95,20 @@
                     </div>
                 </div>
 
+                {{-- Map Section --}}
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="mdi mdi-map-marker-radius me-2 text-danger"></i>Map Settings</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-muted">Google Map Iframe Embed Code (or Map URL)</label>
+                            <textarea name="map_iframe" class="form-control bg-light border-0" rows="4" placeholder="&lt;iframe src=&quot;https://www.google.com/maps/embed...&quot; width=&quot;600&quot; height=&quot;450&quot; style=&quot;border:0;&quot; allowfullscreen=&quot;&quot; loading=&quot;lazy&quot;&gt;&lt;/iframe&gt;">{{ old('map_iframe', $settings->map_iframe) }}</textarea>
+                            <small class="text-muted d-block mt-1">Paste the full Google Maps iframe embed code or link. If not uploaded, a fallback default Google Map will be shown.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-end pb-5 mt-2">
                     <button type="submit" class="btn btn-primary px-5 py-3 shadow-sm fw-bold rounded-pill">
                         <i class="mdi mdi-content-save me-2"></i> Save Contact Page Settings

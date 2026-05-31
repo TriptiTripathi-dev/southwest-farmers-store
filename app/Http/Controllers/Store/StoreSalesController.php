@@ -705,7 +705,13 @@ class StoreSalesController extends Controller
         $terminalId = $store ? $store->pos_terminal_id : null;
 
         if (!$terminalId) {
-            return response()->json(['status' => 'offline', 'message' => 'Terminal ID not configured.']);
+            return response()->json([
+                'status' => 'offline', 
+                'message' => 'Terminal ID not configured.',
+                'online' => false,
+                'scanner' => false,
+                'scale' => false
+            ]);
         }
 
         try {
@@ -713,18 +719,53 @@ class StoreSalesController extends Controller
 
             $isOnline = false;
             if (is_array($raw)) {
-                if (!empty($raw['success']) && !empty($raw['registered'])) $isOnline = true;
-                if (isset($raw['status']) && strtolower($raw['status']) === 'approved') $isOnline = true;
-                if (!empty($raw['approved'])) $isOnline = true;
+                if (isset($raw['success']) && $raw['success'] === true && isset($raw['registered']) && $raw['registered'] === true) {
+                    $isOnline = true;
+                }
+                if (isset($raw['status']) && strtolower($raw['status']) === 'approved') {
+                    $isOnline = true;
+                }
+                if (!empty($raw['approved'])) {
+                    $isOnline = true;
+                }
+            }
+
+            $scannerOnline = false;
+            $scaleOnline = false;
+
+            if ($isOnline) {
+                $scannerStatus = $posAgentService->getScannerStatus($terminalId);
+                if (is_array($scannerStatus) && !empty($scannerStatus['connected'])) {
+                    $scannerOnline = true;
+                }
+                // Some agents might return success true instead of connected
+                if (is_array($scannerStatus) && !empty($scannerStatus['success'])) {
+                    $scannerOnline = true;
+                }
+                
+                $scaleStatus = $posAgentService->getScaleStatus($terminalId);
+                if (is_array($scaleStatus) && !empty($scaleStatus['connected'])) {
+                    $scaleOnline = true;
+                }
+                if (is_array($scaleStatus) && !empty($scaleStatus['success'])) {
+                    $scaleOnline = true;
+                }
             }
 
             return response()->json([
                 'status'      => $isOnline ? 'Approved' : 'offline',
                 'online'      => $isOnline,
+                'scanner'     => $scannerOnline,
+                'scale'       => $scaleOnline,
                 'raw'         => $raw,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'offline', 'online' => false]);
+            return response()->json([
+                'status' => 'offline', 
+                'online' => false,
+                'scanner' => false,
+                'scale' => false
+            ]);
         }
     }
 

@@ -37,6 +37,7 @@ class ContactPageSettingController extends Controller
             'email_title' => 'nullable|string|max:255',
             'email_content' => 'nullable|string',
             'form_title' => 'nullable|string|max:255',
+            'map_iframe' => 'nullable|string',
         ]);
 
         $settings->update($data);

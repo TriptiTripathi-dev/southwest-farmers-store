@@ -11,14 +11,14 @@
 
                 {{-- ACTIONS --}}
                 <div class="d-flex flex-wrap gap-2">
-                    @if (Auth::user()->hasPermission('import_products'))
+                    @if (Auth::user()->hasPermission('import_products') || Auth::user()->hasPermission('create_product'))
                         <button class="btn btn-success text-white shadow-sm fw-bold d-flex align-items-center"
                             data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="mdi mdi-upload fs-5 me-1"></i> Import
                         </button>
                     @endif
 
-                    @if (Auth::user()->hasPermission('export_products'))
+                    @if (Auth::user()->hasPermission('export_products') || Auth::user()->hasPermission('create_product'))
                         <a href="{{ route('store.products.export') }}"
                             class="btn btn-info text-white shadow-sm fw-bold d-flex align-items-center">
                             <i class="mdi mdi-download fs-5 me-1"></i> Export
@@ -77,6 +77,8 @@
                                         style="letter-spacing: 0.5px;">Product [UPC]</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase"
                                         style="letter-spacing: 0.5px;">Barcode</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase"
+                                         style="letter-spacing: 0.5px;">Department</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase"
                                         style="letter-spacing: 0.5px;">Category</th>
                                     <th class="py-3 text-muted small fw-bold text-uppercase"
@@ -141,6 +143,7 @@
                                                 <span class="text-muted small fst-italic">-</span>
                                             @endif
                                         </td>
+                                        <td class="text-muted small fw-bold">{{ $item->department->name ?? 'N/A' }}</td>
                                         <td class="fw-medium text-dark">{{ $item->category->name ?? 'N/A' }}</td>
                                         <td class="text-muted">{{ $item->subcategory->name ?? 'N/A' }}</td>
                                         <td>

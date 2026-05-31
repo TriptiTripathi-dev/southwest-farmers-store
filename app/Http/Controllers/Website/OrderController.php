@@ -122,6 +122,27 @@ class OrderController extends Controller
                 }
             }
 
+            // Handle Card Payment (Converge HPP)
+            if ($request->payment_method === 'card') {
+                $converge = new \App\Services\ConvergeService();
+                $token = $converge->generateTransactionToken($cart->total_amount, $invoiceNumber, $user);
+
+                if (!$token) {
+                    throw new \Exception('Unable to initialize payment. Please try again or choose another method.');
+                }
+
+                // We DON'T clear the cart yet for Card payments. 
+                // We clear it only AFTER successful payment in the callback.
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'payment_required' => true,
+                    'redirect' => $converge->getHppUrl($token, $invoiceNumber)
+                ]);
+            }
+
+            // Handle COD Payment (Existing logic)
             // Create Notification for Store
             StoreNotification::create([
                 'store_id' => $storeId,

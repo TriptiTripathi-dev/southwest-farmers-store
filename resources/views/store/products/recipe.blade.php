@@ -55,7 +55,7 @@
                                 <td class="fw-bold">{{ $item->quantity + 0 }}</td> {{-- +0 removes trailing zeros --}}
                                 <td>{{ $item->ingredient->unit }}</td>
                                 <td>
-                                    <form action="{{ route('store.products.recipe.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Remove this ingredient?');">
+                                    <form action="{{ route('store.products.recipe.destroy', $item->id) }}" method="POST" data-confirm="Remove this ingredient?">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>

@@ -131,6 +131,9 @@
                                     <label class="form-check-label ms-2 mt-1" for="cash_drawer_enabled">Cash
                                         Drawer</label>
                                 </div>
+                                <button type="button" id="btnTestDrawer" class="btn btn-sm btn-outline-primary mt-2 ms-5 fw-bold" onclick="testCashDrawer()">
+                                    <i class="mdi mdi-open-in-new"></i> Test Drawer
+                                </button>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-check form-switch form-switch-lg">
@@ -167,4 +170,53 @@
         style="display: none;">
         @csrf
     </form>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function testCashDrawer() {
+            const btn = document.getElementById('btnTestDrawer');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Testing...';
+
+            fetch("{{ route('settings.quick-pos.test-drawer') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Cash drawer open command sent successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed',
+                        text: data.message || 'Could not open cash drawer. Check connection.'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Connection to server failed.'
+                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="mdi mdi-open-in-new"></i> Test Drawer';
+            });
+        }
+    </script>
+    @endpush
 </x-app-layout>

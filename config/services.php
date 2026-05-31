@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'converge' => [
+        'merchant_id' => env('CONVERGE_MERCHANT_ID'),
+        'user_id' => env('CONVERGE_USER_ID'),
+        'pin' => env('CONVERGE_PIN'),
+        'mode' => env('CONVERGE_MODE', 'demo'), // 'demo' or 'prod'
+        'api_url' => env('CONVERGE_MODE') === 'prod' 
+            ? 'https://api.convergepay.com/hosted-payments' 
+            : 'https://api.demo.convergepay.com/hosted-payments',
+    ],
 ];

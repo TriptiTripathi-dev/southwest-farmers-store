@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckCashierRole::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'payment/callback',
+        ]);
+
         $middleware->redirectGuestsTo(function ($request) {
             if ($request->is('customer*') || $request->is('cart*') || $request->is('checkout*') || $request->is('dashboard*') || $request->is('my-orders*')) {
                 return route('website.login');

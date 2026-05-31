@@ -66,7 +66,7 @@ class StaffController extends Controller
             $currentUser = Auth::user();
 
             $staff = StoreUser::where('id', $request->id)
-                ->where('parent_id', $currentUser->id)
+                ->where('store_id', $currentUser->store_id)
                 ->firstOrFail();
 
             $staff->is_active = $request->status;
@@ -135,10 +135,9 @@ class StaffController extends Controller
     public function edit($id)
     {
         $currentUser = Auth::user();
-        $staff = StoreUser::where('id', $id)->where('parent_id', $currentUser->id)->firstOrFail();
+        $staff = StoreUser::where('id', $id)->where('store_id', $currentUser->store_id)->firstOrFail();
         $roles = StoreRole::where('name', '!=', 'Super Admin')->get();
         $currentRoleId = $staff->store_role_id ?? $staff->roles->first()?->id;
-        dd($currentRoleId);
 
         return view('staff.edit', compact('staff', 'roles', 'currentRoleId'));
     }
@@ -146,7 +145,7 @@ class StaffController extends Controller
     public function update(Request $request, $id)
     {
         $currentUser = Auth::user();
-        $staff = StoreUser::where('id', $id)->where('parent_id', $currentUser->id)->firstOrFail();
+        $staff = StoreUser::where('id', $id)->where('store_id', $currentUser->store_id)->firstOrFail();
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -190,7 +189,7 @@ class StaffController extends Controller
     public function destroy($id)
     {
         $currentUser = Auth::user();
-        $staff = StoreUser::where('id', $id)->where('parent_id', $currentUser->id)->firstOrFail();
+        $staff = StoreUser::where('id', $id)->where('store_id', $currentUser->store_id)->firstOrFail();
 
         if ($staff->id === $currentUser->id) {
             return back()->with('error', 'You cannot delete your own account.');

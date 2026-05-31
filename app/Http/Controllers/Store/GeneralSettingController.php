@@ -32,6 +32,10 @@ class GeneralSettingController extends Controller
             'login_logo' => 'nullable|image|max:2048',
             'currency' => 'nullable|string|max:10',
             'vat_percentage' => 'nullable|numeric|min:0|max:100',
+            'footer_description' => 'nullable|string|max:500',
+            'facebook_url' => 'nullable|url|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'twitter_url' => 'nullable|url|max:255',
         ]);
 
         $data = $request->only([
@@ -40,7 +44,11 @@ class GeneralSettingController extends Controller
             'support_email', 
             'address', 
             'currency', 
-            'vat_percentage'
+            'vat_percentage',
+            'footer_description',
+            'facebook_url',
+            'instagram_url',
+            'twitter_url'
         ]);
 
         $uploadFile = function ($fileKey, $path) use ($request, $settings) {

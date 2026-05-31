@@ -41,6 +41,9 @@ Route::get('/pos-test', function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::resource('departments', \App\Http\Controllers\Store\DepartmentController::class);
+    Route::post('/departments/status', [\App\Http\Controllers\Store\DepartmentController::class, 'changeStatus'])->name('departments.status');
+
     Route::get('/store/dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
@@ -90,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'edit'])->name('settings.quick-pos');
     Route::put('/settings/quick-pos', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'update'])->name('settings.quick-pos.update');
     Route::post('/settings/quick-pos/connect', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'connectToServer'])->name('settings.quick-pos.connect');
+    Route::post('/settings/quick-pos/test-drawer', [\App\Http\Controllers\Store\QuickPosSettingController::class, 'testDrawer'])->name('settings.quick-pos.test-drawer');
 
     Route::resource('enquiries', \App\Http\Controllers\Store\EnquiryController::class)->only(['index', 'show', 'destroy'])->names([
         'index' => 'store.enquiries.index',
@@ -104,6 +108,9 @@ Route::middleware('auth')->group(function () {
         'update' => 'settings.legal.update',
         'destroy' => 'settings.legal.destroy',
     ]);
+    Route::get('/settings/newsletter', [\App\Http\Controllers\Store\NewsletterSubscribersController::class, 'index'])->name('settings.newsletter.index');
+    Route::post('/settings/newsletter/send-mail', [\App\Http\Controllers\Store\NewsletterSubscribersController::class, 'sendMail'])->name('settings.newsletter.send-mail');
+    Route::delete('/settings/newsletter/{id}', [\App\Http\Controllers\Store\NewsletterSubscribersController::class, 'destroy'])->name('settings.newsletter.destroy');
     Route::get('/stocks', [StoreInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/request', [StoreInventoryController::class, 'requestStock'])->name('inventory.request');
     Route::post('/inventory/request/generate-po', [StoreInventoryController::class, 'generateWarehousePo'])->name('inventory.request.generate-po');
@@ -217,16 +224,18 @@ Route::middleware('auth')->group(function () {
         Route::post('categories/import', [ProductCategoryController::class, 'import'])->name('categories.import');
         Route::get('categories/export', [ProductCategoryController::class, 'export'])->name('categories.export');
         Route::post('categories/status', [ProductCategoryController::class, 'updateStatus'])->name('categories.status');
-        Route::resource('subcategories', ProductSubcategoryController::class);
         Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
         Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
         Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
+        Route::resource('subcategories', ProductSubcategoryController::class);
         Route::get('/analytics', [StoreAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('products/generate-upc', [StoreProductController::class, 'generateUpc'])->name('products.generate-upc');
-        Route::resource('products', StoreProductController::class);
+        Route::get('products/sample', [StoreProductController::class, 'sample'])->name('products.sample');
         Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
         Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
         Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
+        Route::resource('products', StoreProductController::class);
+        Route::get('imports/progress/{id}', [\App\Http\Controllers\Store\ImportProgressController::class, 'show'])->name('store.imports.progress');
 
         Route::controller(StoreSupportTicketController::class)
             ->prefix('support')

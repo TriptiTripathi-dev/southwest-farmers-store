@@ -203,7 +203,16 @@
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info small rounded-3 mb-3">
-                            <i class="mdi mdi-information me-1"></i> Required Columns: <strong>category_code</strong>, <strong>name</strong>, <strong>code</strong>.
+                            <i class="mdi mdi-information me-1"></i> Ensure your file contains the columns: <strong>name, code</strong>.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Parent Category <span class="text-danger">*</span></label>
+                            <select name="category_id" class="form-select bg-light border-0 shadow-sm py-2" required>
+                                <option value="">Select Category</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-muted">Excel File (.xlsx, .csv) <span class="text-danger">*</span></label>

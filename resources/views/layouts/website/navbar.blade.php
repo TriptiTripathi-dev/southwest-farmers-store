@@ -42,7 +42,11 @@
                     @endphp
                     <div class="dropdown ms-lg-2">
                         <a class="text-dark text-decoration-none hover-lift p-2 dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="mdi mdi-account-circle fs-4 text-theme me-1"></i>
+                            @if($currentUser->image)
+                                <img src="{{ Storage::disk('r2')->url($currentUser->image) }}" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #019934;" alt="{{ $currentUser->name }}">
+                            @else
+                                <i class="mdi mdi-account-circle fs-4 text-theme me-1"></i>
+                            @endif
                             <span class="fw-bold small d-none d-md-inline">{{ $currentUser->name }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-3 rounded-4">
@@ -54,7 +58,7 @@
                             </li>
                             @endif
                             <li>
-                                <a class="dropdown-item py-2 fw-semibold" href="#">
+                                <a class="dropdown-item py-2 fw-semibold" href="{{ route('website.profile') }}">
                                     <i class="mdi mdi-cog-outline me-2 text-muted"></i> Profile
                                 </a>
                             </li>

@@ -20,17 +20,38 @@
             --bs-sidebar-item-active: #fff;
             --bs-sidebar-item-active-bg: #019934;
         }
-        .tp-link.active, .tp-link:hover {
+        /* Hide icons before they load to prevent flickering placeholder boxes */
+        iconify-icon:not(:defined) {
+            display: none !important;
+        }
+        iconify-icon[status="loading"] {
+            opacity: 0 !important;
+        }
+        .tp-link.active, .tp-link:hover, .tp-link:focus, .tp-link[aria-expanded="true"], .menuitem-active > .tp-link {
             background-color: #019934 !important;
             color: #fff !important;
         }
-        .tp-link.active .nav-icon iconify-icon, .tp-link:hover .nav-icon iconify-icon {
+        .tp-link.active .nav-icon iconify-icon, .tp-link:hover .nav-icon iconify-icon, .tp-link:focus .nav-icon iconify-icon, .tp-link[aria-expanded="true"] .nav-icon iconify-icon, .menuitem-active > .tp-link .nav-icon iconify-icon {
+            color: #fff !important;
+        }
+        .tp-link.active .sidebar-text, .tp-link:hover .sidebar-text, .tp-link:focus .sidebar-text, .tp-link[aria-expanded="true"] .sidebar-text, .menuitem-active > .tp-link .sidebar-text {
             color: #fff !important;
         }
         .menu-arrow {
             color: inherit !important;
         }
+        
+        /* Hide MDI icons until fonts are fully loaded to prevent boxes */
+        html:not(.fonts-loaded) .mdi::before {
+            color: transparent !important;
+        }
     </style>
+    <script>
+        // Add fonts-loaded class when all web fonts have finished loading
+        document.fonts.ready.then(function() {
+            document.documentElement.classList.add('fonts-loaded');
+        });
+    </script>
     @stack('styles')
 </head>
 
@@ -167,7 +188,81 @@
                 });
             }
         });
+
+        // Global data-confirm handler using SweetAlert
+        document.addEventListener('click', function(e) {
+            let el = e.target.closest('[data-confirm]');
+            if (el && el.tagName !== 'FORM' && el.type !== 'submit') {
+                e.preventDefault();
+                let msg = el.getAttribute('data-confirm');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: msg,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, proceed!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (el.tagName === 'A') {
+                            window.location.href = el.href;
+                        }
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('submit', function(e) {
+            let form = e.target;
+            if (form.hasAttribute('data-confirm')) {
+                e.preventDefault();
+                let msg = form.getAttribute('data-confirm');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: msg,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, proceed!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.removeAttribute('data-confirm');
+                        form.submit();
+                    }
+                });
+            }
+        });
+
+        // Global interceptor for .status-toggle switches
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('.status-toggle')) {
+                if (e.target.dataset.swalConfirmed) {
+                    e.target.removeAttribute('data-swal-confirmed');
+                    return; // Let the click proceed normally
+                }
+                
+                e.preventDefault(); // Stop immediate toggle
+                
+                Swal.fire({
+                    title: 'Change Status?',
+                    text: 'Are you sure you want to change the status?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981', // success
+                    cancelButtonColor: '#6c757d', // secondary
+                    confirmButtonText: 'Yes, change it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        e.target.dataset.swalConfirmed = "true";
+                        e.target.click(); // Programmatically trigger click to continue
+                    }
+                });
+            }
+        });
     </script>
+    @include('layouts.partials._import-progress-scripts')
     @stack('scripts')
 
 </body>
