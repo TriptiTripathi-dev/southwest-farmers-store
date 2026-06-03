@@ -39,34 +39,36 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-light">Current Ingredients</div>
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead>
-                            <tr>
-                                <th>Ingredient Name</th>
-                                <th>Qty Required</th>
-                                <th>Unit</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($product->ingredients as $item)
-                            <tr>
-                                <td>{{ $item->ingredient->product_name }}</td>
-                                <td class="fw-bold">{{ $item->quantity + 0 }}</td> {{-- +0 removes trailing zeros --}}
-                                <td>{{ $item->ingredient->unit }}</td>
-                                <td>
-                                    <form action="{{ route('store.products.recipe.destroy', $item->id) }}" method="POST" data-confirm="Remove this ingredient?">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="text-center p-4 text-muted">No ingredients defined yet. This item acts as a standalone product.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ingredient Name</th>
+                                    <th>Qty Required</th>
+                                    <th>Unit</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($product->ingredients as $item)
+                                <tr>
+                                    <td>{{ $item->ingredient->product_name }}</td>
+                                    <td class="fw-bold">{{ $item->quantity + 0 }}</td> {{-- +0 removes trailing zeros --}}
+                                    <td>{{ $item->ingredient->unit }}</td>
+                                    <td>
+                                        <form action="{{ route('store.products.recipe.destroy', $item->id) }}" method="POST" data-confirm="Remove this ingredient?">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="4" class="text-center p-4 text-muted">No ingredients defined yet. This item acts as a standalone product.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -92,11 +92,11 @@
     <section class="py-5 position-relative min-vh-100 d-flex align-items-center overflow-hidden"
              style="background: linear-gradient(135deg, var(--theme-light) 0%, #f1f5f9 100%);">
 
-        {{-- Background blobs --}}
-        <div class="position-absolute rounded-circle"
-             style="width:500px;height:500px;top:-150px;left:-150px;background:rgba(0, 154, 54, 0.12);filter:blur(80px);"></div>
-        <div class="position-absolute rounded-circle"
-             style="width:400px;height:400px;bottom:-100px;right:-100px;background:rgba(251,191,36,0.12);filter:blur(80px);"></div>
+        <!-- Decorative Blobs -->
+        <div class="position-absolute rounded-circle" 
+             style="width:min(500px, 100vw);height:min(500px, 100vw);top:-150px;left:-150px;background:rgba(0, 154, 54, 0.12);filter:blur(80px);"></div>
+        <div class="position-absolute rounded-circle" 
+             style="width:min(400px, 100vw);height:min(400px, 100vw);bottom:-100px;right:-100px;background:rgba(251,191,36,0.12);filter:blur(80px);"></div>
 
         <div class="container position-relative z-1 py-4">
             <div class="row justify-content-center">

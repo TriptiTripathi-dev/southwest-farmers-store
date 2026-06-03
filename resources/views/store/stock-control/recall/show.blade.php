@@ -39,26 +39,28 @@
                         <div class="alert alert-success">Request Approved! Select batches to dispatch.</div>
                         <form action="{{ route('store.stock-control.recall.dispatch', $recall) }}" method="POST">
                             @csrf
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Batch</th>
-                                        <th>Expiry</th>
-                                        <th>Stock</th>
-                                        <th>Dispatch Qty</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($batches as $batch)
-                                    <tr>
-                                        <td>{{ $batch->batch_number }}<input type="hidden" name="batches[{{$batch->id}}][batch_id]" value="{{$batch->id}}"></td>
-                                        <td>{{ $batch->expiry_date }}</td>
-                                        <td>{{ $batch->quantity }}</td>
-                                        <td><input type="number" name="batches[{{$batch->id}}][quantity]" class="form-control form-control-sm" max="{{$batch->quantity}}" min="0" value="0"></td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Batch</th>
+                                            <th>Expiry</th>
+                                            <th>Stock</th>
+                                            <th>Dispatch Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($batches as $batch)
+                                        <tr>
+                                            <td>{{ $batch->batch_number }}<input type="hidden" name="batches[{{$batch->id}}][batch_id]" value="{{$batch->id}}"></td>
+                                            <td>{{ $batch->expiry_date }}</td>
+                                            <td>{{ $batch->quantity }}</td>
+                                            <td><input type="number" name="batches[{{$batch->id}}][quantity]" class="form-control form-control-sm" max="{{$batch->quantity}}" min="0" value="0"></td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                             <button class="btn btn-primary w-100">Dispatch Now</button>
                         </form>
                         @elseif($recall->status == 'dispatched')

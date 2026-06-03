@@ -108,7 +108,7 @@
                 {{ $settings->header_badge ?? '👋 GET IN TOUCH' }}
             </span>
             <h1 class="display-3 fw-black mb-3 text-gradient">{{ $settings->header_title ?? 'How can we help?' }}</h1>
-            <p class="lead text-muted mx-auto" style="max-width: 600px;">{{ $settings->header_subtitle ?? 'Have questions about our products or your order? Our team is here to provide dedicated support.' }}</p>
+            <p class="lead text-muted mx-auto px-3" style="max-width: min(600px, 100%);">{{ $settings->header_subtitle ?? 'Have questions about our products or your order? Our team is here to provide dedicated support.' }}</p>
         </div>
     </section>
 

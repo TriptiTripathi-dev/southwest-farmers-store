@@ -144,11 +144,19 @@ class StoreSalesController extends Controller
             ->latest()
             ->paginate(15);
 
-        // Calculate Totals
-        $totalRevenue = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->sum('total_amount');
-        $totalOrders = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->count();
-        $cashSales = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->where('payment_method', 'cash')->sum('total_amount');
-        $digitalSales = Sale::where('store_id', $storeId)->whereDate('created_at', $date)->where('payment_method', '!=', 'cash')->sum('total_amount');
+        // Calculate Totals in one query
+        $totals = Sale::where('store_id', $storeId)->whereDate('created_at', $date)
+            ->selectRaw('
+                COUNT(*) as total_orders,
+                SUM(total_amount) as total_revenue,
+                SUM(CASE WHEN payment_method = \'cash\' THEN total_amount ELSE 0 END) as cash_sales,
+                SUM(CASE WHEN payment_method != \'cash\' THEN total_amount ELSE 0 END) as digital_sales
+            ')->first();
+
+        $totalRevenue = $totals->total_revenue ?? 0;
+        $totalOrders = $totals->total_orders ?? 0;
+        $cashSales = $totals->cash_sales ?? 0;
+        $digitalSales = $totals->digital_sales ?? 0;
 
         return view('store.sales.daily', compact('sales', 'totalRevenue', 'totalOrders', 'cashSales', 'digitalSales', 'date'));
     }
@@ -197,21 +205,23 @@ class StoreSalesController extends Controller
             ['total_amount' => 0]
         );
 
-        // Check if item exists in cart
-        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+        // Check if item exists in cart (Atomic update)
+        DB::transaction(function() use ($cart, $product, $request) {
+            $cartItem = $cart->items()->where('product_id', $product->id)->lockForUpdate()->first();
 
-        if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
-            $cartItem->total = $cartItem->quantity * $cartItem->price;
-            $cartItem->save();
-        } else {
-            $cart->items()->create([
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'price' => $product->price,
-                'total' => $product->price * $request->quantity
-            ]);
-        }
+            if ($cartItem) {
+                $cartItem->quantity += $request->quantity;
+                $cartItem->total = $cartItem->quantity * $cartItem->price;
+                $cartItem->save();
+            } else {
+                $cart->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $request->quantity,
+                    'price' => $product->price,
+                    'total' => $product->price * $request->quantity
+                ]);
+            }
+        });
 
         $this->recalculateCartTotal($cart);
 
@@ -224,21 +234,25 @@ class StoreSalesController extends Controller
     // 2. Update Quantity
     public function updateCart(Request $request)
     {
-        $cartItem = CartItem::findOrFail($request->item_id);
+        $cart = DB::transaction(function() use ($request) {
+            $cartItem = CartItem::lockForUpdate()->findOrFail($request->item_id);
+            $cart = $cartItem->cart;
 
-        if ($request->quantity <= 0) {
-            $cartItem->delete();
-        } else {
-            $cartItem->quantity = $request->quantity;
-            $cartItem->total = $cartItem->quantity * $cartItem->price;
-            $cartItem->save();
-        }
+            if ($request->quantity <= 0) {
+                $cartItem->delete();
+            } else {
+                $cartItem->quantity = $request->quantity;
+                $cartItem->total = $cartItem->quantity * $cartItem->price;
+                $cartItem->save();
+            }
+            return $cart;
+        });
 
-        $this->recalculateCartTotal($cartItem->cart);
+        $this->recalculateCartTotal($cart);
 
         return response()->json([
             'success' => true,
-            'cart' => $this->getFormattedCart($cartItem->cart)
+            'cart' => $this->getFormattedCart($cart)
         ]);
     }
 
@@ -602,6 +616,7 @@ class StoreSalesController extends Controller
                 // Deduct from StoreStock
                 $storeStock = StoreStock::where('store_id', $storeId)
                     ->where('product_id', $item['id'])
+                    ->lockForUpdate()
                     ->firstOrFail();
 
                 if ($storeStock->quantity < $item['quantity']) {

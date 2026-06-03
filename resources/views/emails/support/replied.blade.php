@@ -2,9 +2,16 @@
 <html>
 <head>
     <title>New Reply on Ticket</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @media only screen and (max-width: 600px) {
+            .email-container { padding: 15px !important; margin: 0 !important; border-radius: 0 !important; }
+            body { padding: 0 !important; }
+        }
+    </style>
 </head>
 <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
-    <div style="background-color: #fff; padding: 20px; border-radius: 5px; max-width: 600px; margin: auto;">
+    <div class="email-container" style="background-color: #fff; padding: 20px; border-radius: 5px; max-width: 600px; margin: auto;">
         <h2 style="color: #333;">New Reply on Ticket #{{ $ticket->ticket_number }}</h2>
         
         <p><strong>From:</strong> {{ $msg->sender->name ?? 'Support Team' }}</p>

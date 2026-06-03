@@ -1250,7 +1250,7 @@
 
     {{-- Invoice / Receipt --}}
     <div class="modal fade" id="invoiceModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body p-4" id="invoiceContent">
                     {{-- Brand header (prints) --}}
@@ -1339,7 +1339,7 @@
 
     {{-- Printer Selection Modal --}}
     <div class="modal fade" id="printerSelectModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white border-0 py-3">
                     <h5 class="modal-title fw-bold"><i class="mdi mdi-printer me-2"></i>Select Printer</h5>
@@ -1402,7 +1402,7 @@
          CART REVIEW MODAL
     ════════════════════════════════════════════════════════════ --}}
     <div class="modal fade" id="cartReviewModal" tabindex="-1" aria-labelledby="cartReviewModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:540px;">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg rounded-4">
 
                 {{-- Header --}}
@@ -2906,6 +2906,111 @@
                     }
                 });
             }
+            /* ─── POS KEYBOARD EMULATION ENGINE ─────────────────── */
+            const POSKeyboardEngine = {
+                barcodeBuffer: '',
+                lastKeyPressTime: 0,
+                timeoutThreshold: 50, // ms threshold for hardware macro speed
+                timer: null,
+
+                // Default hotkeys for Action Keys. These will be updated once we get the zip file.
+                hotkeys: {
+                    'F9': 'SUB_TOTAL',
+                    'F8': 'VOID',
+                    'F7': 'CLEAR',
+                    'F6': 'QTY',
+                },
+
+                init: function() {
+                    $(document).on('keydown', this.handleKeydown.bind(this));
+                    console.log('POS Keyboard Engine Initialized. Ready for fast input.');
+                },
+
+                handleKeydown: function(e) {
+                    // Do not steal focus if user is intentionally typing in an input
+                    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+                        return;
+                    }
+
+                    // Check for Action Hotkeys
+                    if (this.hotkeys[e.key]) {
+                        e.preventDefault();
+                        this.triggerAction(this.hotkeys[e.key]);
+                        return;
+                    }
+
+                    // Process Barcode buffering
+                    // Ignore modifiers and control keys
+                    if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) {
+                        if (e.key === 'Enter' && this.barcodeBuffer.length > 0) {
+                            e.preventDefault();
+                            if (this.timer) clearTimeout(this.timer);
+                            this.processBuffer();
+                        }
+                        return;
+                    }
+
+                    const currentTime = Date.now();
+                    
+                    // Reset buffer if typed too slowly (human typing)
+                    if (this.lastKeyPressTime > 0 && (currentTime - this.lastKeyPressTime) > this.timeoutThreshold) {
+                        this.barcodeBuffer = '';
+                    }
+
+                    this.barcodeBuffer += e.key;
+                    this.lastKeyPressTime = currentTime;
+
+                    if (this.timer) clearTimeout(this.timer);
+
+                    // Wait for macro sequence to finish
+                    this.timer = setTimeout(() => {
+                        this.processBuffer();
+                    }, this.timeoutThreshold);
+                },
+
+                processBuffer: function() {
+                    if (this.barcodeBuffer.length > 2) {
+                        console.log('POS Keyboard Engine intercepted barcode:', this.barcodeBuffer);
+                        if (typeof processScannedBarcode === 'function') {
+                            // Forward barcode to existing search/add function
+                            processScannedBarcode(this.barcodeBuffer);
+                        }
+                    }
+                    this.barcodeBuffer = '';
+                },
+
+                triggerAction: function(action) {
+                    console.log('POS Keyboard Action Triggered:', action);
+                    switch(action) {
+                        case 'SUB_TOTAL':
+                            if (cart.length > 0) openCartReview();
+                            else toastr.warning('Cart is empty');
+                            break;
+                        case 'VOID':
+                            if (cart.length > 0) {
+                                removeFromCart(cart.length - 1);
+                                toastr.info('Last item voided');
+                            } else toastr.warning('Nothing to void');
+                            break;
+                        case 'CLEAR':
+                            if (cart.length > 0) {
+                                $.post("{{ route('store.sales.cart.clear') }}", { _token: csrfToken }, function() {
+                                    cart = [];
+                                    renderCart();
+                                    toastr.success('Cart cleared via Keyboard');
+                                });
+                            }
+                            break;
+                        case 'QTY':
+                            $('#productSearch').focus();
+                            break;
+                    }
+                }
+            };
+
+            $(document).ready(function() {
+                POSKeyboardEngine.init();
+            });
         </script>
     @endpush
 </x-app-layout>

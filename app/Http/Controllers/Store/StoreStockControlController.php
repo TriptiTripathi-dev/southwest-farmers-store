@@ -38,22 +38,26 @@ class StoreStockControlController extends Controller
         $areaData = $areaSales->pluck('total_sold');
 
         // --- 2. Top Selling Product Per Area (For Insights Table) ---
-        // Finds the most popular item in each specific area
-        $topProductsByArea = DB::table('stock_transactions as t')
+        // Uses DB-agnostic Window Functions (ROW_NUMBER) to prevent memory OOM on large datasets
+        $subquery = DB::table('stock_transactions as t')
             ->join('store_customers as c', 't.customer_id', '=', 'c.id')
             ->join('products as p', 't.product_id', '=', 'p.id')
             ->where('t.store_id', $storeId)
             ->where('t.type', 'sale')
             ->whereNotNull('c.address')
-            ->select('c.address', 'p.product_name', DB::raw('SUM(ABS(t.quantity_change)) as qty'))
-            ->groupBy('c.address', 'p.product_name')
-            ->orderBy('c.address')
-            ->orderByDesc('qty')
+            ->select(
+                'c.address', 
+                'p.product_name', 
+                DB::raw('SUM(ABS(t.quantity_change)) as qty'),
+                DB::raw('ROW_NUMBER() OVER(PARTITION BY c.address ORDER BY SUM(ABS(t.quantity_change)) DESC) as rn')
+            )
+            ->groupBy('c.address', 'p.product_name');
+
+        $topProductsByArea = DB::table(DB::raw("({$subquery->toSql()}) as sub"))
+            ->mergeBindings($subquery)
+            ->where('rn', 1)
             ->get()
-            ->groupBy('address')
-            ->map(function ($group) {
-                return $group->first(); // Returns the single top product row for the address
-            });
+            ->keyBy('address');
 
         return view('store.stock-control.overview', compact('categories', 'areaLabels', 'areaData', 'topProductsByArea'));
     }
@@ -129,7 +133,12 @@ class StoreStockControlController extends Controller
 
         $user = Auth::user();
         $storeId = $user->store_id;
-        $product = Product::findOrFail($request->product_id);
+        
+        // Ensure the product requested is accessible to this store
+        $product = Product::where('id', $request->product_id)
+            ->where(function($q) use ($storeId) {
+                $q->whereNull('store_id')->orWhere('store_id', $storeId);
+            })->firstOrFail();
 
         DB::transaction(function () use ($request, $user, $storeId, $product) {
             $po = StockRequest::create([
@@ -291,14 +300,12 @@ class StoreStockControlController extends Controller
                 'products.product_name',
                 'products.sku',
                 'product_categories.name as category_name',
-                // Fixed: Direct subtraction (PostgreSQL mein ye integer days deta hai)
-                DB::raw("(product_batches.expiry_date - CURRENT_DATE) as days_left"),
                 DB::raw("(product_batches.quantity * product_batches.cost_price) as value")
             ])
             ->where('product_batches.quantity', '>', 0);
 
         if ($days !== 'all') {
-            $query->whereRaw("product_batches.expiry_date <= CURRENT_DATE + INTERVAL '{$days} days'");
+            $query->whereDate('product_batches.expiry_date', '<=', Carbon::now()->addDays((int)$days));
         }
 
         if ($categoryId) {
@@ -310,8 +317,11 @@ class StoreStockControlController extends Controller
         }
 
         return DataTables::of($query)
+            ->addColumn('days_left', function ($row) {
+                return (int) Carbon::now()->startOfDay()->diffInDays(Carbon::parse($row->expiry_date), false);
+            })
             ->addColumn('status', function ($row) {
-                $daysLeft = $row->days_left;
+                $daysLeft = (int) Carbon::now()->startOfDay()->diffInDays(Carbon::parse($row->expiry_date), false);
                 if ($daysLeft <= 0) return '<span class="badge bg-danger">Expired</span>';
                 if ($daysLeft <= 30) return '<span class="badge bg-danger">Critical (< 1mo)</span>';
                 if ($daysLeft <= 90) return '<span class="badge bg-warning">Urgent (< 3mo)</span>';

@@ -159,8 +159,8 @@
 
     <!-- Hero Section -->
     <section class="hero-section position-relative overflow-hidden">
-        <div class="hero-blob" style="width: 600px; height: 600px; top: -200px; right: -100px; background: #009A36;"></div>
-        <div class="hero-blob" style="width: 400px; height: 400px; bottom: -100px; left: -100px; background: #fbbf24; animation-delay: -5s;"></div>
+        <div class="hero-blob" style="width: min(600px, 100vw); height: min(600px, 100vw); top: -200px; right: -100px; background: #009A36;"></div>
+        <div class="hero-blob" style="width: min(400px, 100vw); height: min(400px, 100vw); bottom: -100px; left: -100px; background: #fbbf24; animation-delay: -5s;"></div>
         
         <div class="container py-5 position-relative z-1">
             <div class="row align-items-center g-5">
@@ -222,7 +222,7 @@
         <div class="container py-5">
             <div class="text-center mb-5 reveal">
                 <h2 class="display-5 fw-black text-dark mb-3">{{ $homeSettings?->features_title ?? 'Why Shop With Us?' }}</h2>
-                <div class="text-muted mx-auto" style="max-width: 600px;">{!! $homeSettings?->features_subtitle ?? "We've optimized every step of the process to ensure you get the freshest items at the best prices." !!}</div>
+                <div class="text-muted mx-auto px-3" style="max-width: min(600px, 100%);">{!! $homeSettings?->features_subtitle ?? "We've optimized every step of the process to ensure you get the freshest items at the best prices." !!}</div>
             </div>
             
             <div class="row g-4">
@@ -301,7 +301,7 @@
                 <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 bg-theme"></div>
                 <div class="position-relative z-1">
                     <h2 class="display-4 fw-black text-dark mb-3">{{ $homeSettings?->cta_title ?? 'Ready for a Healthy Change?' }}</h2>
-                    <div class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">{!! $homeSettings?->cta_subtitle ?? 'Join thousands of families getting farm-fresh organics delivered straight to their kitchen.' !!}</div>
+                    <div class="lead text-muted mb-5 mx-auto px-3" style="max-width: min(600px, 100%);">{!! $homeSettings?->cta_subtitle ?? 'Join thousands of families getting farm-fresh organics delivered straight to their kitchen.' !!}</div>
                     <div class="d-flex justify-content-center gap-3">
                         <a href="{{ $homeSettings?->cta_button_1_url ?? route('website.register') }}" class="btn btn-premium btn-lg">{{ $homeSettings?->cta_button_1_text ?? 'Join us Today' }}</a>
                         <a href="{{ $homeSettings?->cta_button_2_url ?? route('website.products.index') }}" class="btn btn-white btn-lg rounded-pill shadow-sm border px-5 fw-bold">{{ $homeSettings?->cta_button_2_text ?? 'Shop Now' }}</a>

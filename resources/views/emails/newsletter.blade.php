@@ -48,6 +48,19 @@
             color: #019934;
             text-decoration: none;
         }
+        @media only screen and (max-width: 600px) {
+            .container {
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+            .content {
+                padding: 20px 15px !important;
+            }
+            .header {
+                padding: 20px 15px !important;
+            }
+        }
     </style>
 </head>
 <body>

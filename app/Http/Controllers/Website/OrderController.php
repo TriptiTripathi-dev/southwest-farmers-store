@@ -100,6 +100,7 @@ class OrderController extends Controller
                 // Deduct from StoreStock (If stock tracking is enabled for website)
                 $storeStock = StoreStock::where('store_id', $storeId)
                     ->where('product_id', $item->product_id)
+                    ->lockForUpdate()
                     ->first();
 
                 if ($storeStock) {
