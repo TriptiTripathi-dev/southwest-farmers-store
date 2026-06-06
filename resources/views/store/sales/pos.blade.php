@@ -2910,20 +2910,53 @@
             const POSKeyboardEngine = {
                 barcodeBuffer: '',
                 lastKeyPressTime: 0,
+                lastActionTime: 0, // Used for debounce prevention
                 timeoutThreshold: 50, // ms threshold for hardware macro speed
                 timer: null,
 
-                // Default hotkeys for Action Keys. These will be updated once we get the zip file.
-                hotkeys: {
-                    'F9': 'SUB_TOTAL',
-                    'F8': 'VOID',
-                    'F7': 'CLEAR',
-                    'F6': 'QTY',
+                // Real Cherry Keyboard Mappings based on extracted Excel configuration
+                actionMaps: {
+                    '`print': 'REPRINT',
+                    '`disc': 'DISCOUNT',
+                    '`clock': 'CLOCK_IN_OUT',
+                    '`return': 'RETURN',
+                    '`tmpsgnof': 'TEMP_SIGN_OFF',
+                    '`opendrwr': 'NO_SALE',
+                    '`vndrcpn': 'VENDOR_COUPON',
+                    '`paywic': 'PAY_WIC',
+                    '`service': 'SERVICE',
+                    '`clear': 'CLEAR',
+                    '`cancel': 'CANCEL_ALL',
+                    '`void': 'VOID',
+                    '`qty': 'QTY',
+                    'paycard': 'PAY_CARD',
+                    'cash': 'PAY_CASH'
                 },
 
                 init: function() {
                     $(document).on('keydown', this.handleKeydown.bind(this));
-                    console.log('POS Keyboard Engine Initialized. Ready for fast input.');
+                    console.log('POS Keyboard Engine Initialized. Listening for Cherry hardware macros.');
+                },
+
+                playBeep: function(isError = false) {
+                    try {
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        
+                        oscillator.type = isError ? 'sawtooth' : 'sine';
+                        oscillator.frequency.setValueAtTime(isError ? 200 : 800, audioCtx.currentTime); // 800Hz for success, 200Hz for error
+                        
+                        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        
+                        oscillator.start();
+                        oscillator.stop(audioCtx.currentTime + (isError ? 0.3 : 0.1)); // 100ms beep
+                    } catch(e) {
+                        console.warn('AudioContext not supported or blocked');
+                    }
                 },
 
                 handleKeydown: function(e) {
@@ -2932,20 +2965,18 @@
                         return;
                     }
 
-                    // Check for Action Hotkeys
-                    if (this.hotkeys[e.key]) {
-                        e.preventDefault();
-                        this.triggerAction(this.hotkeys[e.key]);
-                        return;
-                    }
-
-                    // Process Barcode buffering
                     // Ignore modifiers and control keys
                     if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) {
-                        if (e.key === 'Enter' && this.barcodeBuffer.length > 0) {
+                        if (e.key === 'Enter') {
                             e.preventDefault();
-                            if (this.timer) clearTimeout(this.timer);
-                            this.processBuffer();
+                            if (this.barcodeBuffer.length > 0) {
+                                // Finish the sequence if there's a buffer
+                                if (this.timer) clearTimeout(this.timer);
+                                this.processBuffer();
+                            } else {
+                                // Empty Enter key is mapped to SUB TOTAL
+                                this.triggerAction('SUB_TOTAL');
+                            }
                         }
                         return;
                     }
@@ -2969,30 +3000,59 @@
                 },
 
                 processBuffer: function() {
-                    if (this.barcodeBuffer.length > 2) {
-                        console.log('POS Keyboard Engine intercepted barcode:', this.barcodeBuffer);
-                        if (typeof processScannedBarcode === 'function') {
-                            // Forward barcode to existing search/add function
-                            processScannedBarcode(this.barcodeBuffer);
+                    const buf = this.barcodeBuffer.trim();
+                    if (buf.length > 0) {
+                        console.log('POS Keyboard Engine intercepted sequence:', buf);
+
+                        // Check if sequence is a known Action Command
+                        if (this.actionMaps[buf]) {
+                            this.playBeep();
+                            this.triggerAction(this.actionMaps[buf]);
+                        } else {
+                            // Otherwise, it's a Product ID / Barcode
+                            if (typeof processScannedBarcode === 'function') {
+                                this.playBeep();
+                                processScannedBarcode(buf);
+                                // Auto scroll to cart bottom after adding item
+                                setTimeout(() => {
+                                    const cartDiv = document.querySelector('.cart-items-container');
+                                    if(cartDiv) cartDiv.scrollTop = cartDiv.scrollHeight;
+                                }, 200);
+                            }
                         }
                     }
                     this.barcodeBuffer = '';
                 },
 
                 triggerAction: function(action) {
+                    // Debounce prevention: Ignore same/multiple actions within 500ms
+                    const now = Date.now();
+                    if (now - this.lastActionTime < 500) {
+                        console.warn('Action ignored due to debounce: ', action);
+                        return;
+                    }
+                    this.lastActionTime = now;
+
                     console.log('POS Keyboard Action Triggered:', action);
                     switch(action) {
                         case 'SUB_TOTAL':
                             if (cart.length > 0) openCartReview();
-                            else toastr.warning('Cart is empty');
+                            else {
+                                this.playBeep(true);
+                                toastr.warning('Cart is empty');
+                            }
                             break;
                         case 'VOID':
                             if (cart.length > 0) {
                                 removeFromCart(cart.length - 1);
                                 toastr.info('Last item voided');
-                            } else toastr.warning('Nothing to void');
+                            } else {
+                                this.playBeep(true);
+                                toastr.warning('Nothing to void');
+                            }
                             break;
                         case 'CLEAR':
+                        case 'CANCEL_ALL':
                             if (cart.length > 0) {
                                 $.post("{{ route('store.sales.cart.clear') }}", { _token: csrfToken }, function() {
                                     cart = [];
@@ -3003,6 +3063,25 @@
                             break;
                         case 'QTY':
                             $('#productSearch').focus();
+                            break;
+                        case 'NO_SALE':
+                            toastr.info('Opening Cash Drawer...');
+                            // API Call: $.post("{{ route('store.sales.drawer.open') }}", { _token: csrfToken });
+                            break;
+                        case 'PAY_CASH':
+                            if ($('#cartReviewModal').is(':visible')) {
+                                $('#btnPayCash').click();
+                            } else if (cart.length > 0) {
+                                openCartReview();
+                            }
+                            break;
+                        case 'PAY_WIC':
+                            toastr.info('WIC Payment Initialization Required');
+                            // API Call prep for Government WIC auth
+                            break;
+                        default:
+                            this.playBeep(true);
+                            toastr.info('Action ' + action + ' is mapped but not fully implemented yet.');
                             break;
                     }
                 }
