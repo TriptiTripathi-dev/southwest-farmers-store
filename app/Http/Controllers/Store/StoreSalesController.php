@@ -620,7 +620,7 @@ class StoreSalesController extends Controller
                     ->firstOrFail();
 
                 if ($storeStock->quantity < $item['quantity']) {
-                    throw new \Exception('Insufficient stock for ' . $item['name']);
+                    throw new \Exception('Insufficient stock for ' . ($storeStock->product->product_name ?? 'Product ID ' . $item['id']));
                 }
 
                 $storeStock->decrement('quantity', $item['quantity']);

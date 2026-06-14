@@ -575,7 +575,7 @@
                     total_amount: totalNum,
                     cart: JSON.stringify(cartItems.map(i => {
                         let rp = Math.floor(i.product.price) + 0.9;
-                        return { id: i.product_id, quantity: i.quantity, price: rp };
+                        return { id: i.product_id, quantity: i.quantity, price: rp, name: i.product.product_name };
                     })),
                     card_auth_status: cardState.status,
                     card_approved_amount: cardState.amount
