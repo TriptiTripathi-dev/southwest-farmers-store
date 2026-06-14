@@ -765,6 +765,181 @@
                 });
             }
 
+            // --- POS KEYBOARD EMULATION ENGINE ---
+            const POSKeyboardEngine = {
+                barcodeBuffer: '',
+                lastKeyPressTime: 0,
+                lastActionTime: 0,
+                timeoutThreshold: 50,
+                timer: null,
+
+                actionMaps: {
+                    '`opendrwr': 'NO_SALE',
+                    'paycard': 'PAY_CARD',
+                    'cash': 'PAY_CASH',
+                    '`cancel': 'CANCEL_ALL',
+                    '`clear': 'CANCEL_ALL'
+                },
+
+                init: function() {
+                    $(document).on('keydown', this.handleKeydown.bind(this));
+                    console.log('Checkout POS Keyboard Engine Initialized.');
+                },
+
+                playBeep: function(isError = false) {
+                    try {
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        
+                        oscillator.type = isError ? 'sawtooth' : 'sine';
+                        oscillator.frequency.setValueAtTime(isError ? 200 : 800, audioCtx.currentTime);
+                        
+                        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        
+                        oscillator.start();
+                        oscillator.stop(audioCtx.currentTime + (isError ? 0.3 : 0.1));
+                    } catch(e) {
+                        console.warn('AudioContext not supported or blocked');
+                    }
+                },
+
+                handleKeydown: function(e) {
+                    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+                        return;
+                    }
+
+                    if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (this.barcodeBuffer.length > 0) {
+                                if (this.timer) clearTimeout(this.timer);
+                                this.processBuffer();
+                            } else {
+                                this.triggerAction('FINALIZE');
+                            }
+                        }
+                        return;
+                    }
+
+                    const currentTime = Date.now();
+                    if (this.lastKeyPressTime > 0 && (currentTime - this.lastKeyPressTime) > this.timeoutThreshold) {
+                        this.barcodeBuffer = '';
+                    }
+
+                    this.barcodeBuffer += e.key;
+                    this.lastKeyPressTime = currentTime;
+
+                    if (this.timer) clearTimeout(this.timer);
+                    this.timer = setTimeout(() => {
+                        this.processBuffer();
+                    }, this.timeoutThreshold);
+                },
+
+                processBuffer: function() {
+                    const buf = this.barcodeBuffer.trim();
+                    if (buf.length > 0) {
+                        if (this.actionMaps[buf]) {
+                            this.playBeep();
+                            this.triggerAction(this.actionMaps[buf]);
+                        } else {
+                            // If barcode scanned on checkout page, warn user
+                            this.playBeep(true);
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Barcode Scanned',
+                                text: 'Please return to catalog to scan more items.',
+                                showCancelButton: true,
+                                confirmButtonText: 'Return to Catalog',
+                                cancelButtonText: 'Stay Here'
+                            }).then((r) => {
+                                if (r.isConfirmed) {
+                                    window.location.href = "{{ route('store.sales.pos') }}";
+                                }
+                            });
+                        }
+                    }
+                    this.barcodeBuffer = '';
+                },
+
+                triggerAction: function(action) {
+                    const now = Date.now();
+                    if (now - this.lastActionTime < 500) {
+                        return;
+                    }
+                    this.lastActionTime = now;
+
+                    switch(action) {
+                        case 'PAY_CASH':
+                            const cashCardEl = $('.pay-method-card').filter(function() {
+                                return $(this).text().toLowerCase().includes('cash');
+                            }).first()[0];
+                            if (cashCardEl) {
+                                setPaymentMethod('cash', cashCardEl);
+                                Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                }).fire({ icon: 'info', title: 'Selected Cash' });
+                            }
+                            break;
+                        case 'PAY_CARD':
+                            const cardCardEl = $('.pay-method-card').filter(function() {
+                                return $(this).text().toLowerCase().includes('card');
+                            }).first()[0];
+                            if (cardCardEl) {
+                                setPaymentMethod('card', cardCardEl);
+                                Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                }).fire({ icon: 'info', title: 'Selected Card' });
+                            }
+                            break;
+                        case 'NO_SALE':
+                            Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).fire({ icon: 'info', title: 'Opening Cash Drawer...' });
+
+                            $.post("{{ route('store.sales.drawer.open') }}", { _token: csrfToken })
+                                .done(function(res) {
+                                    if (res && res.success) {
+                                        Swal.mixin({
+                                            toast: true,
+                                            position: 'top-end',
+                                            showConfirmButton: false,
+                                            timer: 1500
+                                        }).fire({ icon: 'success', title: 'Cash drawer opened' });
+                                    } else {
+                                        Swal.fire('Error', res.message || 'Failed to open drawer.', 'error');
+                                    }
+                                })
+                                .fail(function() {
+                                    Swal.fire('Error', 'Failed to communicate with cash drawer.', 'error');
+                                });
+                            break;
+                        case 'CANCEL_ALL':
+                            window.location.href = "{{ route('store.sales.pos') }}";
+                            break;
+                        case 'FINALIZE':
+                            initiateFinalCheckout();
+                            break;
+                        default:
+                            this.playBeep(true);
+                            break;
+                    }
+                }
+            };
+
+            POSKeyboardEngine.init();
+
             // Initial badge sync
             renderHeldCarts();
         });

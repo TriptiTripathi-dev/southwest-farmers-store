@@ -117,6 +117,13 @@
                                 <span class="fw-bold text-dark">{{ strtoupper($order->payment_method) }}</span>
                             </div>
                         </div>
+                        @if(in_array($order->status, ['pending', 'payment_failed']) && $order->payment_method === 'card')
+                        <div class="mt-4 pt-4 border-top">
+                            <button id="btnRetryPayment" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow" onclick="retryPayment()">
+                                <i class="mdi mdi-credit-card me-2"></i>Retry Card Payment
+                            </button>
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Shipping Address -->
@@ -143,4 +150,59 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function retryPayment() {
+            const btn = document.getElementById('btnRetryPayment');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connecting...';
+            }
+
+            Swal.fire({
+                title: 'Initializing Payment',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch("{{ route('website.orders.retry-payment', $order->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.redirect) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Payment Initialized',
+                        text: 'Redirecting to payment gateway...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirect;
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Unable to start payment.', 'error');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="mdi mdi-credit-card me-2"></i>Retry Card Payment';
+                    }
+                }
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Connection failed.', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="mdi mdi-credit-card me-2"></i>Retry Card Payment';
+                }
+            });
+        }
+    </script>
+    @endpush
 </x-website-layout>

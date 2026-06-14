@@ -41,6 +41,7 @@ Route::name('website.')->group(function () {
         Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
         Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/my-orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+        Route::post('/my-orders/{id}/retry-payment', [OrderController::class, 'retryPayment'])->name('orders.retry-payment');
         Route::get('/order-success/{invoice}', [OrderController::class, 'success'])->name('checkout.success');
         Route::match(['GET', 'POST'], '/payment/callback', [\App\Http\Controllers\Website\PaymentCallbackController::class, 'handle'])->name('payment.callback');
     });

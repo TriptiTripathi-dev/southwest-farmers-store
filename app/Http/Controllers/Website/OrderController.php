@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\StockTransaction;
 use App\Models\StoreStock;
 use App\Models\StoreNotification;
+use App\Services\ConvergeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -181,5 +182,75 @@ class OrderController extends Controller
             ->firstOrFail();
 
         return view('website.checkout.success', compact('order'));
+    }
+
+    /**
+     * Retry payment for an existing failed or pending order.
+     */
+    public function retryPayment($id)
+    {
+        $user = auth('customer')->user();
+        $order = Sale::where('id', $id)
+            ->where('customer_id', $user->id)
+            ->whereIn('status', ['pending', 'payment_failed'])
+            ->with('items.product')
+            ->firstOrFail();
+
+        $storeId = $order->store_id ?? 1;
+
+        DB::beginTransaction();
+        try {
+            // Re-deduct from StoreStock
+            foreach ($order->items as $item) {
+                $storeStock = StoreStock::where('store_id', $storeId)
+                    ->where('product_id', $item->product_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($storeStock) {
+                    if ($storeStock->quantity < $item->quantity) {
+                        throw new \Exception('Insufficient stock for ' . $item->product->product_name);
+                    }
+                    $storeStock->decrement('quantity', $item->quantity);
+
+                    // Create Stock Transaction
+                    StockTransaction::create([
+                        'product_id' => $item->product_id,
+                        'store_id' => $storeId,
+                        'customer_id' => $user->id,
+                        'type' => 'sale',
+                        'quantity_change' => -$item->quantity,
+                        'running_balance' => $storeStock->quantity,
+                        'reference_id' => $order->id,
+                        'remarks' => 'Retry Payment for Order: ' . $order->invoice_number,
+                    ]);
+                }
+            }
+
+            // Generate new token
+            $converge = new ConvergeService();
+            $token = $converge->generateTransactionToken($order->total_amount, $order->invoice_number, $user);
+
+            if (!$token) {
+                throw new \Exception('Unable to initialize payment. Please try again.');
+            }
+
+            // Update order status back to pending
+            $order->update([
+                'status' => 'pending',
+                'notes' => 'Retrying card payment.'
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => $converge->getHppUrl($token, $order->invoice_number)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
     }
 }

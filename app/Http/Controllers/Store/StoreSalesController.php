@@ -438,7 +438,7 @@ class StoreSalesController extends Controller
 
     public function searchProduct(Request $request)
     {
-        $term = $request->term;
+        $term = $request->term ?? $request->search;
         $category = $request->category;
         $storeId = Auth::user()->store_id;
 
@@ -653,9 +653,10 @@ class StoreSalesController extends Controller
             try {
                 $store = \App\Models\StoreDetail::where('id', $storeId)->first();
                 $terminalId = $store ? $store->pos_terminal_id : null;
+                $posSettings = \App\Models\QuickPosSetting::first();
 
                 if ($terminalId) {
-                    if ($paymentMethod === 'cash') {
+                    if ($paymentMethod === 'cash' && $posSettings && $posSettings->cash_drawer_enabled) {
                         // 1. Check Drawer Status
                         $drawerStatus = $posAgentService->getCashDrawerStatus($terminalId);
                         Log::info('POS Checkout: Cash Drawer Status Response', ['response' => $drawerStatus]);
@@ -921,6 +922,20 @@ class StoreSalesController extends Controller
         }
 
         $result = $posAgentService->cancelPayment($store->pos_terminal_id);
+        return response()->json($result);
+    }
+
+    /**
+     * Open cash drawer manually (NO_SALE action)
+     */
+    public function openDrawer(PosAgentService $posAgentService)
+    {
+        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
+        if (!$store || !$store->pos_terminal_id) {
+            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
+        }
+
+        $result = $posAgentService->openCashDrawer($store->pos_terminal_id);
         return response()->json($result);
     }
 }

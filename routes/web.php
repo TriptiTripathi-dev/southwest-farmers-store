@@ -214,6 +214,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/payment/initiate', [StoreSalesController::class, 'initiatePaxPayment'])->name('sales.payment-initiate');
         Route::post('/pos/payment/cancel', [StoreSalesController::class, 'cancelPaxPayment'])->name('sales.payment-cancel');
         Route::post('/pos/manual-print', [StoreSalesController::class, 'manualPrint'])->name('sales.manual-print');
+        Route::post('/pos/drawer/open', [StoreSalesController::class, 'openDrawer'])->name('sales.drawer.open');
         Route::post('/pos/create-customer', [StoreSalesController::class, 'storeCustomer'])->name('sales.customers.store');
         Route::get('/pos/search-customers', [StoreSalesController::class, 'searchCustomer'])->name('sales.customers.search');
         Route::get('products/{id}/analytics', [StoreProductController::class, 'analytics'])->name('products.analytics');

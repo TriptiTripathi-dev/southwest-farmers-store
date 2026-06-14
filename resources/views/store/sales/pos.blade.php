@@ -3066,13 +3066,50 @@
                             break;
                         case 'NO_SALE':
                             toastr.info('Opening Cash Drawer...');
-                            // API Call: $.post("{{ route('store.sales.drawer.open') }}", { _token: csrfToken });
+                            $.post("{{ route('store.sales.drawer.open') }}", { _token: csrfToken })
+                                .done(function(res) {
+                                    if (res && res.success) {
+                                        toastr.success('Cash drawer opened successfully.');
+                                    } else {
+                                        toastr.error(res.message || 'Failed to open cash drawer.');
+                                    }
+                                })
+                                .fail(function() {
+                                    toastr.error('Error connecting to cash drawer.');
+                                });
+                            break;
+                        case 'PAY_CARD':
+                            if (cart.length > 0) {
+                                openCartReview();
+                                const cardBtn = $('.payment-method-btn').filter(function() {
+                                    return $(this).text().toLowerCase().includes('card');
+                                }).first();
+                                if (cardBtn.length) selectPayment('card', cardBtn[0]);
+                                else {
+                                    $('#paymentMethod').val('card');
+                                    updateCardAuthUI();
+                                }
+                            } else {
+                                this.playBeep(true);
+                                toastr.warning('Cart is empty');
+                            }
                             break;
                         case 'PAY_CASH':
                             if ($('#cartReviewModal').is(':visible')) {
                                 $('#btnPayCash').click();
                             } else if (cart.length > 0) {
                                 openCartReview();
+                                const cashBtn = $('.payment-method-btn').filter(function() {
+                                    return $(this).text().toLowerCase().includes('cash');
+                                }).first();
+                                if (cashBtn.length) selectPayment('cash', cashBtn[0]);
+                                else {
+                                    $('#paymentMethod').val('cash');
+                                    updateCardAuthUI();
+                                }
+                            } else {
+                                this.playBeep(true);
+                                toastr.warning('Cart is empty');
                             }
                             break;
                         case 'PAY_WIC':

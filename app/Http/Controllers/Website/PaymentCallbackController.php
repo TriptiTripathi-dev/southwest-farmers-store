@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\Cart;
 use App\Models\StoreNotification;
+use App\Models\StoreStock;
+use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -78,12 +80,45 @@ class PaymentCallbackController extends Controller
             }
         } else {
             // FAILURE or CANCEL
-            $sale->update([
-                'status' => 'payment_failed',
-                'notes' => "Payment Failed: {$message}"
-            ]);
+            if ($sale->status !== 'payment_failed') {
+                DB::beginTransaction();
+                try {
+                    $sale->load('items');
+                    foreach ($sale->items as $item) {
+                        $storeStock = StoreStock::where('store_id', $sale->store_id)
+                            ->where('product_id', $item->product_id)
+                            ->lockForUpdate()
+                            ->first();
 
-            return redirect()->route('website.home') // Or back to checkout
+                        if ($storeStock) {
+                            $storeStock->increment('quantity', $item->quantity);
+
+                            StockTransaction::create([
+                                'product_id' => $item->product_id,
+                                'store_id' => $sale->store_id,
+                                'customer_id' => $sale->customer_id,
+                                'type' => 'restoration',
+                                'quantity_change' => $item->quantity,
+                                'running_balance' => $storeStock->quantity,
+                                'reference_id' => $sale->id,
+                                'remarks' => 'Website Payment Cancelled/Failed: ' . $invoice,
+                            ]);
+                        }
+                    }
+
+                    $sale->update([
+                        'status' => 'payment_failed',
+                        'notes' => "Payment Failed: {$message}"
+                    ]);
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error('Callback Restoration Error: ' . $e->getMessage());
+                }
+            }
+
+            return redirect()->route('website.cart.index')
                 ->with('error', 'Payment failed or was cancelled: ' . $message);
         }
     }
