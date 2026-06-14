@@ -586,9 +586,15 @@
                 $.post("{{ route('store.sales.checkout') }}", data)
                     .done(res => {
                         if (res.success) handleCheckoutSuccess(res);
-                        else Swal.fire('Checkout Failed', res.message, 'error');
+                        else {
+                            Swal.fire('Checkout Failed', res.message, 'error');
+                            posDisplayChannel.postMessage({ type: 'PAYMENT_STATUS_CHANGE', status: 'failed' });
+                        }
                     })
-                    .fail(xhr => Swal.fire('System Error', xhr.responseJSON?.message || 'Check connection.', 'error'));
+                    .fail(xhr => {
+                        Swal.fire('System Error', xhr.responseJSON?.message || 'Check connection.', 'error');
+                        posDisplayChannel.postMessage({ type: 'PAYMENT_STATUS_CHANGE', status: 'failed' });
+                    });
             }
 
             let lastInvoice = null;
