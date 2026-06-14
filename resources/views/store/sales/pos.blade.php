@@ -1009,6 +1009,10 @@
                                 id="scaleStatusBadge" title="Scale Connection">
                                 <i class="mdi mdi-scale me-1"></i>Scale: -
                             </span>
+                            <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3"
+                                onclick="openCustomerDisplay()" title="Open Customer Facing Display">
+                                <i class="mdi mdi-monitor-multiple me-1"></i>Customer Display
+                            </button>
                             <a href="{{ route('dashboard') }}"
                                 class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
                                 <i class="mdi mdi-exit-to-app me-1"></i>Exit
@@ -1705,6 +1709,41 @@
                 });
             };
 
+            // Broadcast Channel for Customer display
+            const posDisplayChannel = new BroadcastChannel('pos_display_channel');
+
+            window.broadcastCartState = function() {
+                let subtotal = 0;
+                cart.forEach(item => {
+                    subtotal += item.price * item.quantity;
+                });
+                let discount = parseFloat($('#discountInput').val() || $('#discountInputMobile').val() || 0);
+                let taxable = Math.max(0, subtotal - discount);
+                let tax = taxable * TAX_RATE;
+                let grand = taxable + tax;
+
+                posDisplayChannel.postMessage({
+                    type: 'CART_UPDATE',
+                    cart: cart,
+                    totals: {
+                        subtotal: subtotal,
+                        discount: discount,
+                        tax: tax,
+                        total: grand
+                    }
+                });
+            };
+
+            posDisplayChannel.onmessage = function(event) {
+                if (event.data.type === 'CUSTOMER_DISPLAY_READY') {
+                    broadcastCartState();
+                }
+            };
+
+            window.openCustomerDisplay = function() {
+                window.open("{{ route('store.sales.customer-display') }}", 'CustomerDisplay', 'width=1024,height=768,menubar=no,status=no,toolbar=no');
+            };
+
             window.renderCart = function() {
                 let subtotal = 0,
                     totalItems = 0;
@@ -1739,6 +1778,7 @@
                 }
                 updateTotals(subtotal, totalItems);
                 updateProductCartIndicators();
+                broadcastCartState();
             };
 
             window.updateTotals = function(subtotal, totalItems) {

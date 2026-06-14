@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/store/update/{store}', [StoreProfileController::class, 'update'])
         ->name('store.update');
     Route::get('/pos', [StoreSalesController::class, 'index'])->name('store.sales.pos');
+    Route::get('/pos/customer-display', [StoreSalesController::class, 'customerDisplay'])->name('store.sales.customer-display');
     Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     // Notifications

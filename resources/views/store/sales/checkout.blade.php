@@ -341,6 +341,40 @@
             let cartItems = @json($currentCart->items);
             let cartSubtotal = 0;
             
+            // Broadcast Channel for Customer display
+            const posDisplayChannel = new BroadcastChannel('pos_display_channel');
+
+            function broadcastCheckoutCartState() {
+                let discount = parseFloat($('#discountValue').val() || 0);
+                let taxable = Math.max(0, cartSubtotal - discount);
+                let tax = taxable * TAX_RATE;
+                let total = taxable + tax;
+
+                posDisplayChannel.postMessage({
+                    type: 'CART_UPDATE',
+                    cart: cartItems.map(i => {
+                        let rp = Math.floor(i.product.price) + 0.9;
+                        return {
+                            name: i.product.product_name,
+                            price: rp,
+                            quantity: i.quantity
+                        };
+                    }),
+                    totals: {
+                        subtotal: cartSubtotal,
+                        discount: discount,
+                        tax: tax,
+                        total: total
+                    }
+                });
+            }
+
+            posDisplayChannel.onmessage = function(event) {
+                if (event.data.type === 'CUSTOMER_DISPLAY_READY') {
+                    broadcastCheckoutCartState();
+                }
+            };
+
             // Calc dynamic subtotal
             cartItems.forEach(i => {
                 let rp = Math.floor(i.product.price) + 0.9;
@@ -357,9 +391,14 @@
                 $('#summaryTax').text('$' + tax.toFixed(2));
                 $('#discountDisplayLabel').text('-$' + discount.toFixed(2));
                 $('#summaryGrandTotal').text('$' + total.toFixed(2));
+
+                broadcastCheckoutCartState();
             }
 
             $('#discountValue').on('input', refreshTotals);
+            
+            // Broadcast initial state
+            broadcastCheckoutCartState();
 
             // Customer Logic
             $('#customerSearch').on('keyup', function() {
@@ -424,6 +463,8 @@
             window.launchCardAuth = function() {
                 const total = parseFloat($('#summaryGrandTotal').text().replace('$',''));
                 $('#paxAmountVal').text('$' + total.toFixed(2));
+                
+                posDisplayChannel.postMessage({ type: 'PAYMENT_INITIATE', method: 'card' });
                 
                 // 1. Show processing modal
                 paxModal = new bootstrap.Modal(document.getElementById('cardAuthModal'));
@@ -505,6 +546,9 @@
             function handlePaxError(msg) {
                 updatePaxUI('Failed', msg, 'error');
                 cardState.status = 'failed';
+                
+                posDisplayChannel.postMessage({ type: 'PAYMENT_STATUS_CHANGE', status: 'failed' });
+                
                 $('#cardStatusText').text('CARD FAILED').addClass('text-danger');
                 setTimeout(() => {
                     if (paxModal) paxModal.hide();
@@ -515,6 +559,8 @@
             window.initiateFinalCheckout = function() {
                 if (!$('#selectedCustomerId').val()) return Swal.fire('Customer Required', 'Please select or add a customer to continue.', 'error');
                 if (activePayment === 'card' && cardState.status !== 'approved') return Swal.fire('Incomplete Payment', 'Please complete card terminal authorization.', 'error');
+
+                posDisplayChannel.postMessage({ type: 'PAYMENT_INITIATE', method: activePayment });
 
                 const totalNum = parseFloat($('#summaryGrandTotal').text().replace('$',''));
                 
@@ -548,6 +594,9 @@
             let lastInvoice = null;
             function handleCheckoutSuccess(res) {
                 lastInvoice = res.invoice;
+                
+                posDisplayChannel.postMessage({ type: 'CHECKOUT_SUCCESS', invoice: lastInvoice });
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Payment Successful',

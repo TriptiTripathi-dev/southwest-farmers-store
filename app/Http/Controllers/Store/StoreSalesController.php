@@ -938,4 +938,12 @@ class StoreSalesController extends Controller
         $result = $posAgentService->openCashDrawer($store->pos_terminal_id);
         return response()->json($result);
     }
+
+    public function customerDisplay()
+    {
+        $storeId = Auth::user()->store_id;
+        $store = $storeId ? StoreDetail::find($storeId) : null;
+        $posSettings = \App\Models\QuickPosSetting::first();
+        return view('store.sales.customer_display', compact('store', 'posSettings'));
+    }
 }
