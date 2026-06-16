@@ -38,6 +38,7 @@ class ConvergeService
             'ssl_error_url' => $callbackUrl,
             'ssl_cancel_url' => $callbackUrl,
             'secure_hash' => $secureHash,
+            'ssl_custom_field_1' => $secureHash,
         ];
 
         // Pre-fill customer data if provided
