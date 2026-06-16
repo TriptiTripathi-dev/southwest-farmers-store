@@ -15,7 +15,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $storeId = session('store_id');
+        $storeId = session('store_id') ?? (auth('customer')->check() ? auth('customer')->user()->store_id : null);
 
         $query = Product::where('is_active', true);
         
@@ -52,7 +52,7 @@ class ProductController extends Controller
     public function pos(Request $request)
     {
         $categories = \App\Models\ProductCategory::select('id', 'name', 'code')->orderBy('name')->get();
-        $storeId = session('store_id');
+        $storeId = session('store_id') ?? (auth('customer')->check() ? auth('customer')->user()->store_id : null);
 
         if ($request->ajax()) {
             $query = Product::where('is_active', true);
