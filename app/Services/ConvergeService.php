@@ -33,7 +33,6 @@ class ConvergeService
             'ssl_amount' => number_format($amount, 2, '.', ''),
             'ssl_invoice_number' => $invoiceNumber,
             'ssl_show_receipt' => 'false',
-            'ssl_receipt_link_method' => 'REDG',
             'ssl_receipt_link_url' => $callbackUrl,
             'ssl_error_url' => $callbackUrl,
             'ssl_cancel_url' => $callbackUrl,
