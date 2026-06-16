@@ -33,7 +33,7 @@ class ConvergeService
             'ssl_amount' => number_format($amount, 2, '.', ''),
             'ssl_invoice_number' => $invoiceNumber,
             'ssl_show_receipt' => 'false',
-            'ssl_receipt_link_method' => 'GET',
+            'ssl_receipt_link_method' => 'REDG',
             'ssl_receipt_link_url' => $callbackUrl,
             'ssl_error_url' => $callbackUrl,
             'ssl_cancel_url' => $callbackUrl,
@@ -51,7 +51,12 @@ class ConvergeService
         }
 
         try {
-            $response = Http::asForm()->post($endpoint, $params);
+            $request = Http::asForm();
+            $proxyUrl = env('QUOTAGUARDSTATIC_URL') ?: env('FIXIE_URL') ?: env('OUTBOUND_PROXY');
+            if ($proxyUrl) {
+                $request = $request->withOptions(['proxy' => $proxyUrl]);
+            }
+            $response = $request->post($endpoint, $params);
 
             if ($response->successful()) {
                 $token = $response->body();
