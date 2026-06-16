@@ -37,6 +37,7 @@ class ConvergeService
             'ssl_receipt_link_url' => $callbackUrl,
             'ssl_error_url' => $callbackUrl,
             'ssl_cancel_url' => $callbackUrl,
+            'secure_hash' => $secureHash,
         ];
 
         // Pre-fill customer data if provided
