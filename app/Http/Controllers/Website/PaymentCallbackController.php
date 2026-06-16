@@ -118,8 +118,10 @@ class PaymentCallbackController extends Controller
                 }
             }
 
-            return redirect()->route('website.cart.index')
-                ->with('error', 'Payment failed or was cancelled: ' . $message);
+            return redirect()->route('website.checkout.failure', [
+                'invoice' => $invoice,
+                'error' => $message ?? 'Payment was cancelled or declined.'
+            ]);
         }
     }
 }

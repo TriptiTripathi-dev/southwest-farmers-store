@@ -179,9 +179,24 @@ class OrderController extends Controller
     {
         $order = Sale::where('invoice_number', $invoice)
             ->where('customer_id', auth('customer')->id())
+            ->with('items.product')
             ->firstOrFail();
 
         return view('website.checkout.success', compact('order'));
+    }
+
+    /**
+     * Show failure page.
+     */
+    public function failure(Request $request, $invoice)
+    {
+        $order = Sale::where('invoice_number', $invoice)
+            ->where('customer_id', auth('customer')->id())
+            ->firstOrFail();
+
+        $error = $request->query('error', 'Your transaction was declined or cancelled.');
+
+        return view('website.checkout.failure', compact('order', 'error'));
     }
 
     /**
