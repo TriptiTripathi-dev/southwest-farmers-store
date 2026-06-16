@@ -17,7 +17,7 @@ class PaymentCallbackController extends Controller
     /**
      * Handle the return from Converge HPP.
      */
-    public function handle(Request $request)
+    public function handle(Request $request, $secure_hash = null)
     {
         // Elavon sends data back in GET or POST depending on configuration
         // ssl_result: 0 means success
@@ -31,7 +31,8 @@ class PaymentCallbackController extends Controller
 
         // Validate secure hash to prevent callback spoofing
         $expectedHash = hash_hmac('sha256', $invoice, config('app.key'));
-        if ($request->input('secure_hash') !== $expectedHash) {
+        $receivedHash = $secure_hash ?? $request->input('secure_hash');
+        if ($receivedHash !== $expectedHash) {
             Log::error("Invalid secure hash for invoice {$invoice}");
             return redirect()->route('website.home')->with('error', 'Invalid payment verification token.');
         }
