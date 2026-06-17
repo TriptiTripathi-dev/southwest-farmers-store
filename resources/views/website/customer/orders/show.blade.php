@@ -141,7 +141,10 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 text-center">
+                    <div class="mt-4 text-center d-grid gap-2">
+                        <a href="{{ route('website.orders.invoice', $order->id) }}" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm">
+                            <i class="mdi mdi-file-pdf-box me-2"></i>Download PDF Invoice
+                        </a>
                         <a href="{{ route('website.contact') }}" class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-2">
                              <i class="mdi mdi-lifebuoy me-2"></i>Need Help with this Order?
                         </a>

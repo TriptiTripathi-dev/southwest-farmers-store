@@ -14,6 +14,7 @@ use App\Models\StoreNotification;
 use App\Services\ConvergeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
@@ -197,6 +198,20 @@ class OrderController extends Controller
         $error = $request->query('error', 'Your transaction was declined or cancelled.');
 
         return view('website.checkout.failure', compact('order', 'error'));
+    }
+
+    /**
+     * Generate and download PDF Invoice.
+     */
+    public function downloadInvoice($id)
+    {
+        $order = Sale::where('id', $id)
+            ->where('customer_id', auth('customer')->id())
+            ->with(['items.product', 'store', 'customer'])
+            ->firstOrFail();
+
+        $pdf = Pdf::loadView('website.checkout.invoice', compact('order'));
+        return $pdf->download('Invoice-' . $order->invoice_number . '.pdf');
     }
 
     /**

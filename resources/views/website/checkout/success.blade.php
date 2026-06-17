@@ -21,6 +21,9 @@
                             <a href="{{ route('website.orders.show', $order->id) }}" class="btn btn-primary btn-lg px-4 rounded-pill fw-bold">
                                 <i class="mdi mdi-package-variant-closed me-2"></i>Track Order
                             </a>
+                            <a href="{{ route('website.orders.invoice', $order->id) }}" class="btn btn-outline-primary btn-lg px-4 rounded-pill fw-bold">
+                                <i class="mdi mdi-file-pdf-box me-2"></i>Download Invoice
+                            </a>
                             <a href="{{ route('website.products.index') }}" class="btn btn-outline-secondary btn-lg px-4 rounded-pill fw-bold">
                                 Continue Shopping
                             </a>
