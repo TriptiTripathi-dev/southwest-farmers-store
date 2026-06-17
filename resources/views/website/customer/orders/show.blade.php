@@ -26,32 +26,34 @@
                         </div>
                         
                         <div class="position-relative py-3">
-                            <div class="progress" style="height: 4px;">
-                                @php
+                            <div class="progress" style="height: 4px;">                                @php
                                     $progress = [
                                         'pending' => 15,
                                         'processing' => 50,
-                                        'delivered' => 100,
+                                        'completed' => 100,
+                                        'paid' => 100,
                                         'cancelled' => 0,
+                                        'payment_failed' => 0,
                                     ][$order->status ?? 'pending'] ?? 15;
+                                    $isFailed = in_array($order->status, ['cancelled', 'payment_failed']);
                                 @endphp
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progress }}%"></div>
+                                <div class="progress-bar {{ $isFailed ? 'bg-danger' : 'bg-success' }}" role="progressbar" style="width: {{ $isFailed ? 100 : $progress }}%"></div>
                             </div>
                             <div class="d-flex justify-content-between mt-3 text-center small fw-bold text-muted">
                                 <div style="width: 25%">
-                                    <i class="mdi mdi-file-document-outline d-block fs-4 {{ $progress >= 15 ? 'text-success' : '' }}"></i>
-                                    PLACED
+                                    <i class="mdi mdi-file-document-outline d-block fs-4 {{ $isFailed ? 'text-danger' : ($progress >= 15 ? 'text-success' : '') }}"></i>
+                                    {{ $isFailed ? 'CANCELLED' : 'PLACED' }}
                                 </div>
                                 <div style="width: 25%">
-                                    <i class="mdi mdi-package-variant-closed d-block fs-4 {{ $progress >= 50 ? 'text-success' : '' }}"></i>
+                                    <i class="mdi mdi-package-variant-closed d-block fs-4 {{ !$isFailed && $progress >= 50 ? 'text-success' : '' }}"></i>
                                     PACKED
                                 </div>
                                 <div style="width: 25%">
-                                    <i class="mdi mdi-truck-delivery-outline d-block fs-4 {{ $progress >= 100 ? 'text-success' : '' }}"></i>
+                                    <i class="mdi mdi-truck-delivery-outline d-block fs-4 {{ !$isFailed && $progress >= 100 ? 'text-success' : '' }}"></i>
                                     SHIPPED
                                 </div>
                                 <div style="width: 25%">
-                                    <i class="mdi mdi-check-decagram d-block fs-4 {{ $progress >= 100 ? 'text-success' : '' }}"></i>
+                                    <i class="mdi mdi-check-decagram d-block fs-4 {{ !$isFailed && $progress >= 100 ? 'text-success' : '' }}"></i>
                                     DELIVERED
                                 </div>
                             </div>
