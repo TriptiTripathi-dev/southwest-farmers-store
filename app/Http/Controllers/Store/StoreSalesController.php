@@ -21,6 +21,7 @@ use App\Models\StoreDetail;
 use App\Models\StoreNotification;
 use App\Services\PosAgentService;
 use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StoreSalesController extends Controller
 {
@@ -419,6 +420,20 @@ class StoreSalesController extends Controller
         $store = $storeId ? StoreDetail::find($storeId) : null;
 
         return view('store.sales.show', compact('sale', 'store'));
+    }
+
+    /**
+     * Download Invoice as PDF for Store Panel.
+     */
+    public function downloadInvoice($id)
+    {
+        $storeId = Auth::user()->store_id;
+        $order = Sale::where('store_id', $storeId)
+            ->with(['items.product', 'store', 'customer'])
+            ->findOrFail($id);
+
+        $pdf = Pdf::loadView('website.checkout.invoice', compact('order'));
+        return $pdf->download('Invoice-' . $order->invoice_number . '.pdf');
     }
     public function updateOrderStatus(Request $request, $id)
     {

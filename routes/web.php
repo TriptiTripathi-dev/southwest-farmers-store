@@ -190,6 +190,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/sales', [StoreSalesController::class, 'salesReport'])->name('reports.sales');
         Route::get('/orders', [StoreSalesController::class, 'orders'])->name('sales.orders');
         Route::get('/orders/{id}', [StoreSalesController::class, 'showOrder'])->name('sales.orders.show');
+        Route::get('/orders/{id}/invoice', [StoreSalesController::class, 'downloadInvoice'])->name('sales.orders.invoice');
         Route::patch('/orders/{id}/status', [StoreSalesController::class, 'updateOrderStatus'])->name('sales.orders.update-status');
         
         Route::post('/orders/held/{id}/restore', [StoreSalesController::class, 'restoreHeldOrder'])->name('sales.orders.held.restore');
