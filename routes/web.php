@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
         ->name('store.update-status');
     Route::resource('roles', StoreRoleController::class);
     Route::resource('permissions', StorePermissionController::class);
+    Route::resource('menu-categories', \App\Http\Controllers\Store\MenuCategoryController::class);
+    Route::resource('menu-items', \App\Http\Controllers\Store\MenuItemController::class);
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'edit'])->name('settings.home-page');

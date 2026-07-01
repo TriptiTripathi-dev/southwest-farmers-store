@@ -77,7 +77,7 @@ class StoreDetail extends Model
 
         return $query->select('*')
             ->selectRaw("$haversine AS distance")
-            ->havingRaw("$haversine < ?", [$distance])
+            ->whereRaw("$haversine < ?", [$distance])
             ->orderBy('distance');
     }
 }

@@ -52,6 +52,8 @@ Route::name('website.')->group(function () {
     // Public Routes
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/menus', [\App\Http\Controllers\Website\WebsiteMenuController::class, 'index'])->name('menus.index');
+    Route::get('/menus/category/{id}', [\App\Http\Controllers\Website\WebsiteMenuController::class, 'category'])->name('menus.category');
     Route::get('/product/{slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/quick-shop', [ProductController::class, 'pos'])->name('products.pos');
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');

@@ -41,18 +41,25 @@
                             <!-- Items -->
                             <div>
                                 @foreach ($cart->items as $item)
+                                    @php
+                                        $isMenu = (bool) $item->menu_item_id;
+                                        $itemName = $isMenu ? ($item->menuItem->name ?? 'Menu Item') : ($item->product->product_name ?? 'Product');
+                                        $itemPrice = $isMenu ? ($item->menuItem->price ?? 0.0) : ($item->product->price ?? 0.0);
+                                        $itemImage = $isMenu ? ($item->menuItem->image ?? null) : ($item->product->image ?? null);
+                                        $itemUpc = !$isMenu ? ($item->product->upc ?? null) : null;
+                                    @endphp
                                     <div class="cart-item px-4 py-4 border-bottom d-flex gap-4 align-items-start transition"
                                         id="item-{{ $item->id }}">
                                         <!-- Product Image -->
                                         <div class="flex-shrink-0">
-                                            <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/120x120/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}"
-                                                class="rounded-3" alt="{{ $item->product->product_name }}"
+                                            <img src="{{ $itemImage ? Storage::disk('r2')->url($itemImage) : 'https://placehold.co/120x120/ecfdf5/10b981?text=' . urlencode($itemName) }}"
+                                                class="rounded-3" alt="{{ $itemName }}"
                                                 style="width: 120px; height: 120px; object-fit: contain; background: #f8fafc;">
                                         </div>
 
                                         <!-- Product Info -->
                                         <div class="flex-grow-1">
-                                            <h5 class="fw-bold text-dark mb-1">{{ $item->product->product_name }}</h5>
+                                            <h5 class="fw-bold text-dark mb-1">{{ $itemName }}</h5>
                                             @if ($cart->store)
                                                 <div class="mb-2 d-flex align-items-center">
                                                     <span class="badge bg-theme bg-opacity-10 text-theme fw-bold rounded-pill d-flex align-items-center gap-1"
@@ -67,10 +74,10 @@
                                             @endif
                                             <div class="d-flex gap-3 align-items-center mb-3">
                                                 <span
-                                                    class="fs-5 fw-bold text-primary">${{ number_format($item->product->price, 2) }}</span>
-                                                @if ($item->product->upc)
+                                                    class="fs-5 fw-bold text-primary">${{ number_format($itemPrice, 2) }}</span>
+                                                @if ($itemUpc)
                                                     <span class="badge bg-secondary-subtle text-secondary fw-bold">UPC:
-                                                        {{ $item->product->upc }}</span>
+                                                        {{ $itemUpc }}</span>
                                                 @endif
                                             </div>
                                             <p class="text-muted small mb-0">

@@ -67,14 +67,19 @@
                         </div>
                         <div>
                             @foreach($order->items as $item)
+                            @php
+                                $isMenu = (bool) $item->menu_item_id;
+                                $itemName = $isMenu ? $item->menuItem->name : $item->product->product_name;
+                                $itemImage = $isMenu ? $item->menuItem->image : $item->product->image;
+                            @endphp
                             <div class="p-4 border-bottom d-flex gap-4 align-items-center">
                                 <div class="flex-shrink-0">
-                                    <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/80x80/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}" 
+                                    <img src="{{ $itemImage ? Storage::disk('r2')->url($itemImage) : 'https://placehold.co/80x80/ecfdf5/10b981?text=' . urlencode($itemName) }}" 
                                          class="rounded-3 border" 
                                          style="width: 80px; height: 80px; object-fit: contain; background: #f8fafc;">
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-1 text-dark">{{ $item->product->product_name }}</h6>
+                                    <h6 class="fw-bold mb-1 text-dark">{{ $itemName }}</h6>
                                     <p class="text-muted small mb-0">Price: ${{ number_format($item->price, 2) }} &nbsp;·&nbsp; Qty: {{ $item->quantity }}</p>
                                 </div>
                                 <div class="text-end">

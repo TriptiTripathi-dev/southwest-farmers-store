@@ -66,6 +66,11 @@ class Product extends Model
         return $this->barcode;
     }
 
+    public function getImageAttribute(): ?string
+    {
+        return $this->icon;
+    }
+
     // Helper to check if Global
     public function getIsGlobalAttribute()
     {

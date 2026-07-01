@@ -36,7 +36,7 @@ class OrderController extends Controller
     public function show($id)
     {
         $order = Sale::where('customer_id', auth('customer')->id())
-            ->with('items.product')
+            ->with(['items.product', 'items.menuItem'])
             ->findOrFail($id);
 
         return view('website.customer.orders.show', compact('order'));
@@ -94,34 +94,37 @@ class OrderController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item->product_id,
+                    'menu_item_id' => $item->menu_item_id,
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
                 ]);
 
-                // Deduct from StoreStock (If stock tracking is enabled for website)
-                $storeStock = StoreStock::where('store_id', $storeId)
-                    ->where('product_id', $item->product_id)
-                    ->lockForUpdate()
-                    ->first();
+                if ($item->product_id) {
+                    // Deduct from StoreStock (If stock tracking is enabled for website)
+                    $storeStock = StoreStock::where('store_id', $storeId)
+                        ->where('product_id', $item->product_id)
+                        ->lockForUpdate()
+                        ->first();
 
-                if ($storeStock) {
-                    if ($storeStock->quantity < $item->quantity) {
-                        throw new \Exception('Insufficient stock for ' . $item->product->product_name);
+                    if ($storeStock) {
+                        if ($storeStock->quantity < $item->quantity) {
+                            throw new \Exception('Insufficient stock for ' . $item->product->product_name);
+                        }
+                        $storeStock->decrement('quantity', $item->quantity);
+
+                        // Create Stock Transaction
+                        StockTransaction::create([
+                            'product_id' => $item->product_id,
+                            'store_id' => $storeId,
+                            'customer_id' => $user->id,
+                            'type' => 'sale',
+                            'quantity_change' => -$item->quantity,
+                            'running_balance' => $storeStock->quantity,
+                            'reference_id' => $sale->id,
+                            'remarks' => 'Website Order: ' . $invoiceNumber,
+                        ]);
                     }
-                    $storeStock->decrement('quantity', $item->quantity);
-
-                    // Create Stock Transaction
-                    StockTransaction::create([
-                        'product_id' => $item->product_id,
-                        'store_id' => $storeId,
-                        'customer_id' => $user->id,
-                        'type' => 'sale',
-                        'quantity_change' => -$item->quantity,
-                        'running_balance' => $storeStock->quantity,
-                        'reference_id' => $sale->id,
-                        'remarks' => 'Website Order: ' . $invoiceNumber,
-                    ]);
                 }
             }
 

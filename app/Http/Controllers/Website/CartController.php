@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\MenuItem;
 
 class CartController extends Controller
 {
@@ -15,7 +16,7 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
-        $cart = Cart::with(['items.product', 'store'])
+        $cart = Cart::with(['items.product', 'items.menuItem', 'store'])
             ->where('user_id', auth('customer')->id())
             ->first();
 
@@ -45,11 +46,20 @@ class CartController extends Controller
         }
 
         $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'nullable|exists:products,id',
+            'menu_item_id' => 'nullable|exists:menu_items,id',
             'quantity' => 'required|integer|min:1',
         ]);
+
+        if (!$request->product_id && !$request->menu_item_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select a valid item'
+            ], 422);
+        }
+
         $user = auth('customer')->user();
-        $storeId = $user->store_id ?? 1; // Default or handled by logic
+        $storeId = session('store_id') ?? $user->store_id ?? 1;
 
         // Get or Create Active Cart
         $cart = Cart::firstOrCreate(
@@ -63,22 +73,38 @@ class CartController extends Controller
             ]
         );
 
-        $product = \App\Models\Product::find($request->product_id);
-        
-        // Check if item exists in cart
-        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+        if ($request->product_id) {
+            $product = Product::findOrFail($request->product_id);
+            $cartItem = $cart->items()->where('product_id', $product->id)->first();
 
-        if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
-            $cartItem->total = $cartItem->quantity * $product->price;
-            $cartItem->save();
+            if ($cartItem) {
+                $cartItem->quantity += $request->quantity;
+                $cartItem->total = $cartItem->quantity * $product->price;
+                $cartItem->save();
+            } else {
+                $cart->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $request->quantity,
+                    'price' => $product->price,
+                    'total' => $product->price * $request->quantity
+                ]);
+            }
         } else {
-            $cart->items()->create([
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'price' => $product->price,
-                'total' => $product->price * $request->quantity
-            ]);
+            $menuItem = MenuItem::findOrFail($request->menu_item_id);
+            $cartItem = $cart->items()->where('menu_item_id', $menuItem->id)->first();
+
+            if ($cartItem) {
+                $cartItem->quantity += $request->quantity;
+                $cartItem->total = $cartItem->quantity * $menuItem->price;
+                $cartItem->save();
+            } else {
+                $cart->items()->create([
+                    'menu_item_id' => $menuItem->id,
+                    'quantity' => $request->quantity,
+                    'price' => $menuItem->price,
+                    'total' => $menuItem->price * $request->quantity
+                ]);
+            }
         }
 
         // Recalculate Total
@@ -87,12 +113,12 @@ class CartController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Product added to cart!',
+                'message' => 'Item added to cart!',
                 'cart_count' => $cart->items()->count()
             ]);
         }
 
-        return redirect()->route('website.cart.index')->with('success', 'Product added to cart!');
+        return redirect()->route('website.cart.index')->with('success', 'Item added to cart!');
     }
 
     /**
@@ -108,9 +134,9 @@ class CartController extends Controller
             $q->where('user_id', auth()->id());
         })->findOrFail($id);
 
-        $product = $cartItem->product;
+        $price = $cartItem->product ? $cartItem->product->price : $cartItem->menuItem->price;
         $cartItem->quantity = $request->quantity;
-        $cartItem->total = $cartItem->quantity * $product->price;
+        $cartItem->total = $cartItem->quantity * $price;
         $cartItem->save();
 
         // Update Cart Total
@@ -165,7 +191,7 @@ class CartController extends Controller
             'total_amount' => $subtotal - $discount
         ]);
 
-        $cart->load(['items.product', 'store']);
+        $cart->load(['items.product', 'items.menuItem', 'store']);
 
         return response()->json([
             'success' => true,

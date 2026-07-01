@@ -173,6 +173,35 @@
                 </li>
                 @endif
 
+                {{-- PREPARED MENUS --}}
+                @php
+                $isMenuCategoryActive = request()->routeIs('menu-categories.*');
+                $isMenuItemActive = request()->routeIs('menu-items.*');
+                $isMenuCollapseActive = $isMenuCategoryActive || $isMenuItemActive;
+                @endphp
+                <li class="menuitem-{{ $isMenuCollapseActive ? 'active' : '' }} {{ $isMenuCollapseActive ? 'show' : '' }}">
+                    <a class="tp-link {{ $isMenuCollapseActive ? 'active' : '' }}" href="#sidebarMenus"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isMenuCollapseActive ? 'true' : 'false' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:tools-kitchen-2"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Prepared Menus</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ $isMenuCollapseActive ? 'show' : '' }}" id="sidebarMenus">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a class="tp-link {{ $isMenuCategoryActive ? 'active' : '' }}"
+                                    href="{{ route('menu-categories.index') }}">Menu Categories</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isMenuItemActive ? 'active' : '' }}"
+                                    href="{{ route('menu-items.index') }}">Menu Items</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 {{-- STOCK CONTROL --}}
                 @if ($can('view_stock_overview') || $can('view_stock_valuation') || $can('manage_recalls'))
                 <li class="menuitem-{{ request()->routeIs('store.stock-control.*') ? 'active' : '' }} {{ request()->routeIs('store.stock-control.*') ? 'show' : '' }}">

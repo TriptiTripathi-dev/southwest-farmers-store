@@ -65,24 +65,30 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($order->items as $item)
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <img src="{{ $item->product->image ? Storage::disk('r2')->url($item->product->image) : 'https://placehold.co/50x50/ecfdf5/10b981?text=' . urlencode($item->product->product_name) }}" 
-                                                         class="rounded-3 border" 
-                                                         style="width: 50px; height: 50px; object-fit: contain; background: #f8fafc;">
-                                                    <div>
-                                                        <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">{{ $item->product->product_name }}</h6>
-                                                        <small class="text-muted">{{ $item->product->sku ?? '' }}</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center fw-bold text-dark">{{ $item->quantity }}</td>
-                                            <td class="text-end text-muted">${{ number_format($item->price, 2) }}</td>
-                                            <td class="text-end fw-bold text-dark">${{ number_format($item->total, 2) }}</td>
-                                        </tr>
-                                    @endforeach
+                                     @foreach($order->items as $item)
+                                         @php
+                                             $isMenu = (bool) $item->menu_item_id;
+                                             $itemName = $isMenu ? ($item->menuItem->name ?? 'Menu Item') : ($item->product->product_name ?? 'Product');
+                                             $itemImage = $isMenu ? ($item->menuItem->image ?? null) : ($item->product->image ?? null);
+                                             $itemSku = $isMenu ? 'Prepared Meal' : ($item->product->sku ?? '');
+                                         @endphp
+                                         <tr>
+                                             <td>
+                                                 <div class="d-flex align-items-center gap-3">
+                                                     <img src="{{ $itemImage ? Storage::disk('r2')->url($itemImage) : 'https://placehold.co/50x50/ecfdf5/10b981?text=' . urlencode($itemName) }}" 
+                                                          class="rounded-3 border" 
+                                                          style="width: 50px; height: 50px; object-fit: contain; background: #f8fafc;">
+                                                     <div>
+                                                         <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">{{ $itemName }}</h6>
+                                                         <small class="text-muted">{{ $itemSku }}</small>
+                                                     </div>
+                                                 </div>
+                                             </td>
+                                             <td class="text-center fw-bold text-dark">{{ $item->quantity }}</td>
+                                             <td class="text-end text-muted">${{ number_format($item->price, 2) }}</td>
+                                             <td class="text-end fw-bold text-dark">${{ number_format($item->total, 2) }}</td>
+                                         </tr>
+                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
