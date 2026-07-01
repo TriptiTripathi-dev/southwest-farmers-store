@@ -43,7 +43,11 @@ class MenuCategoryController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_categories', 'r2');
+            try {
+                $imagePath = $request->file('image')->store('menu_categories', 'r2');
+            } catch (\Exception $e) {
+                return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+            }
         }
 
         MenuCategory::create([
@@ -86,8 +90,12 @@ class MenuCategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_categories', 'r2');
-            $menuCategory->image = $imagePath;
+            try {
+                $imagePath = $request->file('image')->store('menu_categories', 'r2');
+                $menuCategory->image = $imagePath;
+            } catch (\Exception $e) {
+                return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+            }
         }
 
         $menuCategory->update([

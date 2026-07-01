@@ -100,6 +100,15 @@ class StoreProductController extends Controller
             $weightOptions = array_map('trim', explode(',', $request->weight_options));
         }
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            try {
+                $imagePath = $request->file('image')->store('products', 'r2');
+            } catch (\Exception $e) {
+                return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+            }
+        }
+
         $product = Product::create([
             'store_id' => $storeId,
             'department_id' => $request->department_id,
@@ -115,7 +124,7 @@ class StoreProductController extends Controller
             'price' => $request->selling_price,
             'lead_time_days' => $request->lead_time_days,
             'requires_expiration' => $request->has('requires_expiration'),
-            'icon' => $request->hasFile('image') ? $request->file('image')->store('products', 'r2') : null,
+            'icon' => $imagePath,
             'is_active' => true
         ]);
 
@@ -186,7 +195,12 @@ class StoreProductController extends Controller
             ]);
 
             if ($request->hasFile('image')) {
-                $product->update(['icon' => $request->file('image')->store('products', 'r2')]);
+                try {
+                    $imagePath = $request->file('image')->store('products', 'r2');
+                    $product->update(['icon' => $imagePath]);
+                } catch (\Exception $e) {
+                    return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+                }
             }
         }
 

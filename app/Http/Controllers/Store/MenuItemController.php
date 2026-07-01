@@ -60,7 +60,11 @@ class MenuItemController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_items', 'r2');
+            try {
+                $imagePath = $request->file('image')->store('menu_items', 'r2');
+            } catch (\Exception $e) {
+                return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+            }
         }
 
         MenuItem::create([
@@ -114,8 +118,12 @@ class MenuItemController extends Controller
             ->firstOrFail();
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_items', 'r2');
-            $menuItem->image = $imagePath;
+            try {
+                $imagePath = $request->file('image')->store('menu_items', 'r2');
+                $menuItem->image = $imagePath;
+            } catch (\Exception $e) {
+                return back()->withInput()->with('error', 'Cloud storage upload failed: ' . $e->getMessage());
+            }
         }
 
         $menuItem->update([
