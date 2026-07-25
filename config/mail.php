@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => 'smtp',
 
     /*
     |--------------------------------------------------------------------------
@@ -39,12 +39,13 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'scheme' => null,
+            'url' => null,
+            'host' => 'smtp.sendgrid.net',
+            'port' => 587,
+            'username' => 'apikey',
+            'password' => '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',
+            'encryption' => 'tls',
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
@@ -111,8 +112,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => 'orders@southwestfarmersmarket.com',
+        'name' => 'Southwest Farmers Market',
     ],
 
 ];
