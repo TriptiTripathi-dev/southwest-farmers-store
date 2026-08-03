@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_notifications', function (Blueprint $table) {
-            // Website orders have no store user — make user_id optional
-            $table->unsignedBigInteger('user_id')->nullable()->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            Schema::table('store_notifications', function (Blueprint $table) {
+                $table->unsignedBigInteger('user_id')->nullable()->change();
+            });
+        }
     }
 
     /**

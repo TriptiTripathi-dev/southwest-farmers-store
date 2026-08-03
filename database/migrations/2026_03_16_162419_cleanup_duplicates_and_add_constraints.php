@@ -12,50 +12,47 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Clean up product_categories duplicates
-        // We use ctid in Postgres to distinguish between identical rows
-        DB::statement("
-            DELETE FROM product_categories a 
-            USING product_categories b 
-            WHERE a.ctid < b.ctid 
-              AND a.id = b.id
-        ");
+        if (DB::getDriverName() === 'pgsql') {
+            // 1. Clean up product_categories duplicates
+            DB::statement("
+                DELETE FROM product_categories a 
+                USING product_categories b 
+                WHERE a.ctid < b.ctid 
+                  AND a.id = b.id
+            ");
 
-        // 2. Clean up store_stocks duplicates
-        DB::statement("
-            DELETE FROM store_stocks a 
-            USING store_stocks b 
-            WHERE a.ctid < b.ctid 
-              AND a.id = b.id
-        ");
+            // 2. Clean up store_stocks duplicates
+            DB::statement("
+                DELETE FROM store_stocks a 
+                USING store_stocks b 
+                WHERE a.ctid < b.ctid 
+                  AND a.id = b.id
+            ");
+        }
 
-        // 3. Add Primary Keys and Unique Constraints
-        Schema::table('product_categories', function (Blueprint $table) {
-            // First drop existing primary key if any (though we checked and it seems missing)
-            // But we can just try to add it.
-            try {
-                $table->primary('id');
-            } catch (\Exception $e) {
-                // Already has primary key or other error
-            }
-            
-            // Add unique constraint on name and store_id if store_id exists
-            if (Schema::hasColumn('product_categories', 'store_id')) {
-                $table->unique(['name', 'store_id'], 'unique_category_per_store');
-            } else {
-                $table->unique('name', 'unique_category_name');
-            }
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            Schema::table('product_categories', function (Blueprint $table) {
+                try {
+                    $table->primary('id');
+                } catch (\Exception $e) {
+                }
+                
+                if (Schema::hasColumn('product_categories', 'store_id')) {
+                    $table->unique(['name', 'store_id'], 'unique_category_per_store');
+                } else {
+                    $table->unique('name', 'unique_category_name');
+                }
+            });
 
-        Schema::table('store_stocks', function (Blueprint $table) {
-            try {
-                $table->primary('id');
-            } catch (\Exception $e) {
-                // Already has primary key
-            }
-            
-            $table->unique(['store_id', 'product_id'], 'unique_stock_per_product_store');
-        });
+            Schema::table('store_stocks', function (Blueprint $table) {
+                try {
+                    $table->primary('id');
+                } catch (\Exception $e) {
+                }
+                
+                $table->unique(['store_id', 'product_id'], 'unique_stock_per_product_store');
+            });
+        }
     }
 
     /**

@@ -98,37 +98,32 @@
                             <table class="table table-hover align-middle" id="selectedItemsTable">
                                 <thead class="bg-light text-muted small text-uppercase">
                                     <tr>
-                                        <th style="width: 15%">UPC</th>
-                                        <th style="width: 40%">Product Name</th>
+                                        <th style="width: 25%">UPC</th>
+                                        <th style="width: 50%">Product Name</th>
                                         <th style="width: 20%" class="text-center">Quantity</th>
-                                        <th style="width: 20%" class="text-end">Unit Cost</th>
                                         <th style="width: 5%"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="selectedItemsBody">
                                     <tr id="emptyRow">
-                                        <td colspan="5" class="text-center py-5 text-muted">
+                                        <td colspan="4" class="text-center py-5 text-muted">
                                             <div class="mb-2"><i class="mdi mdi-basket-plus-outline fs-1"></i></div>
                                             <p class="mb-0">Please select a department and search for products to add items.</p>
                                         </td>
                                     </tr>
                                 </tbody>
-                                <tfoot class="bg-light">
-                                    <tr>
-                                        <td colspan="3" class="text-end fw-bold fs-5 py-3">Total Estimated Amount:</td>
-                                        <td class="text-end fw-bold fs-5 py-3 text-success" id="totalAmount">₹0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
                             </table>
                         </div>
                     </div>
                     <div class="card-footer bg-white border-top-0 p-4">
-                        <div class="d-flex justify-content-end gap-3">
-                            <button type="button" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold" onclick="window.history.back()">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ route('inventory.requests') }}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold">
                                 Cancel
+                            </a>
+                            <button type="submit" name="status" value="draft" class="btn btn-warning text-dark px-4 py-2 rounded-pill fw-bold" id="draftBtn" disabled>
+                                <i class="mdi mdi-content-save-outline me-1"></i> Draft
                             </button>
-                            <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow-sm" id="submitBtn" disabled>
+                            <button type="submit" name="status" value="pending" class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow-sm" id="submitBtn" disabled>
                                 <i class="mdi mdi-check-circle me-1"></i> Review Order
                             </button>
                         </div>
@@ -223,8 +218,7 @@
                             <div class="small text-muted font-monospace">${p.upc || p.sku || 'N/A'}</div>
                         </div>
                         <div class="text-end">
-                            <div class="fw-bold text-primary">₹${(p.cost_price || 0).toFixed(2)}</div>
-                            <small class="text-muted">${p.unit || 'units'}</small>
+                            <span class="badge bg-light text-muted border">${p.unit || 'units'}</span>
                         </div>
                     </div>
                 `;
@@ -259,19 +253,16 @@
         if (selectedProducts.length === 0) {
             $('#emptyRow').show().appendTo($body);
             $('#submitBtn').prop('disabled', true);
+            $('#draftBtn').prop('disabled', true);
             $('#itemCount').text('0 Items');
-            $('#totalAmount').text('₹0.00');
             return;
         }
 
         $('#emptyRow').hide();
         $('#submitBtn').prop('disabled', false);
+        $('#draftBtn').prop('disabled', false);
 
-        let total = 0;
         selectedProducts.forEach((p, index) => {
-            const itemTotal = p.quantity * p.cost;
-            total += itemTotal;
-
             const row = `
                 <tr>
                     <td class="font-monospace text-muted small">${p.upc}</td>
@@ -283,7 +274,6 @@
                             <button type="button" class="btn btn-outline-secondary" onclick="updateQty(${index}, 1)">+</button>
                         </div>
                     </td>
-                    <td class="text-end fw-bold">₹${p.cost.toFixed(2)}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-link text-danger p-0" onclick="removeItem(${index})">
                             <i class="mdi mdi-delete-outline fs-4"></i>
@@ -293,13 +283,11 @@
             `;
             $body.append(row);
 
-            // Add hidden inputs for form submission
             $hidden.append(`<input type="hidden" name="products[${index}][product_id]" value="${p.id}">`);
             $hidden.append(`<input type="hidden" name="products[${index}][quantity]" value="${p.quantity}">`);
         });
 
         $('#itemCount').text(`${selectedProducts.length} Items`);
-        $('#totalAmount').text(`₹${total.toFixed(2)}`);
     }
 
     function updateQty(index, delta) {

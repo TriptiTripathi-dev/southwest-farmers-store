@@ -12,18 +12,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Fix missing primary key and duplicate IDs in store_details first
-        DB::statement("
-            DELETE FROM store_details a 
-            USING store_details b 
-            WHERE a.ctid < b.ctid 
-              AND a.id = b.id
-        ");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("
+                DELETE FROM store_details a 
+                USING store_details b 
+                WHERE a.ctid < b.ctid 
+                  AND a.id = b.id
+            ");
+        }
 
         try {
-            Schema::table('store_details', function (Blueprint $table) {
-                $table->primary('id');
-            });
+            if (DB::getDriverName() === 'pgsql' && Schema::hasTable('store_details')) {
+                Schema::table('store_details', function (Blueprint $table) {
+                    $table->primary('id');
+                });
+            }
         } catch (\Exception $e) {
             // Primary key already exists or other constraint issue handled
         }

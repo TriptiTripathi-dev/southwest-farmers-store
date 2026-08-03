@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            $table->string('transaction_id')->nullable()->after('invoice_number');
-            $table->string('payment_status')->nullable()->after('status');
-            $table->text('notes')->nullable()->after('payment_status');
-        });
+        if (Schema::hasTable('sales')) {
+            Schema::table('sales', function (Blueprint $table) {
+                $table->string('transaction_id')->nullable()->after('invoice_number');
+                $table->string('payment_status')->nullable()->after('status');
+                $table->text('notes')->nullable()->after('payment_status');
+            });
+        }
     }
 
     /**

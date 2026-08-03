@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_settings', function (Blueprint $table) {
-            $table->text('footer_description')->nullable();
-            $table->string('facebook_url')->nullable();
-            $table->string('instagram_url')->nullable();
-            $table->string('twitter_url')->nullable();
-        });
+        if (Schema::hasTable('store_settings')) {
+            Schema::table('store_settings', function (Blueprint $table) {
+                $table->text('footer_description')->nullable();
+                $table->string('facebook_url')->nullable();
+                $table->string('instagram_url')->nullable();
+                $table->string('twitter_url')->nullable();
+            });
+        }
     }
 
     /**

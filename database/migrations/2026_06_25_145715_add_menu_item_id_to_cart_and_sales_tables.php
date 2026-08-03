@@ -11,15 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cart_items', function (Blueprint $table) {
-            $table->foreignId('menu_item_id')->nullable()->constrained('menu_items')->nullOnDelete();
-            $table->unsignedBigInteger('product_id')->nullable()->change();
-        });
+        if (Schema::hasTable('cart_items')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->foreignId('menu_item_id')->nullable()->constrained('menu_items')->nullOnDelete();
+                $table->unsignedBigInteger('product_id')->nullable()->change();
+            });
+        }
 
-        Schema::table('sale_items', function (Blueprint $table) {
-            $table->foreignId('menu_item_id')->nullable()->constrained('menu_items')->nullOnDelete();
-            $table->unsignedBigInteger('product_id')->nullable()->change();
-        });
+        if (Schema::hasTable('sale_items')) {
+            Schema::table('sale_items', function (Blueprint $table) {
+                $table->foreignId('menu_item_id')->nullable()->constrained('menu_items')->nullOnDelete();
+                $table->unsignedBigInteger('product_id')->nullable()->change();
+            });
+        }
 
         if (Schema::hasTable('sale_return_items')) {
             Schema::table('sale_return_items', function (Blueprint $table) {

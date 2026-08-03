@@ -130,6 +130,10 @@ class StoreOrderController extends Controller
     public function confirmReceive(Request $request, $id)
     {
         $request->validate([
+            'driver_phone' => 'required|string|max:20',
+            'driver_code'  => 'required|string|max:10',
+            'staff_name'   => 'required|string|max:100',
+            'clocking_id'  => 'required|string|max:50',
             'items' => 'required|array',
             'items.*.id' => 'required|exists:store_purchase_order_items,id',
             'items.*.received_quantity' => 'required|integer|min:0',
@@ -138,7 +142,7 @@ class StoreOrderController extends Controller
 
         $user = Auth::user();
         $order = StorePurchaseOrder::where('store_id', $user->store_id)
-            ->where('status', 'dispatched')
+            ->whereIn('status', ['dispatched', 'in_transit', 'approved'])
             ->findOrFail($id);
 
         DB::transaction(function () use ($request, $order, $user) {
@@ -175,10 +179,11 @@ class StoreOrderController extends Controller
             }
 
             // Update PO Status
+            $receivingNote = "Received By: {$request->staff_name} (Clocking ID: {$request->clocking_id}) | Driver Phone: {$request->driver_phone} (Code: {$request->driver_code})";
             $order->update([
                 'status' => 'completed',
                 'received_at' => now(),
-                'store_remarks' => $request->remarks,
+                'store_remarks' => ($request->remarks ? $request->remarks . "\n" : '') . $receivingNote,
             ]);
         });
 

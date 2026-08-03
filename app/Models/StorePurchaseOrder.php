@@ -48,19 +48,21 @@ class StorePurchaseOrder extends Model
 
     public static function generatePONumber($storeId)
     {
-        $prefix = "PO-" . date('Ymd');
-        $lastOrder = self::where('store_id', $storeId)
-            ->where('po_number', 'like', $prefix . '%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        $sequence = 1;
-        if ($lastOrder) {
-            $lastSequence = (int) substr($lastOrder->po_number, -4);
-            $sequence = $lastSequence + 1;
+        $store = StoreDetail::find($storeId);
+        $storeCode = 'STORE';
+        if ($store && $store->store_name) {
+            $name = preg_replace('/^SWF\s*-\s*/i', '', $store->store_name);
+            $cleanName = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $name));
+            $storeCode = strlen($cleanName) >= 3 ? substr($cleanName, 0, 4) : $cleanName;
         }
+        $year = date('Y');
+        $prefix = "REQ-" . $storeCode . "-" . $year;
 
-        return $prefix . "-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        $count = self::where('store_id', $storeId)
+            ->whereYear('created_at', date('Y'))
+            ->count() + 1;
+
+        return $prefix . "-" . str_pad($count, 2, '0', STR_PAD_LEFT);
     }
 
     public function calculateTotals()

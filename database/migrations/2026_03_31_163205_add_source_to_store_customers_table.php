@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_customers', function (Blueprint $table) {
-            $table->string('source')->default('admin')->after('store_id');
-        });
+        if (Schema::hasTable('store_customers')) {
+            Schema::table('store_customers', function (Blueprint $table) {
+                $table->string('source')->default('admin')->after('store_id');
+            });
+        }
     }
 
     /**

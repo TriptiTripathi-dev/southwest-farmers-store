@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_details', function (Blueprint $table) {
-            $table->string('profile')->nullable()->after('store_user_id');
-        });
+        if (Schema::hasTable('store_details')) {
+            Schema::table('store_details', function (Blueprint $table) {
+                $table->string('profile')->nullable()->after('store_user_id');
+            });
+        }
     }
 
     /**

@@ -78,6 +78,32 @@
                     </div>
 
                     <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark py-2 fw-bold">
+                            <i class="mdi mdi-shield-account me-1"></i> Security & Driver Verification
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Driver Phone Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="driver_phone" class="form-control" placeholder="e.g. +1 555-0199" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Verification Code <span class="text-danger">*</span></label>
+                                    <input type="text" name="driver_code" class="form-control" placeholder="Enter Security Code" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Receiving Employee Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="staff_name" class="form-control" value="{{ auth()->user()->name }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Clocking User ID <span class="text-danger">*</span></label>
+                                    <input type="text" name="clocking_id" class="form-control" placeholder="Everyday Clocking ID" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
                             <label class="form-label fw-bold">Receipt Remarks (Optional)</label>
                             <textarea name="remarks" class="form-control" rows="3"

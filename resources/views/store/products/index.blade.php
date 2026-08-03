@@ -156,8 +156,14 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span
-                                                class="fw-bolder text-success fs-6">${{ number_format($item->price, 2) }}</span>
+                                            @php
+                                                $overridePrice = $item->marketPrices?->first()?->sale_price ?? null;
+                                                $displayPrice = $overridePrice ?? $item->price;
+                                            @endphp
+                                            <span class="fw-bolder text-success fs-6">${{ number_format($displayPrice, 2) }}</span>
+                                            @if ($overridePrice)
+                                                <small class="badge bg-info text-dark ms-1">Override</small>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             @if ($item->store_id == null)
@@ -176,14 +182,6 @@
                                         </td>
                                         <td class="pe-4 text-end">
                                             <div class="d-flex justify-content-end gap-1">
-                                                @if (Auth::user()->hasPermission('manage_recipes'))
-                                                    <a href="{{ route('store.products.recipe', $item->id) }}"
-                                                        class="btn btn-sm btn-light border shadow-sm text-warning"
-                                                        data-bs-toggle="tooltip" title="Manage Recipe">
-                                                        <i class="mdi mdi-silverware-variant fs-6"></i>
-                                                    </a>
-                                                @endif
-
                                                 @if (Auth::user()->hasPermission('view_stock_history'))
                                                     <a href="{{ route('inventory.history', $item->id) }}"
                                                         class="btn btn-sm btn-light border shadow-sm text-info"

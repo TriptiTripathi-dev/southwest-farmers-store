@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_details', function (Blueprint $table) {
-            $table->string('pos_terminal_id')->nullable();
-            $table->string('pos_store_id')->nullable();
-            $table->string('pos_agent_secret')->nullable();
-            $table->string('pos_hardware_url')->nullable();
-            $table->string('pos_terminal_status')->default('offline');
-        });
+        if (Schema::hasTable('store_details')) {
+            Schema::table('store_details', function (Blueprint $table) {
+                $table->string('pos_terminal_id')->nullable();
+                $table->string('pos_store_id')->nullable();
+                $table->string('pos_agent_secret')->nullable();
+                $table->string('pos_hardware_url')->nullable();
+                $table->string('pos_terminal_status')->default('offline');
+            });
+        }
     }
 
     /**

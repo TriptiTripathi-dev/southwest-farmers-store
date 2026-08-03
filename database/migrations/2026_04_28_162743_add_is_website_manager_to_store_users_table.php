@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('store_users', function (Blueprint $table) {
-            $table->boolean('is_website_manager')->default(false)->after('store_role_id');
-        });
+        if (Schema::hasTable('store_users')) {
+            Schema::table('store_users', function (Blueprint $table) {
+                $table->boolean('is_website_manager')->default(false)->after('store_role_id');
+            });
+        }
     }
 
     /**

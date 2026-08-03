@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('departments', function (Blueprint $table) {
-            $table->unsignedBigInteger('store_id')->nullable()->after('id');
-            // Indexing for performance
-            $table->index('store_id');
-        });
+        if (Schema::hasTable('departments')) {
+            Schema::table('departments', function (Blueprint $table) {
+                $table->unsignedBigInteger('store_id')->nullable()->after('id');
+                $table->index('store_id');
+            });
+        }
     }
 
     /**

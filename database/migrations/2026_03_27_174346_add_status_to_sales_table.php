@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            // Status for website orders (pending → processing → completed/cancelled)
-            // Default 'completed' keeps existing POS sales valid
-            $table->string('status')->default('completed')->after('payment_method');
+        if (Schema::hasTable('sales')) {
+            Schema::table('sales', function (Blueprint $table) {
+                // Status for website orders (pending → processing → completed/cancelled)
+                // Default 'completed' keeps existing POS sales valid
+                $table->string('status')->default('completed')->after('payment_method');
 
-            // Track whether the order came from the website or the in-store POS
-            $table->string('source')->default('pos')->after('status');
-        });
+                // Track whether the order came from the website or the in-store POS
+                $table->string('source')->default('pos')->after('status');
+            });
+        }
     }
 
     /**

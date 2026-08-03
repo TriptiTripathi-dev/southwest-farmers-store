@@ -252,7 +252,7 @@
                 </li>
                 @endif
 
-                {{-- ORDERS --}}
+                {{-- POS SYSTEM --}}
                 @if ($can('access_pos') || $can('view_orders') || $can('process_return'))
                                 @php
                     $isPosActive = request()->routeIs('store.sales.pos');
@@ -267,7 +267,7 @@
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:shopping-cart"></iconify-icon>
                         </span>
-                        <span class="sidebar-text"> Orders </span>
+                        <span class="sidebar-text"> POS System </span>
                         <span class="menu-arrow"></span>
                     </a>
 
@@ -277,7 +277,7 @@
                             <li>
                                 <a href="{{ route('store.sales.pos') }}"
                                     class="tp-link {{ $isPosActive ? 'active' : '' }}">
-                                    Create Order (POS)
+                                    POS Register
                                 </a>
                             </li>
                             @endif
@@ -286,7 +286,7 @@
                             <li>
                                 <a href="{{ route('store.sales.orders') }}"
                                     class="tp-link {{ request()->routeIs('store.sales.orders') ? 'active' : '' }}">
-                                    All Orders
+                                    All POS Transactions
                                 </a>
                             </li>
                             @endif
@@ -295,7 +295,7 @@
                             <li>
                                 <a href="{{ route('store.sales.returns.index') }}"
                                     class="tp-link {{ request()->routeIs('store.sales.returns.*') ? 'active' : '' }}">
-                                    Returns
+                                    POS Returns
                                 </a>
                             </li>
                             @endif

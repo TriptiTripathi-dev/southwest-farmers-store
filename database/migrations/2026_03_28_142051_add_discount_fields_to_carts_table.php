@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('carts', function (Blueprint $table) {
-            $table->decimal('discount_amount', 10, 2)->default(0)->after('total_amount');
-            $table->string('coupon_code')->nullable()->after('discount_amount');
-        });
+        if (Schema::hasTable('carts')) {
+            Schema::table('carts', function (Blueprint $table) {
+                $table->decimal('discount_amount', 10, 2)->default(0)->after('total_amount');
+                $table->string('coupon_code')->nullable()->after('discount_amount');
+            });
+        }
     }
 
     /**
