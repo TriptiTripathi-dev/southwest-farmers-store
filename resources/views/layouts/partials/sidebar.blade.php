@@ -84,15 +84,6 @@
                             </li>
                             @endif
 
-                            @if ($can('request_stock'))
-                            <li>
-                                <a href="{{ route('inventory.requests') }}"
-                                    class="tp-link {{ request()->routeIs('inventory.requests') || request()->routeIs('inventory.order.*') ? 'active' : '' }}">
-                                    Order Inventory
-                                </a>
-                            </li>
-                            @endif
-
                             @if ($can('adjust_stock'))
                             <li>
                                 <a href="{{ route('inventory.adjustments') }}"
@@ -119,6 +110,46 @@
                                 </a>
                             </li>
                             @endif
+                        </ul>
+                    </div>
+                </li>
+                @endif
+
+                {{-- WAREHOUSE ORDERS (PO) --}}
+                @if ($can('request_stock') || $can('view_inventory'))
+                @php
+                $isWarehouseOrdersActive = request()->is('inventory/requests*') || request()->is('inventory/order*') || request()->is('store/purchase-orders*') || request()->is('store/orders*');
+                @endphp
+                <li class="menuitem-{{ $isWarehouseOrdersActive ? 'active' : '' }} {{ $isWarehouseOrdersActive ? 'show' : '' }}">
+                    <a href="#sidebarWarehouseOrders" data-bs-toggle="collapse"
+                        class="tp-link {{ $isWarehouseOrdersActive ? 'active' : '' }}"
+                        aria-expanded="{{ $isWarehouseOrdersActive ? 'true' : 'false' }}">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:truck-delivery"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text"> Warehouse Orders (PO) </span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ $isWarehouseOrdersActive ? 'show' : '' }}" id="sidebarWarehouseOrders">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a href="{{ route('inventory.requests') }}"
+                                    class="tp-link {{ request()->routeIs('inventory.requests') || request()->routeIs('inventory.order.create') ? 'active' : '' }}">
+                                    Store orders (PO)
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.orders.index', ['tab' => 'receiving']) }}"
+                                    class="tp-link {{ request()->routeIs('store.orders.index') && request('tab') == 'receiving' ? 'active' : '' }}">
+                                    Receiving Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.orders.index', ['tab' => 'history']) }}"
+                                    class="tp-link {{ request()->routeIs('store.orders.index') && (request('tab') == 'history' || !request('tab')) ? 'active' : '' }}">
+                                    Order History
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>

@@ -4,16 +4,40 @@
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-cart-arrow-down text-primary me-2"></i> Purchase Orders
+                <i class="mdi mdi-truck-delivery text-primary me-2"></i> Warehouse Orders (PO)
             </h4>
-            <small class="text-muted">Manage and track your warehouse orders</small>
+            <small class="text-muted">Manage and track store purchase orders and incoming receiving shipments</small>
         </div>
-        @if($schedule)
-            <div class="badge bg-soft-info text-info p-2 border border-info border-opacity-25">
-                <i class="mdi mdi-calendar-clock me-1"></i> Expected Order Day: <strong>{{ $schedule->expected_day }}</strong>
-            </div>
-        @endif
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('inventory.requests') }}" class="btn btn-outline-primary fw-bold">
+                <i class="mdi mdi-plus me-1"></i> Store orders (PO)
+            </a>
+            @if($schedule)
+                <div class="badge bg-soft-info text-info p-2 border border-info border-opacity-25 ms-2">
+                    <i class="mdi mdi-calendar-clock me-1"></i> Expected Order Day: <strong>{{ $schedule->expected_day }}</strong>
+                </div>
+            @endif
+        </div>
     </div>
+
+    <!-- SUB-TABS NAVIGATION -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border">
+        <li class="nav-item">
+            <a class="nav-link fw-bold {{ request()->routeIs('inventory.requests') ? 'active' : '' }}" href="{{ route('inventory.requests') }}">
+                <i class="mdi mdi-cart-plus me-1"></i> Store orders (PO)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link fw-bold {{ request('tab') == 'receiving' ? 'active' : '' }}" href="{{ route('store.orders.index', ['tab' => 'receiving']) }}">
+                <i class="mdi mdi-truck-check me-1"></i> Receiving Orders
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link fw-bold {{ request('tab') == 'history' || !request('tab') ? 'active' : '' }}" href="{{ route('store.orders.index', ['tab' => 'history']) }}">
+                <i class="mdi mdi-history me-1"></i> Order History
+            </a>
+        </li>
+    </ul>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -50,7 +74,7 @@
         $('#ordersTable').DataTable({
             processing: true,
             serverSide: true,
-            ajax: "{{ route('store.orders.data') }}",
+            ajax: "{{ route('store.orders.data') }}?tab={{ request('tab', 'history') }}",
             columns: [
                 { data: 'po_number', name: 'po_number', className: 'ps-3 fw-bold' },
                 { data: 'created_at', name: 'created_at' },

@@ -24,9 +24,16 @@ class StoreOrderController extends Controller
     public function getOrders(Request $request)
     {
         $user = Auth::user();
-        $orders = StorePurchaseOrder::where('store_id', $user->store_id)
-            ->with(['user'])
-            ->orderBy('created_at', 'desc');
+        $query = StorePurchaseOrder::where('store_id', $user->store_id)
+            ->with(['user']);
+
+        if ($request->get('tab') === 'receiving') {
+            $query->whereIn('status', ['approved', 'dispatched', 'in_transit']);
+        } elseif ($request->get('tab') === 'history') {
+            $query->whereIn('status', ['completed', 'partially_received', 'cancelled']);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc');
 
         return DataTables::of($orders)
             ->editColumn('status', function ($order) {
