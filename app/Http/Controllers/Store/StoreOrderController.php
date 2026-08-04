@@ -23,43 +23,66 @@ class StoreOrderController extends Controller
 
     public function getOrders(Request $request)
     {
-        $user = Auth::user();
-        $query = StorePurchaseOrder::where('store_id', $user->store_id)
-            ->with(['user']);
+        try {
+            $user = Auth::user();
+            $query = StorePurchaseOrder::query()->with(['user']);
 
-        if ($request->get('tab') === 'receiving') {
-            $query->whereIn('status', ['approved', 'dispatched', 'in_transit']);
-        } elseif ($request->get('tab') === 'history') {
-            $query->whereIn('status', ['completed', 'partially_received', 'cancelled']);
+            if ($user && $user->store_id) {
+                $query->where('store_id', $user->store_id);
+            }
+
+            $tab = strtolower($request->get('tab', 'history'));
+            if ($tab === 'receiving') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['approved', 'dispatched', 'in_transit']);
+            } elseif ($tab === 'history') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['completed', 'partially_received', 'cancelled']);
+            }
+
+            $orders = $query->orderBy('created_at', 'desc');
+
+            return DataTables::of($orders)
+                ->editColumn('status', function ($order) {
+                    $status = strtolower($order->status ?? 'pending');
+                    $class = match ($status) {
+                        'pending' => 'bg-warning text-dark',
+                        'approved' => 'bg-info text-white',
+                        'dispatched', 'in_transit' => 'bg-primary text-white',
+                        'completed' => 'bg-success text-white',
+                        'cancelled' => 'bg-danger text-white',
+                        default => 'bg-secondary text-white'
+                    };
+                    $label = str_replace('_', ' ', ucfirst($status));
+                    return '<span class="badge ' . $class . '">' . $label . '</span>';
+                })
+                ->editColumn('total_amount', function ($order) {
+                    return '$' . number_format($order->total_amount ?? 0, 2);
+                })
+                ->editColumn('created_at', function ($order) {
+                    return $order->created_at ? $order->created_at->format('d M Y, h:i A') : 'N/A';
+                })
+                ->addColumn('action', function ($order) {
+                    $btn = '<a href="' . route('store.orders.show', $order->id) . '" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="mdi mdi-eye"></i> View
+                            </a>';
+                    if (in_array(strtolower($order->status), ['approved', 'dispatched', 'in_transit'])) {
+                        $btn .= '<a href="' . route('store.orders.receive', $order->id) . '" class="btn btn-sm btn-success">
+                                    <i class="mdi mdi-truck-check"></i> Receive
+                                </a>';
+                    }
+                    return $btn;
+                })
+                ->rawColumns(['status', 'action'])
+                ->make(true);
+        } catch (\Throwable $e) {
+            \Log::error('StoreOrder getOrders DataTables Error: ' . $e->getMessage());
+            return response()->json([
+                'draw' => intval($request->get('draw', 1)),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => $e->getMessage()
+            ]);
         }
-
-        $orders = $query->orderBy('created_at', 'desc');
-
-        return DataTables::of($orders)
-            ->editColumn('status', function ($order) {
-                $class = match ($order->status) {
-                    'pending' => 'bg-warning text-dark',
-                    'approved' => 'bg-info text-white',
-                    'dispatched' => 'bg-primary text-white',
-                    'completed' => 'bg-success text-white',
-                    'cancelled' => 'bg-danger text-white',
-                    default => 'bg-secondary text-white'
-                };
-                return '<span class="badge ' . $class . '">' . ucfirst($order->status) . '</span>';
-            })
-            ->editColumn('total_amount', function ($order) {
-                return '₹' . number_format($order->total_amount, 2);
-            })
-            ->editColumn('created_at', function ($order) {
-                return $order->created_at->format('d M Y, h:i A');
-            })
-            ->addColumn('action', function ($order) {
-                return '<a href="' . route('store.orders.show', $order->id) . '" class="btn btn-sm btn-outline-primary">
-                            <i class="mdi mdi-eye"></i> View
-                        </a>';
-            })
-            ->rawColumns(['status', 'action'])
-            ->make(true);
     }
 
     public function show($id)

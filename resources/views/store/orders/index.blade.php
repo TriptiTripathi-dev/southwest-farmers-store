@@ -71,6 +71,8 @@
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script>
     $(document).ready(function() {
+        $.fn.dataTable.ext.errMode = 'none';
+        
         $('#ordersTable').DataTable({
             processing: true,
             serverSide: true,
