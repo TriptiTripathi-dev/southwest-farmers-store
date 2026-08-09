@@ -381,10 +381,15 @@ class StoreInventoryController extends Controller
             return back()->with('error', 'An order has already been placed for this department today. You can only place one order per department per day.')->withInput();
         }
 
+        $firstProductId = $request->products[0]['product_id'] ?? null;
+        $totalRequestedQty = array_sum(array_column($request->products, 'quantity'));
+
         $stockRequest = StockRequest::create([
             'store_id' => $storeId,
             'request_number' => StockRequest::generateRequestNumber($storeId),
             'department_id' => $request->department_id,
+            'product_id' => $firstProductId,
+            'requested_quantity' => $totalRequestedQty,
             'gm_email' => $request->gm_email,
             'gm_phone' => $request->gm_phone,
             'vp_email' => $request->vp_email,
