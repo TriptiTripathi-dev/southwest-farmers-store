@@ -64,7 +64,7 @@
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                         </span>
-                        <span class="sidebar-text"> Inventory </span>
+                        <span class="sidebar-text"> Inventory control </span>
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse {{ $isInventoryActive ? 'show' : '' }}" id="sidebarInventory">
@@ -73,7 +73,7 @@
                             <li>
                                 <a href="{{ route('inventory.index') }}"
                                     class="tp-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">
-                                    Store Stock
+                                    Store Inventory
                                 </a>
                             </li>
                             <li>
@@ -88,7 +88,7 @@
                             <li>
                                 <a href="{{ route('inventory.adjustments') }}"
                                     class="tp-link {{ request()->routeIs('inventory.adjustments') ? 'active' : '' }}">
-                                    Stock Adjustments
+                                    Inventory adjustment
                                 </a>
                             </li>
                             @endif
@@ -97,7 +97,7 @@
                             <li>
                                 <a href="{{ route('transfers.index') }}"
                                     class="tp-link {{ request()->is('transfers*') ? 'active' : '' }}">
-                                    Store To Store Transfers
+                                    Store to store transfer
                                 </a>
                             </li>
                             @endif
@@ -106,7 +106,7 @@
                             <li>
                                 <a href="{{ route('store.audits.index') }}"
                                     class="tp-link {{ request()->routeIs('store.audits.*') ? 'active' : '' }}">
-                                    Stock Audits
+                                    Inventory Audits
                                 </a>
                             </li>
                             @endif

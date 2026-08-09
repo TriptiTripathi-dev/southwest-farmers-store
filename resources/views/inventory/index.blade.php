@@ -1,4 +1,4 @@
-<x-app-layout title="Store Stock">
+<x-app-layout title="Store Inventory">
     @push('styles')
     <style>
         .stats-card {
@@ -128,7 +128,7 @@
             {{-- Header & Stats --}}
             <div class="row align-items-center py-4 g-3">
                 <div class="col-md-4">
-                    <h4 class="h3 fw-black m-0 text-dark">Store Stock</h4>
+                    <h4 class="h3 fw-black m-0 text-dark">Store Inventory</h4>
                     <p class="text-muted mb-0">Manage and monitor your local inventory</p>
                 </div>
                 <div class="col-md-8">
