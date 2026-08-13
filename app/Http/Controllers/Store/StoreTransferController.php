@@ -61,7 +61,7 @@ class StoreTransferController extends Controller
             'product_id' => $request->product_id,
             'quantity_sent' => $request->quantity, // Using 'sent' as 'requested' initially for Pending state
             'quantity_received' => 0,
-            'status' => 'pending',
+            'status' => 'awaiting_approval',
             'created_by' => Auth::id()
         ]);
         $storeId = Auth::user()->store_id;
@@ -69,13 +69,34 @@ class StoreTransferController extends Controller
         StoreNotification::create([
             'user_id' => Auth::id(),
             'store_id' => $storeId,
-            'title' => 'Stock Request Sent',
-            'message' => "Request #{$transfer->transfer_number} for {$request->quantity} units sent.",
+            'title' => 'Stock Request Created - Awaiting GM/VP Approval',
+            'message' => "Transfer Request #{$transfer->transfer_number} for {$request->quantity} units requires GM/VP Approval.",
             'type' => 'info',
             'url' => route('transfers.index'),
         ]);
 
-        return back()->with('success', 'Transfer Request Sent!');
+        return back()->with('success', 'Transfer Request Created! Awaiting GM/VP Approval.');
+    }
+
+    // 1B. Approve Transfer (GM/VP Approval)
+    public function approveTransfer($id)
+    {
+        $transfer = StockTransfer::findOrFail($id);
+
+        $transfer->update([
+            'status' => 'pending', // GM/VP Approved, now ready for sender store to dispatch
+        ]);
+
+        StoreNotification::create([
+            'user_id' => Auth::id(),
+            'store_id' => $transfer->from_store_id,
+            'title' => 'Transfer Approved by GM/VP',
+            'message' => "Transfer Request #{$transfer->transfer_number} was approved by VP/GM.",
+            'type' => 'success',
+            'url' => route('transfers.index'),
+        ]);
+
+        return back()->with('success', 'Stock Transfer request approved by VP/GM!');
     }
 
     // 2. Dispatch (Sender Side)

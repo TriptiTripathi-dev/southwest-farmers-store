@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between">
             @php
                 $brandLogo = asset('assets/images/logo.jpg');
-                $brandName = 'Home Food Distributors';
+                $brandName = 'Southwest Farmers Market';
                 $settings = \App\Models\StoreSetting::first();
                 if ($settings) {
                     if (!empty($settings->logo)) {
@@ -13,6 +13,7 @@
                         $brandName = $settings->app_name;
                     }
                 }
+                $storeName = auth()->user()->store->store_name ?? (auth()->user()->store->name ?? $brandName);
             @endphp
 
             {{-- LEFT --}}
@@ -27,7 +28,7 @@
                 @endif
                 <li class="ms-2 d-flex align-items-center">
                     <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="rounded border bg-white p-1 me-2" style="width: 34px; height: 34px; object-fit: contain;">
-                    <span class="fw-bold text-dark d-none d-md-inline">{{ $brandName }}</span>
+                    <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide">{{ $storeName }}</span>
                 </li>
 
                 @if(auth()->user()->hasRole('Cashier'))

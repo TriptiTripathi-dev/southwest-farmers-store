@@ -25,8 +25,8 @@
                             <i class="mdi mdi-home-variant text-white fs-18"></i>
                         </div>
                         <div class="text-start lh-1 overflow-hidden">
-                            <span class="d-block fw-bold text-dark fs-14 text-uppercase tracking-wider">Home Food</span>
-                            <span class="d-block text-muted fs-11 fw-medium">Distributors</span>
+                            <span class="d-block fw-bold text-dark fs-13 text-uppercase tracking-wider">Southwest</span>
+                            <span class="d-block text-success fs-11 fw-bold text-uppercase">Farmers Market</span>
                         </div>
                     </div>
                 </a>

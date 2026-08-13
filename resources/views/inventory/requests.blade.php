@@ -1,12 +1,12 @@
-<x-app-layout title="Order Inventory">
+<x-app-layout title="Purchase Order">
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-clipboard-text-outline text-primary me-2"></i> Order Inventory
+                <i class="mdi mdi-clipboard-text-outline text-primary me-2"></i> Purchase Order
             </h4>
-            <small class="text-muted">Manage inventory orders and replenishment from warehouse</small>
+            <small class="text-muted">Manage store purchase orders and replenishment from warehouse</small>
         </div>
         <div class="d-flex gap-2">
             <form action="{{ route('inventory.request.generate-po') }}" method="POST">
@@ -19,7 +19,7 @@
                 <i class="mdi mdi-file-excel me-1"></i> Import
             </button>
             <a href="{{ route('inventory.order.create') }}" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">
-                <i class="mdi mdi-plus me-1"></i> New Order Inventory
+                <i class="mdi mdi-plus me-1"></i> + New Warehouse PO
             </a>
         </div>
     </div>
@@ -193,7 +193,12 @@
                         @forelse($requests as $request)
                         <tr>
                             <td class="ps-4">
-                                <span class="fw-bold text-primary">{{ $request->request_number ?? 'REQ-'.str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary p-1 lh-1 me-2 rounded-circle" type="button" data-bs-toggle="collapse" data-bs-target="#dept-list-{{ $request->id }}" aria-expanded="false" title="View all departments ordered on this date">
+                                        <i class="mdi mdi-chevron-down fs-5"></i>
+                                    </button>
+                                    <span class="fw-bold text-primary">{{ $request->request_number ?? 'REQ-'.str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                </div>
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark border">{{ $request->department->name ?? 'N/A' }}</span>
@@ -226,6 +231,66 @@
                                         @endif
                                     </div>
                                 </td>
+                        </tr>
+                        <tr class="collapse bg-light" id="dept-list-{{ $request->id }}">
+                            <td colspan="7" class="p-3">
+                                <div class="card border border-primary border-opacity-25 shadow-sm mb-0">
+                                    <div class="card-header bg-primary bg-opacity-10 py-2">
+                                        <h6 class="mb-0 fw-bold text-primary small">
+                                            <i class="mdi mdi-domain me-1"></i> Department Orders Placed on {{ $request->created_at->format('d M Y') }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        @php
+                                            $sameDayDeptOrders = \App\Models\StockRequest::where('store_id', $request->store_id)
+                                                ->whereDate('created_at', $request->created_at->toDateString())
+                                                ->with(['department', 'items', 'reviewedBy'])
+                                                ->get();
+                                        @endphp
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="bg-light small text-muted text-uppercase">
+                                                <tr>
+                                                    <th class="ps-3">ORDER ID</th>
+                                                    <th>DEPARTMENT</th>
+                                                    <th class="text-center">QTY</th>
+                                                    <th>DATE</th>
+                                                    <th class="text-center">REVIEW</th>
+                                                    <th class="text-center">STATUS</th>
+                                                    <th class="text-end pe-3">ACTION</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($sameDayDeptOrders as $deptOrder)
+                                                <tr>
+                                                    <td class="ps-3 font-monospace fw-bold text-primary">{{ $deptOrder->request_number }}</td>
+                                                    <td><span class="badge bg-white text-dark border fw-bold">{{ $deptOrder->department->name ?? 'N/A' }}</span></td>
+                                                    <td class="text-center fw-bold">{{ $deptOrder->items->count() }} Items</td>
+                                                    <td>{{ $deptOrder->created_at->format('d M Y') }}</td>
+                                                    <td class="text-center">
+                                                        @if($deptOrder->reviewed)
+                                                            <i class="mdi mdi-checkbox-marked-circle text-success fs-5" title="Reviewed by {{ $deptOrder->reviewedBy->name ?? 'N/A' }}"></i>
+                                                        @else
+                                                            <button class="btn btn-xs btn-outline-warning rounded-pill px-2" onclick="reviewOrder({{ $deptOrder->id }})">Mark Review</button>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if($deptOrder->status == 'awaiting_approval')
+                                                            <span class="badge bg-danger">Awaiting Approval</span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-end pe-3">
+                                                        <a href="{{ route('inventory.requests.show', $deptOrder->id) }}" class="btn btn-xs btn-outline-primary"><i class="mdi mdi-eye"></i></a>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
 
                             @elseif(request('status') == 'in_transit')
                                 <td class="text-center fw-bold">{{ $request->received_qty ?? 0 }} / {{ $request->total_items ?? $request->items->count() }}</td>

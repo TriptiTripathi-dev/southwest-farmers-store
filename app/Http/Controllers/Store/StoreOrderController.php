@@ -25,16 +25,24 @@ class StoreOrderController extends Controller
     {
         try {
             $user = Auth::user();
-            $query = StorePurchaseOrder::query()->with(['user']);
+            $query = StorePurchaseOrder::query()->with(['user', 'items']);
 
             if ($user && $user->store_id) {
                 $query->where('store_id', $user->store_id);
             }
 
-            $tab = strtolower($request->get('tab', 'history'));
+            if ($request->filled('date')) {
+                $query->whereDate('created_at', $request->date);
+            }
+
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            }
+
+            $tab = strtolower($request->get('tab', 'receiving'));
             if ($tab === 'receiving') {
-                $query->whereIn(DB::raw('LOWER(status)'), ['approved', 'dispatched', 'in_transit']);
-            } elseif ($tab === 'history') {
+                $query->whereIn(DB::raw('LOWER(status)'), ['approved', 'dispatched', 'in_transit', 'receiving']);
+            } else {
                 $query->whereIn(DB::raw('LOWER(status)'), ['completed', 'partially_received', 'cancelled']);
             }
 
@@ -47,29 +55,35 @@ class StoreOrderController extends Controller
                         'pending' => 'bg-warning text-dark',
                         'approved' => 'bg-info text-white',
                         'dispatched', 'in_transit' => 'bg-primary text-white',
+                        'receiving' => 'bg-secondary text-white fw-bold',
+                        'partially_received' => 'bg-warning text-dark',
                         'completed' => 'bg-success text-white',
                         'cancelled' => 'bg-danger text-white',
                         default => 'bg-secondary text-white'
                     };
                     $label = str_replace('_', ' ', ucfirst($status));
-                    return '<span class="badge ' . $class . '">' . $label . '</span>';
+                    return '<span class="badge ' . $class . ' px-3 py-2 fs-12">' . $label . '</span>';
                 })
+                ->addColumn('qty_ordered', fn($order) => $order->items->sum('quantity') ?: ($order->total_items ?? 1))
+                ->addColumn('qty_received', fn($order) => $order->items->sum('received_quantity') ?: ($order->status == 'completed' ? ($order->total_items ?? 1) : 0))
                 ->editColumn('total_amount', function ($order) {
                     return '$' . number_format($order->total_amount ?? 0, 2);
                 })
                 ->editColumn('created_at', function ($order) {
-                    return $order->created_at ? $order->created_at->format('d M Y, h:i A') : 'N/A';
+                    return $order->created_at ? $order->created_at->format('d M Y') : '---';
                 })
-                ->addColumn('action', function ($order) {
-                    $btn = '<a href="' . route('store.orders.show', $order->id) . '" class="btn btn-sm btn-outline-primary me-1">
-                                <i class="mdi mdi-eye"></i> View
-                            </a>';
-                    if (in_array(strtolower($order->status), ['approved', 'dispatched', 'in_transit'])) {
-                        $btn .= '<a href="' . route('store.orders.receive', $order->id) . '" class="btn btn-sm btn-success">
-                                    <i class="mdi mdi-truck-check"></i> Receive
+                ->addColumn('received_date', function ($order) {
+                    return $order->received_at ? $order->received_at->format('d M Y') : ($order->updated_at ? $order->updated_at->format('d M Y') : '---');
+                })
+                ->addColumn('action', function ($order) use ($tab) {
+                    if ($tab === 'receiving') {
+                        return '<a href="' . route('store.orders.receive', $order->id) . '" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold shadow-sm">
+                                    <i class="mdi mdi-truck-check me-1"></i> Receive
                                 </a>';
                     }
-                    return $btn;
+                    return '<a href="' . route('store.orders.show', $order->id) . '" class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1 fw-bold">
+                                <i class="mdi mdi-eye me-1"></i> View
+                            </a>';
                 })
                 ->rawColumns(['status', 'action'])
                 ->make(true);
@@ -150,9 +164,13 @@ class StoreOrderController extends Controller
     {
         $user = Auth::user();
         $order = StorePurchaseOrder::where('store_id', $user->store_id)
-            ->where('status', 'dispatched')
+            ->whereIn('status', ['dispatched', 'in_transit', 'approved', 'receiving'])
             ->with(['items.product'])
             ->findOrFail($id);
+
+        if ($order->status !== 'receiving') {
+            $order->update(['status' => 'receiving']);
+        }
 
         return view('store.orders.receive', compact('order'));
     }

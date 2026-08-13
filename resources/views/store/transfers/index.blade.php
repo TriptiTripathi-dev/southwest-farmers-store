@@ -136,7 +136,15 @@
                                                     class="badge bg-primary-subtle text-primary fw-bold">{{ $t->quantity_sent }}</span>
                                             </td>
                                             <td class="px-3 py-3 text-center">
-                                                @if ($t->status == 'pending')
+                                                @if ($t->status == 'awaiting_approval')
+                                                    <form action="{{ route('transfers.approve', $t->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+                                                            <i class="fas fa-check-double"></i>
+                                                            <span class="d-none d-md-inline">Approve (VP/GM)</span>
+                                                        </button>
+                                                    </form>
+                                                @elseif ($t->status == 'pending')
                                                     @if (Auth::user()->hasPermission('dispatch_transfer'))
                                                         {{-- CHANGED: Removed native onsubmit confirm, added class for SweetAlert --}}
                                                         <form action="{{ route('transfers.dispatch', $t->id) }}"
@@ -149,7 +157,7 @@
                                                             </button>
                                                         </form>
                                                     @else
-                                                        <span class="badge bg-secondary">Pending</span>
+                                                        <span class="badge bg-warning text-dark">Pending Dispatch</span>
                                                     @endif
                                                 @else
                                                     <span class="badge bg-secondary">{{ ucfirst($t->status) }}</span>

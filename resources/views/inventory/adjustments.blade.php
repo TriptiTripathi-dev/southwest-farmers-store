@@ -98,7 +98,7 @@
     <div class="modal fade" id="newAdjustmentModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                <form action="{{ route('inventory.adjustments.store') }}" method="POST">
+                <form action="{{ route('inventory.adjustments.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-header border-bottom-0 pb-0">
                         <h5 class="modal-title fw-bold">Make Stock Adjustment</h5>
@@ -138,6 +138,12 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-muted">Reason / Note</label>
                             <textarea name="reason" class="form-control" rows="2" placeholder="e.g., Damaged during shipping"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Photo Proof <span class="badge bg-light text-secondary border">Camera / Upload</span></label>
+                            <input type="file" name="proof_image" class="form-control" accept="image/*">
+                            <small class="text-muted" style="font-size: 0.75rem;">Take a picture or upload proof of damaged/added inventory</small>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">

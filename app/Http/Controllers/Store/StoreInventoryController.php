@@ -598,13 +598,20 @@ class StoreInventoryController extends Controller
             'quantity' => 'required|integer|min:1',
             'operation' => 'required|in:add,subtract',
             'reason' => 'nullable|string|max:255',
+            'proof_image' => 'nullable|image|max:5120',
         ]);
 
         $user = Auth::user();
         $storeId = $user->store_id ?? $user->id;
 
+        $reasonText = $request->reason;
+        if ($request->hasFile('proof_image')) {
+            $path = $request->file('proof_image')->store('adjustments/proofs', 'public');
+            $reasonText = trim(($reasonText ?? '') . ' [Photo Proof: ' . asset('storage/' . $path) . ']');
+        }
+
         try {
-            DB::transaction(function () use ($request, $user, $storeId) {
+            DB::transaction(function () use ($request, $user, $storeId, $reasonText) {
                 $stock = StoreStock::firstOrNew(['store_id' => $storeId, 'product_id' => $request->product_id]);
 
                 if ($request->operation === 'add') {
@@ -625,7 +632,7 @@ class StoreInventoryController extends Controller
                     'user_id' => $user->id,
                     'quantity' => $request->quantity,
                     'operation' => $request->operation,
-                    'reason' => $request->reason,
+                    'reason' => $reasonText,
                 ]);
 
                 StoreNotification::create([

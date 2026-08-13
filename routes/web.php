@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     // 2. Transfer Routes
     Route::get('/transfers', [StoreTransferController::class, 'index'])->name('transfers.index');
     Route::post('/transfers', [StoreTransferController::class, 'store'])->name('transfers.store');
+    Route::post('/transfers/{transfer}/approve', [StoreTransferController::class, 'approveTransfer'])->name('transfers.approve');
     Route::post('/transfers/{transfer}/dispatch', [StoreTransferController::class, 'dispatchTransfer'])->name('transfers.dispatch');
     Route::post('/transfers/{transfer}/receive', [StoreTransferController::class, 'receiveTransfer'])->name('transfers.receive');
     Route::post('/store/update-status', [StoreProfileController::class, 'updateStatus'])
