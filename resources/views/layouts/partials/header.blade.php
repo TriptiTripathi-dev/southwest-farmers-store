@@ -13,10 +13,10 @@
                         $brandName = $settings->app_name;
                     }
                 }
-                if (auth()->user()->is_website_manager) {
+                if (auth()->check() && auth()->user()->is_website_manager) {
                     $storeName = 'WEBSITE MANAGER';
                 } else {
-                    $storeName = auth()->user()->store->store_name ?? (auth()->user()->store->name ?? $brandName);
+                    $storeName = optional(optional(auth()->user())->store)->store_name ?? (optional(optional(auth()->user())->store)->name ?? $brandName);
                 }
             @endphp
 

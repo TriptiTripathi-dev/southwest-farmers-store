@@ -14,7 +14,7 @@
             // Since you are not using Spatie's @can, we use your custom hasPermission method
             $can = fn($perm) => $user->hasPermission($perm);
             
-            $isWebsiteManager = $user->is_website_manager;
+            $isWebsiteManager = optional($user)->is_website_manager;
             @endphp
 
             {{-- LOGO SECTION --}}
