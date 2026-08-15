@@ -8,6 +8,7 @@ class HomePageSetting extends Model
 {
     protected $fillable = [
         'store_id',
+        'website_logo',
         'hero_badge',
         'hero_title',
         'hero_subtitle',

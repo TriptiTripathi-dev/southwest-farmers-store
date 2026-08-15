@@ -1,7 +1,11 @@
 <nav class="navbar navbar-expand-lg bg-white sticky-top shadow-sm py-3">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center fw-bold fs-4 text-theme" href="{{ route('website.home') }}">
-            <img src="{{ asset('assets/images/logo.jpg') }}" alt="Southwest Farmers" height="60" class="me-2">
+            @php
+                $homeSettings = \App\Models\HomePageSetting::first();
+                $navLogo = ($homeSettings && $homeSettings->website_logo) ? Storage::disk('r2')->url($homeSettings->website_logo) : asset('assets/images/logo.jpg');
+            @endphp
+            <img src="{{ $navLogo }}" alt="Southwest Farmers" height="60" class="me-2">
         </a>
 
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">

@@ -65,15 +65,10 @@ class HomePageSettingController extends Controller
         }
 
         if ($request->hasFile('website_logo')) {
-            $generalSettings = \App\Models\StoreSetting::first();
-            if (!$generalSettings) {
-                $generalSettings = \App\Models\StoreSetting::create();
+            if ($settings->website_logo) {
+                Storage::disk('r2')->delete($settings->website_logo);
             }
-            if ($generalSettings->logo) {
-                Storage::disk('r2')->delete($generalSettings->logo);
-            }
-            $generalSettings->logo = $request->file('website_logo')->store('settings/logo', 'r2');
-            $generalSettings->save();
+            $data['website_logo'] = $request->file('website_logo')->store('website/logo', 'r2');
         }
 
         $settings->update($data);

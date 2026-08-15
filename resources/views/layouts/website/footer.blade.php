@@ -7,7 +7,11 @@
             
             <div class="col-12 col-lg-4 pe-lg-5">
                 <h4 class="fw-bold text-white mb-4 d-flex align-items-center">
-                    <img src="{{ optional($settings)->logo ? Storage::disk('r2')->url($settings->logo) : asset('assets/images/logo.jpg') }}" alt="{{ optional($settings)->app_name ?? 'Southwest Farmers' }}" height="80" class="me-2 rounded shadow-sm bg-white p-1">
+                    @php
+                        $homeSettings = \App\Models\HomePageSetting::first();
+                        $footerLogo = ($homeSettings && $homeSettings->website_logo) ? Storage::disk('r2')->url($homeSettings->website_logo) : (optional($settings)->logo ? Storage::disk('r2')->url($settings->logo) : asset('assets/images/logo.jpg'));
+                    @endphp
+                    <img src="{{ $footerLogo }}" alt="{{ optional($settings)->app_name ?? 'Southwest Farmers' }}" height="80" class="me-2 rounded shadow-sm bg-white p-1">
                 </h4>
                 <p class="text-white-50 small mb-4 pe-md-4">
                     {{ optional($settings)->footer_description ?? 'Your premier destination for high-quality, fresh, and organic everyday essentials. We deliver happiness and health right to your doorstep.' }}
