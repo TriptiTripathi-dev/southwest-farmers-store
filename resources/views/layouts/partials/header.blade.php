@@ -27,7 +27,6 @@
                 </li>
                 @endif
                 <li class="ms-2 d-flex align-items-center">
-                    <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="rounded border bg-white p-1 me-2" style="width: 34px; height: 34px; object-fit: contain;">
                     <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide">{{ $storeName }}</span>
                 </li>
 

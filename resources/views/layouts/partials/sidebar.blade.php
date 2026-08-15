@@ -18,17 +18,9 @@
             @endphp
 
             {{-- LOGO SECTION --}}
-            <div class="logo-box text-center py-3">
-                <a href="{{ route('dashboard') }}" class="text-decoration-none">
-                    <div class="d-flex align-items-center justify-content-center px-2">
-                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 32px; height: 32px; min-width: 32px;">
-                            <i class="mdi mdi-home-variant text-white fs-18"></i>
-                        </div>
-                        <div class="text-start lh-1 overflow-hidden">
-                            <span class="d-block fw-bold text-dark fs-13 text-uppercase tracking-wider">Southwest</span>
-                            <span class="d-block text-success fs-11 fw-bold text-uppercase">Farmers Market</span>
-                        </div>
-                    </div>
+            <div class="logo-box text-center py-3 px-3">
+                <a href="{{ route('dashboard') }}" class="d-inline-block text-decoration-none w-100">
+                    <img src="{{ $logo }}" alt="Logo" class="img-fluid logo-img" style="max-height: 55px; width: auto; max-width: 100%; object-fit: contain;">
                 </a>
             </div>
 
