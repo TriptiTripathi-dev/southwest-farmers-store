@@ -225,24 +225,24 @@
                                                 <i class="mdi mdi-package-variant-closed"></i>
                                             </div>
                                             <div>
-                                                <h6 class="mb-0 fw-bold text-dark">{{ $stock->product->product_name }}</h6>
+                                                <h6 class="mb-0 fw-bold text-dark">{{ $stock->product?->product_name }}</h6>
                                                 <div class="d-flex align-items-center gap-2 mt-1">
                                                     <span class="badge bg-light text-muted fw-medium font-monospace" style="font-size: 0.65rem;">
-                                                        UPC: {{ $stock->product->upc ?? '-' }}
+                                                        UPC: {{ $stock->product?->upc ?? '-' }}
                                                     </span>
-                                                    <span class="text-muted small">{{ $stock->product->unit }}</span>
+                                                    <span class="text-muted small">{{ $stock->product?->unit }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td data-label="Category">
                                         <span class="fw-semibold text-dark">
-                                            {{ $stock->product->category->name ?? 'General' }}
+                                            {{ $stock->product?->category?->name ?? 'General' }}
                                         </span>
                                     </td>
                                     <td data-label="Subcategory">
                                         <span class="text-muted">
-                                            {{ $stock->product->subcategory->name ?? '-' }}
+                                            {{ $stock->product?->subcategory?->name ?? '-' }}
                                         </span>
                                     </td>
                                     <td data-label="Quantity">
@@ -269,13 +269,13 @@
                                         @endif
                                     </td>
                                     <td class="text-center" data-label="Actions">
-                                        @if($stock->product->unit_type == 'weight')
+                                        @if($stock->product?->unit_type == 'weight')
                                         <button class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill convert-weight-btn" 
                                                 data-id="{{ $stock->id }}"
-                                                data-name="{{ $stock->product->product_name }}"
+                                                data-name="{{ $stock->product?->product_name }}"
                                                 data-qty="{{ $stock->quantity }}"
-                                                data-unit="{{ $stock->product->unit }}"
-                                                data-options="{{ json_encode($stock->product->weight_options) }}">
+                                                data-unit="{{ $stock->product?->unit }}"
+                                                data-options="{{ json_encode($stock->product?->weight_options) }}">
                                             <i class="mdi mdi-swap-horizontal me-1"></i> Convert
                                         </button>
                                         @else
