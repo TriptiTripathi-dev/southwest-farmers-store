@@ -13,6 +13,28 @@
                 @csrf
                 @method('PUT')
 
+                {{-- Website Logo Section --}}
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="mdi mdi-image me-2 text-primary"></i>Main Website Logo</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-muted">Upload Dynamic Website Logo</label>
+                                @php
+                                    $generalSettings = \App\Models\StoreSetting::first();
+                                @endphp
+                                <div class="mb-2">
+                                    <img id="logoPreview" src="{{ ($generalSettings && $generalSettings->logo) ? Storage::disk('r2')->url($generalSettings->logo) : asset('assets/images/logo.jpg') }}" alt="Logo" class="img-fluid rounded border p-2 bg-light" style="max-height: 80px;">
+                                </div>
+                                <input type="file" name="website_logo" accept="image/*" class="form-control bg-light border-0" onchange="document.getElementById('logoPreview').src = window.URL.createObjectURL(this.files[0])">
+                                <small class="text-muted mt-1 d-block">This logo will dynamically update on the store sidebar and main website.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Hero Section --}}
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
                     <div class="card-header bg-white border-bottom py-3">

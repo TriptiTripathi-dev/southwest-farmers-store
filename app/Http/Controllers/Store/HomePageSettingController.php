@@ -64,6 +64,18 @@ class HomePageSettingController extends Controller
             $data['hero_image'] = $request->file('hero_image')->store('website/home', 'r2');
         }
 
+        if ($request->hasFile('website_logo')) {
+            $generalSettings = \App\Models\StoreSetting::first();
+            if (!$generalSettings) {
+                $generalSettings = \App\Models\StoreSetting::create();
+            }
+            if ($generalSettings->logo) {
+                Storage::disk('r2')->delete($generalSettings->logo);
+            }
+            $generalSettings->logo = $request->file('website_logo')->store('settings/logo', 'r2');
+            $generalSettings->save();
+        }
+
         $settings->update($data);
 
         return back()->with('success', 'Home page settings updated successfully.');
