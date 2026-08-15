@@ -20,7 +20,7 @@
             {{-- LOGO SECTION --}}
             <div class="logo-box text-center py-3 px-3">
                 <a href="{{ route('dashboard') }}" class="d-inline-block text-decoration-none w-100">
-                    <img src="{{ $logo }}" alt="Logo" class="img-fluid logo-img" style="max-height: 55px; width: auto; max-width: 100%; object-fit: contain;">
+                    <img src="{{ $logo }}" alt="Logo" class="img-fluid logo-img" style="max-height: 80px; width: auto; max-width: 100%; object-fit: contain;">
                 </a>
             </div>
 
