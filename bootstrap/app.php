@@ -47,10 +47,5 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->renderable(function (\Throwable $e, $request) {
-            if ($request->is('stocks*')) {
-                return response('<pre>' . $e->getMessage() . "
-" . $e->getTraceAsString() . '</pre>', 500);
-            }
-        });
+        //
     })->create();
