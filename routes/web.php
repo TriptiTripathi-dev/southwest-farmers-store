@@ -280,3 +280,11 @@ require __DIR__ . '/auth.php';
 
 // Load Website Module Routes
 require __DIR__ . '/website.php';
+
+Route::get('/debug-log', function() {
+    $logFile = storage_path('logs/laravel.log');
+    if (file_exists($logFile)) {
+        return '<pre>' . shell_exec('tail -n 200 ' . escapeshellarg($logFile)) . '</pre>';
+    }
+    return 'No log file';
+});
