@@ -13,10 +13,27 @@
                         $brandName = $settings->app_name;
                     }
                 }
-                if (auth()->check() && auth()->user()->is_website_manager) {
+                $isWebsiteManager = auth()->check() && auth()->user()->is_website_manager;
+                if ($isWebsiteManager) {
                     $storeName = 'WEBSITE MANAGER';
                 } else {
                     $storeName = optional(optional(auth()->user())->store)->store_name ?? (optional(optional(auth()->user())->store)->name ?? $brandName);
+                }
+
+                $hasTextLogo = false;
+                $storeLocation = $storeName;
+                if (!$isWebsiteManager && $storeName) {
+                    $upperName = mb_strtoupper($storeName);
+                    if (str_contains($upperName, 'SOUTHWEST FARMERS MARKET - ')) {
+                        $storeLocation = trim(str_ireplace('SOUTHWEST FARMERS MARKET - ', '', $storeName));
+                        $hasTextLogo = true;
+                    } elseif (str_contains($upperName, 'SOUTHWEST FARMERS – ')) {
+                        $storeLocation = trim(str_ireplace('SOUTHWEST FARMERS – ', '', $storeName));
+                        $hasTextLogo = true;
+                    } elseif (str_contains($upperName, 'SOUTHWEST FARMERS MARKET')) {
+                        $storeLocation = trim(str_ireplace('SOUTHWEST FARMERS MARKET', '', $storeName));
+                        $hasTextLogo = true;
+                    }
                 }
             @endphp
 
@@ -31,7 +48,16 @@
                 </li>
                 @endif
                 <li class="ms-2 d-flex align-items-center">
-                    <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide">{{ $storeName }}</span>
+                    <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide d-flex align-items-center">
+                        @if($hasTextLogo)
+                            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 14px; margin-right: 6px; position: relative; top: -1px;">
+                            @if($storeLocation)
+                                <span class="ms-1">- {{ $storeLocation }}</span>
+                            @endif
+                        @else
+                            {{ $storeName }}
+                        @endif
+                    </span>
                 </li>
 
                 @if(auth()->user()->hasRole('Cashier'))
