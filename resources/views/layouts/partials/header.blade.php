@@ -50,7 +50,7 @@
                 <li class="ms-2 d-flex align-items-center">
                     <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide d-flex align-items-center">
                         @if($hasTextLogo)
-                            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 14px; margin-right: 6px; position: relative; top: -1px;">
+                            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 22px; margin-right: 6px; position: relative; top: -1px;">
                             @if($storeLocation)
                                 <span class="ms-1">- {{ $storeLocation }}</span>
                             @endif
