@@ -103,7 +103,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end fw-bold text-success">
-                                    ₹{{ number_format($request->total_amount ?? $request->items->sum('total_cost') ?? 0, 2) }}
+                                    ${{ number_format($request->total_amount ?? $request->items->sum('total_cost') ?? 0, 2) }}
                                 </td>
                                 <td>
                                     <small class="text-muted">{{ $request->requestedBy->name ?? 'N/A' }}</small>

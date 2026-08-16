@@ -71,10 +71,10 @@
                                                     </span>
                                                 </td>
                                             @endif
-                                            <td class="text-end text-muted">₹{{ number_format($item->unit_cost, 2) }}
+                                            <td class="text-end text-muted">${{ number_format($item->unit_cost, 2) }}
                                             </td>
                                             <td class="text-end fw-bold pe-3">
-                                                ₹{{ number_format($item->total_cost, 2) }}</td>
+                                                ${{ number_format($item->total_cost, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -83,7 +83,7 @@
                                         <td colspan="{{ $request->status == 'pending' ? 4 : 6 }}"
                                             class="text-end fw-bold py-3">Total Amount:</td>
                                         <td class="text-end fw-bold text-success fs-5 py-3 pe-3">
-                                            ₹{{ number_format($request->total_amount, 2) }}</td>
+                                            ${{ number_format($request->total_amount, 2) }}</td>
                                     </tr>
                                 </tfoot>
                             </table>

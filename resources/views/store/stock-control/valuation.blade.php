@@ -563,7 +563,7 @@
                         format: 'dd MMM yyyy'
                     },
                     y: {
-                        formatter: val => "₹ " + val.toLocaleString('en-IN'),
+                        formatter: val => "$ " + val.toLocaleString('en-IN'),
                         title: {
                             formatter: () => 'Total Value'
                         }

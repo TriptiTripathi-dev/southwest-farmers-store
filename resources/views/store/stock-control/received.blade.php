@@ -37,7 +37,7 @@
                                 </span>
                             </td>
                             <td class="text-end fw-bold text-success">
-                                ₹{{ number_format($req->total_amount, 2) }}
+                                ${{ number_format($req->total_amount, 2) }}
                             </td>
                             <td>{{ $req->updated_at->format('d M Y, h:i A') }}</td>
                             <td class="text-center">

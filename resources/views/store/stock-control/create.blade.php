@@ -79,7 +79,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="5" class="text-end fw-bold fs-5">Total Amount:</td>
-                                        <td class="text-end fw-bold text-success fs-5" id="totalAmount">₹0.00</td>
+                                        <td class="text-end fw-bold text-success fs-5" id="totalAmount">$0.00</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -286,7 +286,7 @@ function renderSelectedProducts() {
                     <input type="number" class="form-control form-control-sm" step="0.01" min="0" value="${p.cost_price}" 
                            onchange="updateCost(${index}, this.value)">
                 </td>
-                <td class="text-end fw-bold">₹${total.toFixed(2)}</td>
+                <td class="text-end fw-bold">$${total.toFixed(2)}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeProduct(${index})" title="Remove">
                         <i class="mdi mdi-delete"></i>
@@ -321,7 +321,7 @@ function updateTotals() {
     const totalAmount = selectedProducts.reduce((sum, p) => sum + (p.quantity * p.cost_price), 0);
     
     $('#totalItems').text(totalItems);
-    $('#totalAmount').text('₹' + totalAmount.toFixed(2));
+    $('#totalAmount').text('$' + totalAmount.toFixed(2));
     
     estimatePallets();
 }

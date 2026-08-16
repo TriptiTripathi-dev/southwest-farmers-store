@@ -15,7 +15,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="text-white-50">Total Inventory Value</h6>
-                                <h3 class="mb-0 fw-bold">₹{{ number_format($totalValue, 2) }}</h3>
+                                <h3 class="mb-0 fw-bold">${{ number_format($totalValue, 2) }}</h3>
                             </div>
                             <div class="bg-white bg-opacity-25 p-2 rounded">
                                 <i class="mdi mdi-cash-multiple fs-3"></i>
@@ -141,8 +141,8 @@
                                             {{ $stock->in_transit_qty ?? 0 }}
                                         </span>
                                     </td>
-                                    <td class="text-end">₹{{ number_format($stock->price, 2) }}</td>
-                                    <td class="text-end fw-bold text-success">₹{{ number_format($stockValue, 2) }}</td>
+                                    <td class="text-end">${{ number_format($stock->price, 2) }}</td>
+                                    <td class="text-end fw-bold text-success">${{ number_format($stockValue, 2) }}</td>
                                     <td class="text-center">
                                         @if ($stock->quantity == 0)
                                             <span class="badge bg-danger">Out of Stock</span>

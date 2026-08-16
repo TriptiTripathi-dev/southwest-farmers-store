@@ -64,9 +64,9 @@
                                             <td class="text-center">{{ $item->quantity }}</td>
                                             <td class="text-center">{{ $item->dispatched_quantity ?: '-' }}</td>
                                             <td class="text-center">{{ $item->received_quantity ?: '-' }}</td>
-                                            <td class="text-end">₹{{ number_format($item->unit_cost, 2) }}</td>
+                                            <td class="text-end">${{ number_format($item->unit_cost, 2) }}</td>
                                             <td class="text-end pe-3 fw-bold">
-                                                ₹{{ number_format($item->total_cost, 2) }}</td>
+                                                ${{ number_format($item->total_cost, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -74,7 +74,7 @@
                                     <tr>
                                         <td colspan="5" class="text-end fw-bold ps-3 py-3">Grand Total:</td>
                                         <td class="text-end pe-3 fw-bold py-3 text-primary h5 mb-0">
-                                            ₹{{ number_format($order->total_amount, 2) }}</td>
+                                            ${{ number_format($order->total_amount, 2) }}</td>
                                     </tr>
                                 </tfoot>
                             </table>

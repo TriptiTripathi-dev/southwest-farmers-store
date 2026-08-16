@@ -46,14 +46,14 @@
                                                         <div class="text-muted small font-monospace">UPC:
                                                             {{ $item->product->upc ?? 'N/A' }}</div>
                                                     </td>
-                                                    <td>₹{{ number_format($item->unit_cost, 2) }}</td>
+                                                    <td>${{ number_format($item->unit_cost, 2) }}</td>
                                                     <td class="text-center">
                                                         <input type="number" name="items[{{ $index }}][quantity]"
                                                             class="form-control form-control-sm text-center fw-bold rounded-3 border-2 item-qty"
                                                             value="{{ $item->quantity }}" min="1"
                                                             data-cost="{{ $item->unit_cost }}">
                                                     </td>
-                                                    <td class="pe-4 text-end fw-bold">₹<span
+                                                    <td class="pe-4 text-end fw-bold">$<span
                                                             class="item-subtotal">{{ number_format($item->quantity * $item->unit_cost, 2) }}</span>
                                                     </td>
                                                 </tr>
@@ -62,7 +62,7 @@
                                         <tfoot class="bg-light fw-bold text-dark">
                                             <tr>
                                                 <td colspan="3" class="ps-4 py-3 text-end">Grand Total</td>
-                                                <td class="pe-4 text-end fs-5">₹<span
+                                                <td class="pe-4 text-end fs-5">$<span
                                                         id="grandTotal">{{ number_format($order->total_amount, 2) }}</span>
                                                 </td>
                                             </tr>

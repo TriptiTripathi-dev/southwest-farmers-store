@@ -124,7 +124,7 @@
                             </div>
                             <div class="d-flex justify-content-between mb-3">
                                 <span class="text-muted">Total Amount:</span>
-                                <span class="fw-bold text-success">₹{{ number_format($order->total_amount, 2) }}</span>
+                                <span class="fw-bold text-success">${{ number_format($order->total_amount, 2) }}</span>
                             </div>
                             <hr>
                             <button type="submit" class="btn btn-success w-100 btn-lg shadow-sm">

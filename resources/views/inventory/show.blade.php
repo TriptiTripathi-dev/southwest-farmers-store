@@ -95,8 +95,8 @@
                                                            min="0">
                                                 </td>
                                                 @endif
-                                                <td class="text-end pe-4">₹{{ number_format($item->unit_cost, 2) }}</td>
-                                                <td class="text-end pe-4 fw-bold">₹{{ number_format($item->total_cost, 2) }}</td>
+                                                <td class="text-end pe-4">${{ number_format($item->unit_cost, 2) }}</td>
+                                                <td class="text-end pe-4 fw-bold">${{ number_format($item->total_cost, 2) }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -104,7 +104,7 @@
                                     <tfoot class="bg-light border-top">
                                         <tr>
                                             <td colspan="5" class="text-end fw-bold py-3">Total Amount:</td>
-                                            <td class="text-end pe-4 fw-bold py-3 text-primary fs-5">₹{{ number_format($stockRequest->total_amount, 2) }}</td>
+                                            <td class="text-end pe-4 fw-bold py-3 text-primary fs-5">${{ number_format($stockRequest->total_amount, 2) }}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
