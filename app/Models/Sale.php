@@ -17,4 +17,15 @@ class Sale extends Model {
     public function customer() {
         return $this->belongsTo(StoreCustomer::class);
     }
+    public function getInventorySourceBadgeAttribute()
+    {
+        if ($this->inventory_source === 'old') {
+            return '<span class="badge bg-secondary">🪙 Old Stock</span>';
+        } elseif ($this->inventory_source === 'new') {
+            return '<span class="badge bg-success">🌟 New Stock</span>';
+        } elseif ($this->inventory_source === 'mixed') {
+            return '<span class="badge bg-warning text-dark">🌗 Mixed</span>';
+        }
+        return '<span class="badge bg-light text-dark">Unknown</span>';
+    }
 }

@@ -10,6 +10,7 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\StockTransaction;
 use App\Models\StoreStock;
+use App\Models\ProductBatch;
 use App\Models\StoreNotification;
 use App\Services\ConvergeService;
 use Illuminate\Support\Facades\Auth;
@@ -89,16 +90,11 @@ class OrderController extends Controller
                 'created_by' => null,    // Created by customer
             ]);
 
+            $hasOld = false;
+            $hasNew = false;
+
             foreach ($cart->items as $item) {
-                // Create SaleItem
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item->product_id,
-                    'menu_item_id' => $item->menu_item_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                    'total' => $item->total,
-                ]);
+                $fulfillmentDetails = [];
 
                 if ($item->product_id) {
                     // Deduct from StoreStock (If stock tracking is enabled for website)
@@ -112,6 +108,63 @@ class OrderController extends Controller
                             throw new \Exception('Insufficient stock for ' . $item->product->product_name);
                         }
                         $storeStock->decrement('quantity', $item->quantity);
+
+                        // FIFO Logic on ProductBatch
+                        $qtyRemaining = $item->quantity;
+                        $batches = ProductBatch::where('store_id', $storeId)
+                            ->where('product_id', $item->product_id)
+                            ->where('quantity', '>', 0)
+                            ->orderBy('created_at', 'asc') // FIFO
+                            ->lockForUpdate()
+                            ->get();
+
+                        foreach ($batches as $batch) {
+                            if ($qtyRemaining <= 0) break;
+                            
+                            $take = min($qtyRemaining, $batch->quantity);
+                            $batch->decrement('quantity', $take);
+                            $qtyRemaining -= $take;
+                            
+                            $fulfillmentDetails[] = ['type' => 'new', 'batch_id' => $batch->id, 'qty' => $take];
+                            $hasNew = true;
+                        }
+
+                        if ($qtyRemaining > 0) {
+                            $fulfillmentDetails[] = ['type' => 'old', 'qty' => $qtyRemaining];
+                            $hasOld = true;
+                        }
+                    }
+                }
+
+                // Calculate exact COGS for this SaleItem
+                $totalCogs = 0;
+                if ($item->product_id && isset($storeStock)) {
+                    foreach ($fulfillmentDetails as $fd) {
+                        if ($fd['type'] === 'new' && isset($fd['batch_id'])) {
+                            $b = \App\Models\ProductBatch::find($fd['batch_id']);
+                            $totalCogs += ($b ? $b->cost_price : ($item->product->cost_price ?? 0)) * $fd['qty'];
+                        } else {
+                            $totalCogs += ($item->product->cost_price ?? 0) * $fd['qty'];
+                        }
+                    }
+                } else if ($item->menu_item_id) {
+                    // For menu items (restaurant side), just use 0 or estimate
+                    $totalCogs = 0;
+                }
+
+                // Create SaleItem
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item->product_id,
+                    'menu_item_id' => $item->menu_item_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    'total' => $item->total,
+                    'fulfillment_details' => $fulfillmentDetails,
+                    'total_cogs' => $totalCogs,
+                ]);
+
+                if ($item->product_id && $storeStock) {
 
                         // Create Stock Transaction
                         StockTransaction::create([

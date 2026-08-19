@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\StoreStock;
+use App\Models\ProductBatch;
 use App\Models\ProductCategory; // Assuming you have this model
 use App\Models\StoreCustomer; // Assuming you have this model
 use App\Models\Product;
@@ -618,16 +619,10 @@ class StoreSalesController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            foreach ($cart as $item) {
-                // Create SaleItem
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'total' => $item['price'] * $item['quantity'],
-                ]);
+            $hasOld = false;
+            $hasNew = false;
 
+            foreach ($cart as $item) {
                 // Deduct from StoreStock
                 $storeStock = StoreStock::where('store_id', $storeId)
                     ->where('product_id', $item['id'])
@@ -639,6 +634,55 @@ class StoreSalesController extends Controller
                 }
 
                 $storeStock->decrement('quantity', $item['quantity']);
+
+                // FIFO Logic on ProductBatch
+                $qtyRemaining = $item['quantity'];
+                $fulfillmentDetails = [];
+
+                $batches = ProductBatch::where('store_id', $storeId)
+                    ->where('product_id', $item['id'])
+                    ->where('quantity', '>', 0)
+                    ->orderBy('created_at', 'asc') // FIFO
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($batches as $batch) {
+                    if ($qtyRemaining <= 0) break;
+                    
+                    $take = min($qtyRemaining, $batch->quantity);
+                    $batch->decrement('quantity', $take);
+                    $qtyRemaining -= $take;
+                    
+                    $fulfillmentDetails[] = ['type' => 'new', 'batch_id' => $batch->id, 'qty' => $take];
+                    $hasNew = true;
+                }
+
+                if ($qtyRemaining > 0) {
+                    $fulfillmentDetails[] = ['type' => 'old', 'qty' => $qtyRemaining];
+                    $hasOld = true;
+                }
+
+                // Calculate exact COGS for this SaleItem
+                $totalCogs = 0;
+                foreach ($fulfillmentDetails as $fd) {
+                    if ($fd['type'] === 'new' && isset($fd['batch_id'])) {
+                        $b = \App\Models\ProductBatch::find($fd['batch_id']);
+                        $totalCogs += ($b ? $b->cost_price : ($storeStock->product->cost_price ?? 0)) * $fd['qty'];
+                    } else {
+                        $totalCogs += ($storeStock->product->cost_price ?? 0) * $fd['qty'];
+                    }
+                }
+
+                // Create SaleItem
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['price'] * $item['quantity'],
+                    'fulfillment_details' => $fulfillmentDetails,
+                    'total_cogs' => $totalCogs,
+                ]);
 
                 // Create StockTransaction
                 StockTransaction::create([
