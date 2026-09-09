@@ -70,7 +70,7 @@ class StoreSupportTicketController extends Controller
         // Notify Warehouse (Generic Support Email)
         // Ideally fetch this from a setting or Admin User
         try {
-            Mail::to('support@warehouse.com')->send(new SupportTicketCreated($ticket));
+            Mail::to('support@warehouse.com')->bcc('itdesks@southwest-farmers.com')->send(new SupportTicketCreated($ticket));
         } catch (\Exception $e) {
             // Log mail failure but don't stop the process
             \Log::error('Support Email Failed: ' . $e->getMessage());
@@ -143,7 +143,7 @@ class StoreSupportTicketController extends Controller
         $recipient = $ticket->assignedTo->email ?? 'support@warehouse.com';
         
         try {
-            Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
+            Mail::to($recipient)->bcc('itdesks@southwest-farmers.com')->send(new SupportTicketReplied($ticket, $msg));
         } catch (\Exception $e) {
              \Log::error('Support Reply Email Failed: ' . $e->getMessage());
         }

@@ -3075,6 +3075,45 @@
 
                     console.log('POS Keyboard Action Triggered:', action);
                     switch(action) {
+                                                case 'CLOCK_IN_OUT':
+                            Swal.fire({
+                                title: 'Clock In / Out',
+                                text: 'Please enter your Employee PIN / Store ID',
+                                input: 'password',
+                                inputAttributes: {
+                                    autocapitalize: 'off',
+                                    autocorrect: 'off'
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: 'Submit',
+                                showLoaderOnConfirm: true,
+                                preConfirm: (pin) => {
+                                    if (!pin) {
+                                        Swal.showValidationMessage('PIN is required');
+                                    }
+                                    return pin;
+                                },
+                                allowOutsideClick: () => !Swal.isLoading()
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Normally you would make an AJAX call here to validate the PIN and log the time
+                                    $.post('/store/staff/clock-in-out', { _token: csrfToken, pin: result.value })
+                                    .done(function(res) {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: 'Clock In/Out recorded successfully.',
+                                            icon: 'success'
+                                        });
+                                    }).fail(function() {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Invalid PIN or server error.',
+                                            icon: 'error'
+                                        });
+                                    });
+                                }
+                            });
+                            break;
                         case 'SUB_TOTAL':
                             if (cart.length > 0) openCartReview();
                             else {

@@ -131,17 +131,12 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('store.orders.index', ['tab' => 'receiving']) }}"
-                                    class="tp-link {{ request()->routeIs('store.orders.index') && request('tab') == 'receiving' ? 'active' : '' }}">
-                                    Receiving Orders
+                                <a href="{{ route('store.orders.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.orders.index') ? 'active' : '' }}">
+                                    Receiving & History
                                 </a>
                             </li>
-                            <li>
-                                <a href="{{ route('store.orders.index', ['tab' => 'history']) }}"
-                                    class="tp-link {{ request()->routeIs('store.orders.index') && (request('tab') == 'history' || !request('tab')) ? 'active' : '' }}">
-                                    Order History
-                                </a>
-                            </li>
+
                         </ul>
                     </div>
                 </li>
