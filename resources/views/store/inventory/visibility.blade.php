@@ -1,13 +1,20 @@
-<x-app-layout title="Product Visibility">
+<x-app-layout title="Global Visibility">
     <div class="content">
         <div class="container-fluid px-3 px-md-4 py-4">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark">Product -> Location Inventory Visibility</h4>
-                    <p class="text-muted small mb-0 mt-1">Real-time stock levels across Warehouse and all Store locations</p>
-                </div>
-            </div>
+            {{-- Title now matches the sidebar exactly: "Global Visibility"
+                 (was "Product -> Location Inventory Visibility", a label found
+                 nowhere in the navigation, per the client's report). --}}
+            <x-page-header
+                icon="mdi mdi-earth"
+                title="Global Visibility"
+                description="Real-time stock levels across Warehouse and all Store locations."
+                :breadcrumbs="[
+                    ['label' => 'Dashboard', 'url' => route('dashboard')],
+                    ['label' => 'Inventory control', 'url' => null],
+                    ['label' => 'Global Visibility', 'url' => null],
+                ]"
+            />
 
             <div class="row">
                 {{-- SELECTION COLUMN --}}

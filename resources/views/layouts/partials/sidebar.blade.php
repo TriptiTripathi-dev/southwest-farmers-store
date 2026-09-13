@@ -94,6 +94,15 @@
                             </li>
                             @endif
 
+                            @if ($can('adjust_stock'))
+                            <li>
+                                <a href="{{ route('kitchen-inventory.index') }}"
+                                    class="tp-link {{ request()->routeIs('kitchen-inventory.*') ? 'active' : '' }}">
+                                    Kitchen Inventory
+                                </a>
+                            </li>
+                            @endif
+
                             @if ($can('view_audits'))
                             <li>
                                 <a href="{{ route('store.audits.index') }}"
@@ -127,7 +136,13 @@
                             <li>
                                 <a href="{{ route('inventory.requests') }}"
                                     class="tp-link {{ request()->routeIs('inventory.requests') || request()->routeIs('inventory.order.create') ? 'active' : '' }}">
-                                    Store orders (PO)
+                                    Store Requests (Unscheduled)
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('inventory.po.create') }}"
+                                    class="tp-link {{ request()->routeIs('inventory.po.*') ? 'active' : '' }}">
+                                    Store POs (Scheduled)
                                 </a>
                             </li>
                             <li>

@@ -1,6 +1,19 @@
 <x-app-layout title="Store Analytics">
 <div class="container-fluid">
-    <h2 class="h4 mb-4">Store Performance & Risks</h2>
+    {{-- Was a plain, unbold h2 with no top padding, sitting flush under the
+         header banner, no description, and titled "Store Performance & Risks"
+         — a label found nowhere in the sidebar (which says "Analytics
+         Dashboard"). Client-reported: font too light, partially hidden, no
+         description, no breadcrumb. --}}
+    <x-page-header
+        icon="mdi mdi-chart-line"
+        title="Analytics Dashboard"
+        description="Store performance and risk indicators for the current period."
+        :breadcrumbs="[
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Analytics Dashboard', 'url' => null],
+        ]"
+    />
 
     <div class="row">
         <div class="col-md-4 mb-4">

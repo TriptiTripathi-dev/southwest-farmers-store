@@ -10,25 +10,18 @@ class StorePurchaseOrderItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'store_purchase_order_id',
+        'store_po_id',
         'product_id',
-        'quantity',
-        'dispatched_quantity',
-        'received_quantity',
-        'unit_cost',
-        'total_cost'
+        'requested_qty',
+        'dispatched_qty',
+        'pending_qty',
+        'status',
+        'rejection_reason',
     ];
-
-    protected static function booted()
-    {
-        static::saving(function ($item) {
-            $item->total_cost = $item->quantity * $item->unit_cost;
-        });
-    }
 
     public function purchaseOrder()
     {
-        return $this->belongsTo(StorePurchaseOrder::class, 'store_purchase_order_id');
+        return $this->belongsTo(StorePurchaseOrder::class, 'store_po_id');
     }
 
     public function product()

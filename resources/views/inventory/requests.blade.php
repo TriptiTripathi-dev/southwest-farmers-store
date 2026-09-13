@@ -1,12 +1,12 @@
-<x-app-layout title="Purchase Order">
+<x-app-layout title="Store Requests (Unscheduled)">
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-clipboard-text-outline text-primary me-2"></i> Purchase Order
+                <i class="mdi mdi-clipboard-text-outline text-primary me-2"></i> Store Requests (Unscheduled)
             </h4>
-            <small class="text-muted">Manage store purchase orders and replenishment from warehouse</small>
+            <small class="text-muted">Manage unscheduled store requests and replenishment from warehouse</small>
         </div>
         <div class="d-flex gap-2">
             <form action="{{ route('inventory.request.generate-po') }}" method="POST">

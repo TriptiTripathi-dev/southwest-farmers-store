@@ -100,6 +100,10 @@ class StaffController extends Controller
 
             $staff = StoreUser::create([
                 'parent_id' => $currentUser->id,
+                // Was never set — new staff had store_id = null, so they never
+                // matched index()'s `where('store_id', $currentUser->store_id)`
+                // filter and silently disappeared from the Store Staff list.
+                'store_id' => $currentUser->store_id,
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -175,7 +179,12 @@ class StaffController extends Controller
 
             $role = StoreRole::find($request->role_id);
             if ($role) {
-                $staff->roles()->sync([$role]);
+                // Must pass model_type explicitly for this morph pivot — sync([$role])
+                // (a model object, not an id) throws a "model_type cannot be null"
+                // error and rolls back the whole update. Same fix already applied in store().
+                $staff->roles()->sync([
+                    $role->id => ['model_type' => get_class($staff)]
+                ]);
             }
 
             DB::commit();

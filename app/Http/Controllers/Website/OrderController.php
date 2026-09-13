@@ -178,7 +178,6 @@ class OrderController extends Controller
                             'remarks' => 'Website Order: ' . $invoiceNumber,
                         ]);
                     }
-                }
             }
 
             // Handle Card Payment (Converge HPP)

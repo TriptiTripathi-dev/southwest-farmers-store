@@ -319,4 +319,48 @@ class StoreOrderController extends Controller
 
         return view('store.inventory.visibility', compact('products', 'selectedProduct'));
     }
+
+    public function createPO()
+    {
+        $products = Product::where('is_active', true)->orderBy('product_name')->get();
+        return view('store.orders.create_po', compact('products'));
+    }
+
+    public function storePO(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Generate a new PO number
+        $lastPO = StorePurchaseOrder::latest('id')->first();
+        $number = $lastPO ? (int)substr($lastPO->po_number, 4) + 1 : 1;
+        $poNumber = 'SPO-' . str_pad($number, 6, '0', STR_PAD_LEFT);
+
+        $po = StorePurchaseOrder::create([
+            'po_number' => $poNumber,
+            'store_id' => $user->store_id,
+            'request_date' => now(),
+            'status' => 'pending',
+            'created_by' => $user->id,
+        ]);
+
+        foreach ($request->products as $item) {
+            \App\Models\StorePurchaseOrderItem::create([
+                'store_po_id' => $po->id,
+                'product_id' => $item['product_id'],
+                'requested_qty' => $item['quantity'],
+                'pending_qty' => $item['quantity'],
+                'dispatched_qty' => 0,
+                'status' => 'pending',
+            ]);
+        }
+
+        return redirect()->route('store.orders.index')->with('success', 'Store Purchase Order created successfully!');
+    }
+
 }

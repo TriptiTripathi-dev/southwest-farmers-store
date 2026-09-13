@@ -1,24 +1,18 @@
 <x-app-layout title="Raise Ticket">
     <div class="container-fluid">
-        
-        {{-- Breadcrumb --}}
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb mb-0 bg-white p-3 rounded shadow-sm">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}" class="text-decoration-none text-dark">
-                        <i class="mdi mdi-home-outline me-1"></i> Dashboard
-                    </a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ route('store.support.index') }}" class="text-decoration-none text-dark">
-                        Support Tickets
-                    </a>
-                </li>
-                <li class="breadcrumb-item active fw-bold" aria-current="page">
-                    Create New
-                </li>
-            </ol>
-        </nav>
+
+        {{-- Breadcrumb text now matches the sidebar exactly: Support > Raise Ticket
+             (was "Support Tickets" — a label that doesn't exist in the sidebar at all). --}}
+        <x-page-header
+            icon="mdi mdi-lifebuoy"
+            title="Raise Ticket"
+            description="Submit a new support request to the warehouse team."
+            :breadcrumbs="[
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Support', 'url' => route('store.support.index')],
+                ['label' => 'Raise Ticket', 'url' => null],
+            ]"
+        />
 
         <div class="row justify-content-center">
             <div class="col-lg-8">

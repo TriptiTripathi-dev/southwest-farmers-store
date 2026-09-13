@@ -122,6 +122,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/stocks/requests', [StoreInventoryController::class, 'requests'])->name('inventory.requests');
     Route::get('/inventory/order/create', [StoreInventoryController::class, 'createOrderInventory'])->name('inventory.order.create');
     Route::post('/inventory/order/store', [StoreInventoryController::class, 'storeOrderInventory'])->name('inventory.order.store');
+
+    // Store PO (Scheduled) Routes
+    Route::get('/inventory/po/create', [App\Http\Controllers\Store\StoreOrderController::class, 'createPO'])->name('inventory.po.create');
+    Route::post('/inventory/po/store', [App\Http\Controllers\Store\StoreOrderController::class, 'storePO'])->name('inventory.po.store');
     Route::get('/inventory/search-products', [StoreInventoryController::class, 'searchProducts'])->name('inventory.search-products');
     Route::get('/inventory/requests/{id}', [StoreInventoryController::class, 'showRequest'])->name('inventory.requests.show');
     Route::get('/inventory/history/{id}', [StoreInventoryController::class, 'history'])->name('inventory.history');
@@ -135,6 +139,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/stocks/adjustments', [StoreInventoryController::class, 'adjustments'])->name('inventory.adjustments');
     Route::post('/stocks/adjustments', [StoreInventoryController::class, 'storeAdjustment'])->name('inventory.adjustments.store');
     Route::post('/stocks/convert', [StoreInventoryController::class, 'convertWeight'])->name('inventory.convert');
+
+    // Item 7: Kitchen Inventory + store-to-kitchen transfer
+    Route::get('/kitchen-inventory', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'index'])->name('kitchen-inventory.index');
+    Route::post('/kitchen-inventory/transfer', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'transfer'])->name('kitchen-inventory.transfer');
 
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         Route::get('/overview', [StoreStockControlController::class, 'overview'])->name('overview');

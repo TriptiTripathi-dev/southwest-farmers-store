@@ -1,12 +1,12 @@
-<x-app-layout title="New Order Inventory">
+<x-app-layout title="New Store Request (Unscheduled)">
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-file-plus text-primary me-2"></i> New Order Inventory
+                <i class="mdi mdi-file-plus text-primary me-2"></i> New Store Request (Unscheduled)
             </h4>
-            <small class="text-muted">Create a new replenishment order for the warehouse</small>
+            <small class="text-muted">Create a new unscheduled store request for the warehouse</small>
         </div>
         <a href="{{ route('inventory.requests') }}" class="btn btn-outline-secondary">
             <i class="mdi mdi-arrow-left me-1"></i> Back to List
