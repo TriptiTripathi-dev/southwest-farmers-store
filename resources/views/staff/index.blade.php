@@ -30,6 +30,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Staff Member</th>
+                                    <th>Store ID</th>
                                     <th>Contact Info</th>
                                     <th>Role</th>
                                     <th>Status</th>
@@ -42,6 +43,7 @@
                                     {{-- Data Columns (Unchanged) --}}
                                     <td class="ps-4">{{ $loop->iteration }}</td>
                                     <td>{{ $staff->name }}</td>
+                                    <td><code>{{ $staff->staff_code ?? '—' }}</code></td>
                                     <td>{{ $staff->email }}</td>
                                     <td>
                                         @foreach($staff->roles as $role)

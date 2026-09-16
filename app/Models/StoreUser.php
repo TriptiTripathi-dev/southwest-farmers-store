@@ -27,6 +27,7 @@ class StoreUser extends Authenticatable
         'store_role_id',   // Yahan Role ID store karenge
         'is_active',
         'is_website_manager', // New field for Website Manager role
+        'staff_code',      // Unique per-employee code used to clock in/out
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -41,6 +42,11 @@ class StoreUser extends Authenticatable
     public function store()
     {
         return $this->belongsTo(StoreDetail::class, 'store_id');
+    }
+
+    public function timeLogs()
+    {
+        return $this->hasMany(StoreTimeLog::class, 'store_user_id');
     }
 
 

@@ -510,7 +510,7 @@
                 {{-- STAFF MANAGEMENT --}}
                 @if ($can('manage_staff') || $can('view_staff'))
                 @php
-                $isStaffActive = request()->routeIs('staff.*');
+                $isStaffActive = request()->routeIs('staff.*') || request()->routeIs('store.time-clock.*');
                 @endphp
                 <li class="menuitem-{{ $isStaffActive ? 'active' : '' }} {{ $isStaffActive ? 'show' : '' }}">
 
@@ -529,6 +529,12 @@
                                 <a href="{{ route('staff.index') }}"
                                     class="tp-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
                                     Store Staff
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('store.time-clock.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.time-clock.*') ? 'active' : '' }}">
+                                    Staff Time Clock
                                 </a>
                             </li>
                         </ul>

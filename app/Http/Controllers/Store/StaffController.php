@@ -110,6 +110,8 @@ class StaffController extends Controller
                 'password' => Hash::make($request->password),
                 'store_role_id' => $request->role_id,
                 'is_active' => $request->has('is_active') ? 1 : 0,
+                // Item 4: every employee needs a store ID to clock in/out with.
+                'staff_code' => 'EMP-' . str_pad((\App\Models\StoreUser::withTrashed()->max('id') ?? 0) + 1, 4, '0', STR_PAD_LEFT),
             ]);
 
             // --- FIX START ---
