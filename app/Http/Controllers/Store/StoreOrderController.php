@@ -189,8 +189,11 @@ class StoreOrderController extends Controller
         ]);
 
         $user = Auth::user();
+        // receive() (the very form this submits) already moves the order to
+        // 'receiving' before the user ever sees this form — that status was
+        // missing here, so submitting the receive form always 404'd.
         $order = StorePurchaseOrder::where('store_id', $user->store_id)
-            ->whereIn('status', ['dispatched', 'in_transit', 'approved'])
+            ->whereIn('status', ['dispatched', 'in_transit', 'approved', 'receiving'])
             ->findOrFail($id);
 
         DB::transaction(function () use ($request, $order, $user) {
