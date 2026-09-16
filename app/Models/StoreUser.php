@@ -44,6 +44,25 @@ class StoreUser extends Authenticatable
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
 
+    /**
+     * Item 1: lets a Super Admin "view as" a different location without a
+     * separate login. Only ever overridden for the currently authenticated
+     * user's own model instance -- other StoreUser rows loaded elsewhere
+     * (e.g. a staff list) must keep reflecting their real store_id.
+     * store.switch-location is itself gated to Super Admins, so by the time
+     * this session key exists it was set legitimately.
+     */
+    public function getStoreIdAttribute($value)
+    {
+        if (session()->has('active_store_id')
+            && \Illuminate\Support\Facades\Auth::guard('store')->check()
+            && \Illuminate\Support\Facades\Auth::guard('store')->id() === $this->getKey()) {
+            return session('active_store_id');
+        }
+
+        return $value;
+    }
+
     public function timeLogs()
     {
         return $this->hasMany(StoreTimeLog::class, 'store_user_id');

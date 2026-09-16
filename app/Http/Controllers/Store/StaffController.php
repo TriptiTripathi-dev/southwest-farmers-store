@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Models\StoreDetail;
 use App\Models\StoreNotification;
 use App\Models\StoreUser;
 use App\Models\StoreRole;
@@ -48,9 +49,11 @@ class StaffController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $roles = StoreRole::where('guard_name', 'store_user')
-            ->where('name', '!=', 'Super Admin')
-            ->get();
+        $rolesQuery = StoreRole::where('guard_name', 'store_user');
+        if (!$currentUser->hasRole('Super Admin')) {
+            $rolesQuery->where('name', '!=', 'Super Admin');
+        }
+        $roles = $rolesQuery->get();
 
         return view('staff.index', compact('staffMembers', 'roles'));
     }
@@ -80,8 +83,21 @@ class StaffController extends Controller
 
     public function create()
     {
-        $roles = StoreRole::where('name', '!=', 'Super Admin')->get();
-        return view('staff.create', compact('roles'));
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser->hasRole('Super Admin');
+
+        $rolesQuery = StoreRole::query();
+        if (!$isSuperAdmin) {
+            $rolesQuery->where('name', '!=', 'Super Admin');
+        }
+        $roles = $rolesQuery->get();
+
+        // Item 3: only a Super Admin gets to pick which location a new hire
+        // belongs to; everyone else keeps the existing behavior of the new
+        // staff member silently inheriting the creating admin's own store.
+        $locations = $isSuperAdmin ? StoreDetail::where('is_active', true)->orderBy('store_name')->get() : collect();
+
+        return view('staff.create', compact('roles', 'locations', 'isSuperAdmin'));
     }
 
     public function store(Request $request)
@@ -92,18 +108,32 @@ class StaffController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
             'role_id' => 'required|exists:store_roles,id',
+            'store_id' => 'nullable|exists:store_details,id',
         ]);
+
+        $currentUser = Auth::user();
+
+        // Guard against a raw POST picking the "Super Admin" role option the
+        // dropdown never rendered for a non-Super-Admin actor.
+        $requestedRole = StoreRole::find($request->role_id);
+        if ($requestedRole && $requestedRole->name === 'Super Admin' && !$currentUser->hasRole('Super Admin')) {
+            return back()->withInput()->with('error', 'Only a Super Admin can assign the Super Admin role.');
+        }
 
         try {
             DB::beginTransaction();
-            $currentUser = Auth::user();
+
+            $targetStoreId = $currentUser->store_id;
+            if ($currentUser->hasRole('Super Admin') && $request->filled('store_id')) {
+                $targetStoreId = $request->store_id;
+            }
 
             $staff = StoreUser::create([
                 'parent_id' => $currentUser->id,
                 // Was never set — new staff had store_id = null, so they never
                 // matched index()'s `where('store_id', $currentUser->store_id)`
                 // filter and silently disappeared from the Store Staff list.
-                'store_id' => $currentUser->store_id,
+                'store_id' => $targetStoreId,
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -141,11 +171,19 @@ class StaffController extends Controller
     public function edit($id)
     {
         $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser->hasRole('Super Admin');
         $staff = StoreUser::where('id', $id)->where('store_id', $currentUser->store_id)->firstOrFail();
-        $roles = StoreRole::where('name', '!=', 'Super Admin')->get();
+
+        $rolesQuery = StoreRole::query();
+        if (!$isSuperAdmin) {
+            $rolesQuery->where('name', '!=', 'Super Admin');
+        }
+        $roles = $rolesQuery->get();
         $currentRoleId = $staff->store_role_id ?? $staff->roles->first()?->id;
 
-        return view('staff.edit', compact('staff', 'roles', 'currentRoleId'));
+        $locations = $isSuperAdmin ? StoreDetail::where('is_active', true)->orderBy('store_name')->get() : collect();
+
+        return view('staff.edit', compact('staff', 'roles', 'currentRoleId', 'locations', 'isSuperAdmin'));
     }
 
     public function update(Request $request, $id)
@@ -159,8 +197,14 @@ class StaffController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
             'role_id' => 'required|exists:store_roles,id',
+            'store_id' => 'nullable|exists:store_details,id',
             'is_active' => 'sometimes'
         ]);
+
+        $requestedRole = StoreRole::find($request->role_id);
+        if ($requestedRole && $requestedRole->name === 'Super Admin' && !$currentUser->hasRole('Super Admin')) {
+            return back()->withInput()->with('error', 'Only a Super Admin can assign the Super Admin role.');
+        }
 
         try {
             DB::beginTransaction();
@@ -172,6 +216,10 @@ class StaffController extends Controller
                 'store_role_id' => $request->role_id,
                 'is_active' => $request->has('is_active') ? 1 : 0,
             ];
+
+            if ($currentUser->hasRole('Super Admin') && $request->filled('store_id')) {
+                $data['store_id'] = $request->store_id;
+            }
 
             if ($request->filled('password')) {
                 $data['password'] = Hash::make($request->password);

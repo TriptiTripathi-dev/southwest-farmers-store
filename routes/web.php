@@ -50,6 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff', StaffController::class);
     Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
 
+    // Item 1: Super Admin location switching
+    Route::post('/switch-location', [\App\Http\Controllers\Store\StoreLocationSwitchController::class, 'switch'])->name('store.switch-location');
+    Route::post('/switch-location/reset', [\App\Http\Controllers\Store\StoreLocationSwitchController::class, 'reset'])->name('store.switch-location.reset');
+
     // Item 4: staff clock in/out using their store ID
     Route::get('/time-clock', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'index'])->name('store.time-clock.index');
     Route::post('/time-clock/clock-in', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockIn'])->name('store.time-clock.clock-in');

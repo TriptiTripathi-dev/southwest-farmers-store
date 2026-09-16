@@ -48,16 +48,62 @@
                 </li>
                 @endif
                 <li class="ms-2 d-flex align-items-center">
-                    <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide d-flex align-items-center">
-                        @if($hasTextLogo)
-                            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 55px; margin-right: 8px; margin-top: -3px;">
-                            @if($storeLocation)
-                                <span class="ms-1">- {{ $storeLocation }}</span>
+                    @if(!$isWebsiteManager && auth()->user()->hasRole('Super Admin'))
+                        @php
+                            $switchableStores = \App\Models\StoreDetail::where('is_active', true)->orderBy('store_name')->get();
+                            $activeStoreId = auth()->user()->store_id;
+                        @endphp
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border dropdown-toggle fw-black text-dark text-uppercase tracking-wide d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 14px;">
+                                @if($hasTextLogo)
+                                    <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 32px; margin-right: 8px;">
+                                @endif
+                                {{ $storeLocation ?: $storeName }}
+                                @if(session()->has('active_store_id'))
+                                    <span class="badge bg-warning text-dark ms-2 fw-bold" style="font-size: 10px;">VIEWING</span>
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Switch Location</h6></li>
+                                @foreach($switchableStores as $s)
+                                    <li>
+                                        <form action="{{ route('store.switch-location') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="store_id" value="{{ $s->id }}">
+                                            <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center {{ $activeStoreId == $s->id ? 'active' : '' }}">
+                                                {{ $s->store_name }}
+                                                @if($activeStoreId == $s->id)
+                                                    <i class="mdi mdi-check"></i>
+                                                @endif
+                                            </button>
+                                        </form>
+                                    </li>
+                                @endforeach
+                                @if(session()->has('active_store_id'))
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ route('store.switch-location.reset') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-muted">
+                                                <i class="mdi mdi-restore me-1"></i> Back to my home location
+                                            </button>
+                                        </form>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                    @else
+                        <span class="fw-black text-dark d-none d-md-inline fs-14 text-uppercase tracking-wide d-flex align-items-center">
+                            @if($hasTextLogo)
+                                <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="Southwest Farmers Market" style="height: 55px; margin-right: 8px; margin-top: -3px;">
+                                @if($storeLocation)
+                                    <span class="ms-1">- {{ $storeLocation }}</span>
+                                @endif
+                            @else
+                                {{ $storeName }}
                             @endif
-                        @else
-                            {{ $storeName }}
-                        @endif
-                    </span>
+                        </span>
+                    @endif
                 </li>
 
                 @if(auth()->user()->hasRole('Cashier'))

@@ -97,6 +97,30 @@
                             </div>
                             <div class="card-body p-4">
                                 <div class="row">
+                                    @if($isSuperAdmin)
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-semibold">
+                                            Location <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="mdi mdi-map-marker text-muted"></i>
+                                            </span>
+                                            <select name="store_id" class="form-select border-start-0 @error('store_id') is-invalid @enderror">
+                                                @foreach ($locations as $location)
+                                                    <option value="{{ $location->id }}" {{ old('store_id') == $location->id ? 'selected' : '' }}>
+                                                        {{ $location->store_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @error('store_id')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Which store location this staff member belongs to</small>
+                                    </div>
+                                    @endif
+
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label fw-semibold">
                                             Assign Role <span class="text-danger">*</span>
