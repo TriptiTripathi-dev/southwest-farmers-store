@@ -55,6 +55,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/time-clock/clock-in', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockIn'])->name('store.time-clock.clock-in');
     Route::post('/time-clock/{timeLog}/clock-out', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockOut'])->name('store.time-clock.clock-out');
 
+    // Item 6: Cookbook Builder — recipes with step-by-step instructions, tied to menu items
+    Route::resource('cookbook', \App\Http\Controllers\Store\StoreCookbookController::class)->names([
+        'index' => 'store.cookbook.index',
+        'create' => 'store.cookbook.create',
+        'store' => 'store.cookbook.store',
+        'show' => 'store.cookbook.show',
+        'edit' => 'store.cookbook.edit',
+        'update' => 'store.cookbook.update',
+        'destroy' => 'store.cookbook.destroy',
+    ]);
+
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])

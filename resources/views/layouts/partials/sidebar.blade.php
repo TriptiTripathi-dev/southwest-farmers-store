@@ -210,7 +210,8 @@
                 @php
                 $isMenuCategoryActive = request()->routeIs('menu-categories.*');
                 $isMenuItemActive = request()->routeIs('menu-items.*');
-                $isMenuCollapseActive = $isMenuCategoryActive || $isMenuItemActive;
+                $isCookbookActive = request()->routeIs('store.cookbook.*');
+                $isMenuCollapseActive = $isMenuCategoryActive || $isMenuItemActive || $isCookbookActive;
                 @endphp
                 <li class="menuitem-{{ $isMenuCollapseActive ? 'active' : '' }} {{ $isMenuCollapseActive ? 'show' : '' }}">
                     <a class="tp-link {{ $isMenuCollapseActive ? 'active' : '' }}" href="#sidebarMenus"
@@ -230,6 +231,10 @@
                             <li>
                                 <a class="tp-link {{ $isMenuItemActive ? 'active' : '' }}"
                                     href="{{ route('menu-items.index') }}">Menu Items</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isCookbookActive ? 'active' : '' }}"
+                                    href="{{ route('store.cookbook.index') }}">Cookbook Builder</a>
                             </li>
                         </ul>
                     </div>
