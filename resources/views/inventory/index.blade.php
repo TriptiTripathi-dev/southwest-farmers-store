@@ -128,6 +128,12 @@
             {{-- Header & Stats --}}
             <div class="row align-items-center py-4 g-3">
                 <div class="col-md-4">
+                    <nav class="mb-1">
+                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                            <li class="breadcrumb-item text-muted">Store Inventory</li>
+                        </ol>
+                    </nav>
                     <h4 class="h3 fw-black m-0 text-dark">Store Inventory</h4>
                     <p class="text-muted mb-0">Manage and monitor your local inventory</p>
                 </div>

@@ -53,6 +53,12 @@
         });
     </script>
     @stack('styles')
+    <style>
+        /* Consistent page-title breadcrumb styling (item 14): blue link,
+           bold + underline on hover, matching the sidebar navigation text. */
+        .page-breadcrumb-link { color: #0d6efd; text-decoration: none; }
+        .page-breadcrumb-link:hover { color: #0d6efd; font-weight: 700; text-decoration: underline; }
+    </style>
 </head>
 
 <body data-menu-color="light" data-sidebar="default">

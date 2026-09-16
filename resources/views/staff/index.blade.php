@@ -3,6 +3,13 @@
         <div class="container-fluid">
             <div class="py-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div>
+                    <nav class="mb-1">
+                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                            <li class="breadcrumb-item text-muted">Staff Management</li>
+                            <li class="breadcrumb-item text-muted">Store Staff</li>
+                        </ol>
+                    </nav>
                     <h4 class="h3 fw-bold m-0 text-dark">Staff Management</h4>
                     <p class="text-muted mb-0 mt-2">Manage your team members and their roles</p>
                 </div>
