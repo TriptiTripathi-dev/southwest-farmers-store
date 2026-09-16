@@ -62,10 +62,26 @@
                                     @else
                                         <span class="badge bg-soft-danger text-danger rounded-pill px-3">New</span>
                                     @endif
+
+                                    @if($enquiry->isEscalated())
+                                        <span class="badge bg-soft-warning text-warning rounded-pill px-3">
+                                            Escalated{{ $enquiry->status === \App\Models\Enquiry::STATUS_ESCALATED_ADMIN ? ' to Super Admin' : ' to Warehouse' }}
+                                        </span>
+                                    @elseif($enquiry->isResolved())
+                                        <span class="badge bg-soft-secondary text-secondary rounded-pill px-3">Resolved</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-white border-top py-3">
+                        <div class="card-footer bg-white border-top py-3 d-flex flex-column gap-2">
+                            @if($enquiry->isNew())
+                                <form action="{{ route('store.enquiries.escalate', $enquiry->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-warning w-100 rounded-pill py-2 fw-bold">
+                                        <i class="mdi mdi-arrow-up-bold-circle-outline me-2"></i> Escalate to Warehouse
+                                    </button>
+                                </form>
+                            @endif
                             <form action="{{ route('store.enquiries.destroy', $enquiry->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')

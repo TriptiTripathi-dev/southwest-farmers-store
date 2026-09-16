@@ -168,7 +168,9 @@
                             <h6 class="fw-bold text-success mb-3">Order is Dispatched!</h6>
                             <p class="small text-success mb-3">Please verify the items received and confirm receipt to
                                 update your stock.</p>
-                            <a href="{{ route('store.stock-control.received') }}" class="btn btn-success w-100">
+                            {{-- Was route('store.stock-control.received') — removed along with the
+                                 orphaned duplicate receive flow; pointing at the active one instead. --}}
+                            <a href="{{ route('inventory.requests.show', $request->id) }}" class="btn btn-success w-100">
                                 <i class="mdi mdi-check-circle me-1"></i> Confirm Receipt
                             </a>
                         </div>

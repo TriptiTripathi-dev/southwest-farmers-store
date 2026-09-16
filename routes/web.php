@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
         'show' => 'store.enquiries.show',
         'destroy' => 'store.enquiries.destroy',
     ]);
+    Route::post('/enquiries/{id}/escalate', [\App\Http\Controllers\Store\EnquiryController::class, 'escalate'])->name('store.enquiries.escalate');
     Route::resource('settings/legal', \App\Http\Controllers\Store\LegalPageSettingController::class)->names([
         'index' => 'settings.legal.index',
         'create' => 'settings.legal.create',
@@ -158,9 +159,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests/search-products', [StoreStockControlController::class, 'searchProducts'])->name('search-products');
         Route::post('/requests/estimate-pallets', [StoreStockControlController::class, 'estimatePallets'])->name('estimate-pallets');
 
-        Route::get('/received', [StoreStockControlController::class, 'received'])->name('received');
-        Route::get('/requests/{id}/receive', [StoreStockControlController::class, 'receive'])->name('requests.receive');
-        Route::post('/received/{id}/confirm', [StoreStockControlController::class, 'confirmReceived'])->name('received.confirm');
+        // Removed: .received / .requests.receive / .received.confirm — an
+        // orphaned duplicate of StoreInventoryController's actively-used,
+        // sidebar-linked "inventory.requests" page (Pending/In Transit/History
+        // tabs). Not reachable from any navigation, so removing the routes
+        // only; StoreStockControlController::received()/receive()/
+        // confirmReceived() and their views are left on disk untouched.
 
         Route::get('/low-stock', [StoreStockControlController::class, 'lowStock'])->name('low-stock');
         Route::get('/low-stock/data', [StoreStockControlController::class, 'lowStockData'])->name('low-stock.data');

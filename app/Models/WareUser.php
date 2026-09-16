@@ -27,4 +27,10 @@ class WareUser extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    // Mirrors warehouse-pos's own WareUser::roles() — same shared pivot table.
+    public function roles()
+    {
+        return $this->morphToMany(WareRole::class, 'model', 'ware_model_has_roles', 'model_id', 'role_id');
+    }
 }
