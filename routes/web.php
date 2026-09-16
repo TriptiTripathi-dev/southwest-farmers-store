@@ -66,6 +66,33 @@ Route::middleware('auth')->group(function () {
         'destroy' => 'store.cookbook.destroy',
     ]);
 
+    // Item 6: rest of Kitchen & Catering ported from Warehouse (KDS, Production
+    // Logs, Leftover Report, Sales Ranking, Daily Availability, Staff & Timesheets)
+    Route::prefix('store/kitchen')->name('store.kitchen.')->group(function () {
+        Route::get('kds', [App\Http\Controllers\Store\StoreKitchenOrderController::class, 'index'])->name('kds.index');
+        Route::post('kds/{sale}/status', [App\Http\Controllers\Store\StoreKitchenOrderController::class, 'updateStatus'])->name('kds.status');
+
+        Route::get('production', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'index'])->name('production.index');
+        Route::get('production/create', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'create'])->name('production.create');
+        Route::post('production', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'store'])->name('production.store');
+        Route::get('production/leftovers', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'leftovers'])->name('production.leftovers');
+        Route::get('production/leftovers/create', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'createLeftover'])->name('production.leftovers.create');
+        Route::post('production/leftovers', [App\Http\Controllers\Store\StoreKitchenProductionController::class, 'storeLeftover'])->name('production.leftovers.store');
+
+        Route::get('reports/sales-ranking', [App\Http\Controllers\Store\StoreKitchenReportController::class, 'salesRanking'])->name('reports.sales-ranking');
+
+        Route::get('availability', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'index'])->name('availability.index');
+        Route::put('availability/{menuItem}', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'update'])->name('availability.update');
+        Route::post('availability/{menuItem}/toggle-today', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'toggleToday'])->name('availability.toggle-today');
+
+        Route::get('staff-timesheets', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'index'])->name('staff.index');
+        Route::post('staff-timesheets/shift', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');
+        Route::put('staff-timesheets/shift/{shift}', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'updateShift'])->name('staff.shift.update');
+        Route::delete('staff-timesheets/shift/{shift}', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'destroyShift'])->name('staff.shift.destroy');
+        Route::post('staff-timesheets/clock-in', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'clockIn'])->name('staff.clock-in');
+        Route::post('staff-timesheets/clock-out/{timeLog}', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'clockOut'])->name('staff.clock-out');
+    });
+
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])

@@ -208,10 +208,17 @@
 
                 {{-- PREPARED MENUS --}}
                 @php
+                $isKdsActive = request()->routeIs('store.kitchen.kds.*');
                 $isMenuCategoryActive = request()->routeIs('menu-categories.*');
                 $isMenuItemActive = request()->routeIs('menu-items.*');
                 $isCookbookActive = request()->routeIs('store.cookbook.*');
-                $isMenuCollapseActive = $isMenuCategoryActive || $isMenuItemActive || $isCookbookActive;
+                $isProductionActive = request()->routeIs('store.kitchen.production.*') && !request()->routeIs('store.kitchen.production.leftovers*');
+                $isLeftoverActive = request()->routeIs('store.kitchen.production.leftovers*');
+                $isSalesRankingActive = request()->routeIs('store.kitchen.reports.*');
+                $isAvailabilityActive = request()->routeIs('store.kitchen.availability.*');
+                $isKitchenStaffActive = request()->routeIs('store.kitchen.staff.*');
+                $isMenuCollapseActive = $isKdsActive || $isMenuCategoryActive || $isMenuItemActive || $isCookbookActive
+                    || $isProductionActive || $isLeftoverActive || $isSalesRankingActive || $isAvailabilityActive || $isKitchenStaffActive;
                 @endphp
                 <li class="menuitem-{{ $isMenuCollapseActive ? 'active' : '' }} {{ $isMenuCollapseActive ? 'show' : '' }}">
                     <a class="tp-link {{ $isMenuCollapseActive ? 'active' : '' }}" href="#sidebarMenus"
@@ -225,6 +232,10 @@
                     <div class="collapse {{ $isMenuCollapseActive ? 'show' : '' }}" id="sidebarMenus">
                         <ul class="nav-second-level">
                             <li>
+                                <a class="tp-link {{ $isKdsActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.kds.index') }}">KDS Screen</a>
+                            </li>
+                            <li>
                                 <a class="tp-link {{ $isMenuCategoryActive ? 'active' : '' }}"
                                     href="{{ route('menu-categories.index') }}">Menu Categories</a>
                             </li>
@@ -235,6 +246,26 @@
                             <li>
                                 <a class="tp-link {{ $isCookbookActive ? 'active' : '' }}"
                                     href="{{ route('store.cookbook.index') }}">Cookbook Builder</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isProductionActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.production.index') }}">Production Logs</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isLeftoverActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.production.leftovers') }}">Leftover Report</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isSalesRankingActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.reports.sales-ranking') }}">Sales Ranking</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isAvailabilityActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.availability.index') }}">Daily Availability &amp; Calendar</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isKitchenStaffActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.staff.index') }}">Staff &amp; Timesheets</a>
                             </li>
                         </ul>
                     </div>
