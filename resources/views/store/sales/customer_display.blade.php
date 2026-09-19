@@ -193,11 +193,36 @@
 
         /* Right Side: Order Summary Card */
         .summary-card {
+            position: relative;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 28px;
             height: 100%;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            background-image: url('{{ asset("logo.png") }}');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.16;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .summary-card > * {
+            position: relative;
+            z-index: 1;
         }
 
         .summary-header {
@@ -350,8 +375,7 @@
     <!-- Header Section -->
     <header class="glass-panel m-3 mt-3 mb-0">
         <div class="store-logo">
-            <i class="fa-solid fa-store"></i>
-            <span>{{ $store->store_name ?? 'Southwest Farmers' }}</span>
+            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="{{ $store->store_name ?? 'Southwest Farmers Market' }}" style="height: 52px; max-height: 52px; width: auto; object-fit: contain;">
         </div>
         <div class="welcome-text">
             <span>Welcome! We appreciate your business.</span>
