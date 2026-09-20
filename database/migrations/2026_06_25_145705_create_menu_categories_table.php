@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Shared with the warehouse app, which also creates this table: no-op if it's already there.
+        if (Schema::hasTable('menu_categories')) {
+            return;
+        }
+
         if (DB::getDriverName() === 'pgsql') {
             DB::statement("
                 DELETE FROM store_details a 

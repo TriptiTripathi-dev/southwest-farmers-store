@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Shared with the warehouse app, which also creates this table: no-op if it's already there.
+        if (Schema::hasTable('menu_items')) {
+            return;
+        }
+
         Schema::create('menu_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('store_id')->constrained('store_details')->onDelete('cascade');

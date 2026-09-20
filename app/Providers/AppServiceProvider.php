@@ -8,6 +8,7 @@ use App\View\Composers\SidebarComposer;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 
@@ -26,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Local .env files point at the shared Railway database, so migrate:fresh /
+        // db:wipe / rollback must be refused for it even when APP_ENV=local. Keyed
+        // off the default connection's host so the sqlite test database is unaffected.
+        $defaultHost = (string) config('database.connections.' . config('database.default') . '.host');
+        DB::prohibitDestructiveCommands($this->app->isProduction() || str_contains($defaultHost, 'rlwy.net'));
+
         View::composer('layouts.partials.header', function ($view) {
             $cartCount = 0;
 
