@@ -7,17 +7,18 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
     Route::middleware('guest:store')->group(function () {
-        Route::get('register', [RegisteredUserController::class, 'create'])
-            ->name('register');
-
-        Route::post('register', [RegisteredUserController::class, 'store']);
-
+        // /admin/register removed: it let anyone on the internet create a
+        // StoreUser (the same model used for staff/admin access) with no
+        // store_id, no role and no approval, then logged them straight in.
+        // It was also a second live source of the orphaned-account bug the
+        // client reported ("email has already been taken" by an account no
+        // one can see) -- staff accounts must only be created through
+        // StaffController by a logged-in admin.
         Route::get('login', [AuthenticatedSessionController::class, 'create'])
             ->name('login');
 

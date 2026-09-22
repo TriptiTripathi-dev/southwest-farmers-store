@@ -123,27 +123,28 @@
 
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label fw-semibold">
-                                            Assign Role <span class="text-danger">*</span>
+                                            Assign Role(s) <span class="text-danger">*</span>
                                         </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light border-end-0">
-                                                <i class="mdi mdi-shield-check text-muted"></i>
-                                            </span>
-                                            <select name="role_id" 
-                                                    class="form-select border-start-0 @error('role_id') is-invalid @enderror" 
-                                                    required>
-                                                <option value="">-- Select Role --</option>
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                        <div class="border rounded p-3 @error('role_ids') is-invalid border-danger @enderror" style="max-height: 220px; overflow-y: auto;">
+                                            @php $oldRoleIds = old('role_ids', []); @endphp
+                                            @foreach ($roles as $role)
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="role_ids[]"
+                                                           value="{{ $role->id }}" id="role_{{ $role->id }}"
+                                                           {{ in_array($role->id, $oldRoleIds) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="role_{{ $role->id }}">
                                                         {{ ucfirst($role->name) }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                                    </label>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                        @error('role_id')
+                                        @error('role_ids')
                                             <div class="text-danger small mt-1">{{ $message }}</div>
                                         @enderror
-                                        <small class="text-muted">Select the appropriate role for this staff member</small>
+                                        @error('role_ids.*')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Select one or more roles for this staff member. The first checked role is used as their primary role.</small>
                                     </div>
 
                                     <div class="col-md-6 mb-3">

@@ -37,7 +37,10 @@ class StaffController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('store_role_id', $request->role);
+            // Filters against every role the staff member holds, not just their
+            // primary (store_role_id) one, now that a staff member can have more
+            // than one role.
+            $query->whereHas('roles', fn ($q) => $q->where('store_roles.id', $request->role));
         }
 
         if ($request->filled('status')) {
@@ -107,16 +110,17 @@ class StaffController extends Controller
             'email' => 'required|email|unique:store_users,email',
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
-            'role_id' => 'required|exists:store_roles,id',
+            'role_ids' => 'required|array|min:1',
+            'role_ids.*' => 'exists:store_roles,id',
             'store_id' => 'nullable|exists:store_details,id',
         ]);
 
         $currentUser = Auth::user();
+        $roleIds = array_map('intval', $request->role_ids);
 
         // Guard against a raw POST picking the "Super Admin" role option the
-        // dropdown never rendered for a non-Super-Admin actor.
-        $requestedRole = StoreRole::find($request->role_id);
-        if ($requestedRole && $requestedRole->name === 'Super Admin' && !$currentUser->hasRole('Super Admin')) {
+        // checkboxes never rendered for a non-Super-Admin actor.
+        if ($this->requestsSuperAdminRole($roleIds) && !$currentUser->hasRole('Super Admin')) {
             return back()->withInput()->with('error', 'Only a Super Admin can assign the Super Admin role.');
         }
 
@@ -138,18 +142,16 @@ class StaffController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
-                'store_role_id' => $request->role_id,
+                // Legacy single-role column; kept in sync with the first
+                // selected role so anything still reading it (e.g. the
+                // pre-multi-role fallback in edit()) sees a sane value.
+                'store_role_id' => $roleIds[0],
                 'is_active' => $request->has('is_active') ? 1 : 0,
                 // Item 4: every employee needs a store ID to clock in/out with.
                 'staff_code' => 'EMP-' . str_pad((\App\Models\StoreUser::withTrashed()->max('id') ?? 0) + 1, 4, '0', STR_PAD_LEFT),
             ]);
 
-            // --- FIX START ---
-            // Explicitly pass 'model_type' in the array
-            $staff->roles()->sync([
-                $request->role_id => ['model_type' => get_class($staff)]
-            ]);
-            // --- FIX END ---
+            $this->syncRoles($staff, $roleIds);
 
             StoreNotification::create([
                 'user_id' => Auth::id(),
@@ -179,11 +181,14 @@ class StaffController extends Controller
             $rolesQuery->where('name', '!=', 'Super Admin');
         }
         $roles = $rolesQuery->get();
-        $currentRoleId = $staff->store_role_id ?? $staff->roles->first()?->id;
+        $currentRoleIds = $staff->roles->pluck('id')->all();
+        if (empty($currentRoleIds) && $staff->store_role_id) {
+            $currentRoleIds = [$staff->store_role_id];
+        }
 
         $locations = $isSuperAdmin ? StoreDetail::where('is_active', true)->orderBy('store_name')->get() : collect();
 
-        return view('staff.edit', compact('staff', 'roles', 'currentRoleId', 'locations', 'isSuperAdmin'));
+        return view('staff.edit', compact('staff', 'roles', 'currentRoleIds', 'locations', 'isSuperAdmin'));
     }
 
     public function update(Request $request, $id)
@@ -196,13 +201,15 @@ class StaffController extends Controller
             'email' => 'required|email|unique:store_users,email,' . $id,
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
-            'role_id' => 'required|exists:store_roles,id',
+            'role_ids' => 'required|array|min:1',
+            'role_ids.*' => 'exists:store_roles,id',
             'store_id' => 'nullable|exists:store_details,id',
             'is_active' => 'sometimes'
         ]);
 
-        $requestedRole = StoreRole::find($request->role_id);
-        if ($requestedRole && $requestedRole->name === 'Super Admin' && !$currentUser->hasRole('Super Admin')) {
+        $roleIds = array_map('intval', $request->role_ids);
+
+        if ($this->requestsSuperAdminRole($roleIds) && !$currentUser->hasRole('Super Admin')) {
             return back()->withInput()->with('error', 'Only a Super Admin can assign the Super Admin role.');
         }
 
@@ -213,7 +220,7 @@ class StaffController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'store_role_id' => $request->role_id,
+                'store_role_id' => $roleIds[0],
                 'is_active' => $request->has('is_active') ? 1 : 0,
             ];
 
@@ -227,15 +234,7 @@ class StaffController extends Controller
 
             $staff->update($data);
 
-            $role = StoreRole::find($request->role_id);
-            if ($role) {
-                // Must pass model_type explicitly for this morph pivot — sync([$role])
-                // (a model object, not an id) throws a "model_type cannot be null"
-                // error and rolls back the whole update. Same fix already applied in store().
-                $staff->roles()->sync([
-                    $role->id => ['model_type' => get_class($staff)]
-                ]);
-            }
+            $this->syncRoles($staff, $roleIds);
 
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff updated successfully.');
@@ -265,5 +264,27 @@ class StaffController extends Controller
             'url' => route('staff.index'),
         ]);
         return redirect()->route('staff.index')->with('success', 'Staff deleted successfully.');
+    }
+
+    /** @param int[] $roleIds */
+    private function requestsSuperAdminRole(array $roleIds): bool
+    {
+        return StoreRole::whereIn('id', $roleIds)->where('name', 'Super Admin')->exists();
+    }
+
+    /**
+     * Replaces every role currently attached to $staff with exactly $roleIds
+     * (add newly-checked roles, remove unchecked ones). sync() itself never
+     * creates a duplicate row for a role already attached, and
+     * store_model_has_roles now has a unique constraint as a second line of
+     * defense (see migration 2026_09_22_090000).
+     *
+     * @param int[] $roleIds
+     */
+    private function syncRoles(StoreUser $staff, array $roleIds): void
+    {
+        $staff->roles()->sync(
+            collect($roleIds)->mapWithKeys(fn ($roleId) => [$roleId => ['model_type' => get_class($staff)]])->all()
+        );
     }
 }

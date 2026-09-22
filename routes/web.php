@@ -8,7 +8,6 @@ use App\Http\Controllers\Store\GeneralSettingController;
 use App\Http\Controllers\Store\ProductCategoryController;
 use App\Http\Controllers\Store\StoreSalesController;
 use App\Http\Controllers\Store\StoreTransferController;
-use App\Http\Controllers\Store\ProductController;
 use App\Http\Controllers\Store\StoreCustomerController;
 use App\Http\Controllers\Store\StoreAnalyticsController;
 use App\Http\Controllers\Store\ProductSubcategoryController;
@@ -41,13 +40,13 @@ Route::get('/pos-test', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::resource('departments', \App\Http\Controllers\Store\DepartmentController::class);
+    Route::resource('departments', \App\Http\Controllers\Store\DepartmentController::class)->except(['show']);
     Route::post('/departments/status', [\App\Http\Controllers\Store\DepartmentController::class, 'changeStatus'])->name('departments.status');
 
     Route::get('/store/dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
-    Route::resource('staff', StaffController::class);
+    Route::resource('staff', StaffController::class)->except(['show']);
     Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
 
     // Item 1: Super Admin location switching
@@ -126,10 +125,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/transfers/{transfer}/receive', [StoreTransferController::class, 'receiveTransfer'])->name('transfers.receive');
     Route::post('/store/update-status', [StoreProfileController::class, 'updateStatus'])
         ->name('store.update-status');
-    Route::resource('roles', StoreRoleController::class);
-    Route::resource('permissions', StorePermissionController::class);
-    Route::resource('menu-categories', \App\Http\Controllers\Store\MenuCategoryController::class);
-    Route::resource('menu-items', \App\Http\Controllers\Store\MenuItemController::class);
+    Route::resource('roles', StoreRoleController::class)->except(['show']);
+    Route::resource('permissions', StorePermissionController::class)->except(['show']);
+    Route::resource('menu-categories', \App\Http\Controllers\Store\MenuCategoryController::class)->except(['show']);
+    Route::resource('menu-items', \App\Http\Controllers\Store\MenuItemController::class)->except(['show']);
     Route::get('/settings/general', [GeneralSettingController::class, 'index'])->name('settings.general');
     Route::put('/settings/update', [GeneralSettingController::class, 'update'])->name('settings.update');
     Route::get('/settings/home-page', [\App\Http\Controllers\Store\HomePageSettingController::class, 'edit'])->name('settings.home-page');
@@ -152,7 +151,7 @@ Route::middleware('auth')->group(function () {
         'destroy' => 'store.enquiries.destroy',
     ]);
     Route::post('/enquiries/{id}/escalate', [\App\Http\Controllers\Store\EnquiryController::class, 'escalate'])->name('store.enquiries.escalate');
-    Route::resource('settings/legal', \App\Http\Controllers\Store\LegalPageSettingController::class)->names([
+    Route::resource('settings/legal', \App\Http\Controllers\Store\LegalPageSettingController::class)->except(['show'])->names([
         'index' => 'settings.legal.index',
         'create' => 'settings.legal.create',
         'store' => 'settings.legal.store',
@@ -223,8 +222,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/expiry', [StoreStockControlController::class, 'expiry'])->name('expiry');
         Route::get('/expiry/data', [StoreStockControlController::class, 'expiryData'])->name('expiry.data');
 
-        Route::post('/recall/{recall}/approve', [StoreRecallController::class, 'approve'])->name('recall.approve');
-        Route::post('/recall/{recall}/reject', [StoreRecallController::class, 'reject'])->name('recall.reject');
 
         Route::get('/recall', [StoreRecallController::class, 'index'])->name('recall.index');
         Route::get('/recall/create', [StoreRecallController::class, 'create'])->name('recall.create');
@@ -235,7 +232,7 @@ Route::middleware('auth')->group(function () {
     });
     Route::prefix('store')->name('store.')->group(function () {
 
-        Route::resource('promotions', StorePromotionController::class);
+        Route::resource('promotions', StorePromotionController::class)->except(['show', 'edit', 'update']);
         Route::post('/promotions/{id}/status', [StorePromotionController::class, 'updateStatus'])->name('promotions.status');
         Route::get('/audits', [StoreAuditController::class, 'index'])->name('audits.index');
         Route::get('/audits/create', [StoreAuditController::class, 'create'])->name('audits.create');
@@ -292,14 +289,14 @@ Route::middleware('auth')->group(function () {
         Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])->name('subcategories.import');
         Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('subcategories.export');
         Route::post('subcategories/get-by-category', [ProductSubcategoryController::class, 'getByCategory'])->name('subcategories.get');
-        Route::resource('subcategories', ProductSubcategoryController::class);
+        Route::resource('subcategories', ProductSubcategoryController::class)->except(['show']);
         Route::get('/analytics', [StoreAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('products/generate-upc', [StoreProductController::class, 'generateUpc'])->name('products.generate-upc');
         Route::get('products/sample', [StoreProductController::class, 'sample'])->name('products.sample');
         Route::post('products/import', [StoreProductController::class, 'import'])->name('products.import');
         Route::get('products/export', [StoreProductController::class, 'export'])->name('products.export');
         Route::post('products/status', [StoreProductController::class, 'updateStatus'])->name('products.status');
-        Route::resource('products', StoreProductController::class);
+        Route::resource('products', StoreProductController::class)->except(['show']);
         Route::get('imports/progress/{id}', [\App\Http\Controllers\Store\ImportProgressController::class, 'show'])->name('store.imports.progress');
 
         Route::controller(StoreSupportTicketController::class)
