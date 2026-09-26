@@ -5,15 +5,7 @@
          — a label found nowhere in the sidebar (which says "Analytics
          Dashboard"). Client-reported: font too light, partially hidden, no
          description, no breadcrumb. --}}
-    <x-page-header
-        icon="mdi mdi-chart-line"
-        title="Analytics Dashboard"
-        description="Store performance and risk indicators for the current period."
-        :breadcrumbs="[
-            ['label' => 'Dashboard', 'url' => route('dashboard')],
-            ['label' => 'Analytics Dashboard', 'url' => null],
-        ]"
-    />
+    <x-page-header />
 
     <div class="row">
         <div class="col-md-4 mb-4">

@@ -2,16 +2,11 @@
     <div class="content">
         <div class="container-fluid">
 
-            <div class="py-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                <div>
-                    <h4 class="h4 fw-bold m-0 text-dark"><i class="mdi mdi-chef-hat me-1"></i> Kitchen Inventory</h4>
-                    <p class="text-muted small mb-0 mt-1">Stock currently held in the kitchen, separate from the store shelf</p>
-                </div>
-
+            <x-page-header>
                 <button class="btn btn-dark rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#transferModal">
                     <i class="mdi mdi-swap-horizontal me-2"></i> Transfer to Kitchen
                 </button>
-            </div>
+            </x-page-header>
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body p-0">

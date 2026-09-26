@@ -5,16 +5,7 @@
             {{-- Title now matches the sidebar exactly: "Global Visibility"
                  (was "Product -> Location Inventory Visibility", a label found
                  nowhere in the navigation, per the client's report). --}}
-            <x-page-header
-                icon="mdi mdi-earth"
-                title="Global Visibility"
-                description="Real-time stock levels across Warehouse and all Store locations."
-                :breadcrumbs="[
-                    ['label' => 'Dashboard', 'url' => route('dashboard')],
-                    ['label' => 'Inventory control', 'url' => null],
-                    ['label' => 'Global Visibility', 'url' => null],
-                ]"
-            />
+            <x-page-header />
 
             <div class="row">
                 {{-- SELECTION COLUMN --}}

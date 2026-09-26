@@ -2,17 +2,11 @@
 
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-alert-decagram text-danger me-2"></i> Stock Alerts & Recalls
-            </h4>
-            <small class="text-muted">Manage recalls, expiration alerts, and low stock warnings</small>
-        </div>
+    <x-page-header>
         <a href="{{ route('store.stock-control.recall.create') }}" class="btn btn-danger">
             <i class="mdi mdi-plus-circle me-1"></i> Create Recall Request
         </a>
-    </div>
+    </x-page-header>
 
     {{-- TABS --}}
     <ul class="nav nav-tabs mb-3" id="stockTabs" role="tablist">

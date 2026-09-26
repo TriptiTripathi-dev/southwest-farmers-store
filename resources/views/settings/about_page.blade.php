@@ -1,13 +1,7 @@
 <x-app-layout title="About Page Settings">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4">
-                <h4 class="h3 fw-bold m-0 ">About Page Settings</h4>
-                <ol class="breadcrumb mt-2">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">About Page</li>
-                </ol>
-            </div>
+            <x-page-header />
 
             <form action="{{ route('settings.about-page.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf

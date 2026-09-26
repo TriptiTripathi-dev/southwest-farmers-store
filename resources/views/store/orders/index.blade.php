@@ -5,13 +5,7 @@
 <x-app-layout :title="$pageTitle">
 
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-truck-delivery text-info me-2"></i> {{ $pageTitle }}
-            </h4>
-            <small class="text-muted">Manage and track store purchase orders and incoming receiving shipments</small>
-        </div>
+    <x-page-header>
         <div class="d-flex align-items-center gap-2">
             @if($schedule)
                 <div class="badge bg-soft-info text-info p-2 border border-info border-opacity-25">
@@ -19,7 +13,7 @@
                 </div>
             @endif
         </div>
-    </div>
+    </x-page-header>
 
     {{-- FILTER BAR --}}
     <div class="card border-0 shadow-sm mb-4">

@@ -3,12 +3,7 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="mb-0 text-dark fw-bold">Sales Orders</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage and view all customer transactions</p>
-                </div>
-                
+            <x-page-header>
                 <div class="d-flex">
                     @if(Auth::user()->hasPermission('create_order') || Auth::user()->hasPermission('access_pos'))
                     <a href="{{ route('store.sales.pos') }}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center transition-all">
@@ -16,7 +11,7 @@
                     </a>
                     @endif
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

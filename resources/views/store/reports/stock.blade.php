@@ -1,12 +1,11 @@
 <x-app-layout title="Stock Inventory Report">
     <div class="container-fluid">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0 fw-bold text-dark">Stock Inventory Report</h4>
+        <x-page-header>
             <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
                 <i class="mdi mdi-printer me-1"></i> Print Report
             </button>
-        </div>
+        </x-page-header>
 
         <div class="row g-3 mb-4">
             <div class="col-md-4">

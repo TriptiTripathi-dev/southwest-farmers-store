@@ -1,13 +1,7 @@
 <x-app-layout title="Contact Page Settings">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4">
-                <h4 class="h3 fw-bold m-0 ">Contact Page Settings</h4>
-                <ol class="breadcrumb mt-2">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Contact Page</li>
-                </ol>
-            </div>
+            <x-page-header />
 
             <form action="{{ route('settings.contact-page.update') }}" method="POST">
                 @csrf

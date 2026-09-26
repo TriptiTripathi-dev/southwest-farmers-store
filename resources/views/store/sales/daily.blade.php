@@ -1,14 +1,13 @@
 <x-app-layout title="Daily Sales Report">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0 fw-bold text-dark">Daily Sales</h4>
+        <x-page-header>
             <form method="GET" action="{{ route('store.sales.daily') }}" class="d-flex gap-2">
                 <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
                 <button type="button" onclick="window.print()" class="btn btn-outline-secondary">
                     <i class="mdi mdi-printer"></i>
                 </button>
             </form>
-        </div>
+        </x-page-header>
 
         <div class="row g-3 mb-4">
             <div class="col-md-3">

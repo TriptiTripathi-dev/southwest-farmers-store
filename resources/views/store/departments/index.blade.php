@@ -3,19 +3,14 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark">Departments</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage local and global catalog departments</p>
-                </div>
-                
+            <x-page-header>
                 {{-- ACTIONS --}}
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('departments.create') }}" class="btn btn-primary shadow-sm fw-bold d-flex align-items-center">
                         <i class="mdi mdi-plus fs-5 me-1"></i> Add New
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

@@ -22,12 +22,7 @@
 
     <div class="container-fluid px-2 px-md-4 py-4">
 
-        <div class="mb-4">
-            <h1 class="h3 fw-bold text-dark mb-1">
-                <i class="fas fa-dolly text-primary me-2"></i>Inter-Store Transfers
-            </h1>
-            <p class="text-muted small mb-0">Manage inventory transfers between locations</p>
-        </div>
+        <x-page-header />
 
         <div class="card border-0 shadow-sm mb-4 overflow-hidden">
             <div class="card-header bg-success text-white border-0 py-2">

@@ -2,26 +2,11 @@
 
     <div class="container-fluid px-4 py-4">
 
-        {{-- CLEAN MODERN HEADER --}}
-        <div class="mb-4">
-            <div class="card border-0 shadow" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="text-white">
-                            <h3 class="fw-bold mb-2">
-                                <i class="mdi mdi-package-variant-closed me-2"></i>Stock Inventory Management
-                            </h3>
-                            <p class="mb-0 opacity-90 small">
-                                <i class="mdi mdi-chart-line me-1"></i>Real-time tracking and analytics
-                            </p>
-                        </div>
-                        <button class="btn btn-light shadow-sm" onclick="window.location.reload()">
-                            <i class="mdi mdi-refresh me-1"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-page-header>
+            <button class="btn btn-light border shadow-sm" onclick="window.location.reload()">
+                <i class="mdi mdi-refresh me-1"></i> Refresh
+            </button>
+        </x-page-header>
 
         {{-- CLEAN ANALYTICS CARDS --}}
         <div class="row g-4 mb-4">
@@ -169,7 +154,6 @@
         <style>
             body {
                 background-color: #f8f9fa;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             }
 
             .card {

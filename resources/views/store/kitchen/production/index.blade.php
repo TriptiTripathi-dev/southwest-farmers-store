@@ -2,17 +2,7 @@
     <div class="content-wrapper">
         <div class="container-fluid px-3 px-md-4 py-4">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <nav class="mb-1">
-                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted">Production Logs</li>
-                        </ol>
-                    </nav>
-                    <h4 class="fw-bold mb-0 text-dark">Production Logs</h4>
-                    <p class="text-muted small mb-0 mt-1">Track batches of prepared menu items made in this store's kitchen</p>
-                </div>
+            <x-page-header>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('store.kitchen.production.create') }}" class="btn btn-primary shadow-sm fw-bold">
                         <i class="mdi mdi-plus me-1"></i> Log New Production
@@ -21,7 +11,7 @@
                         <i class="mdi mdi-food-off me-1"></i> Leftover Report
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>

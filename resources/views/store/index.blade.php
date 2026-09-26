@@ -2,18 +2,16 @@
 
     <div class="container-fluid">
 
-        <div class="py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <h4 class="fs-18 fw-semibold m-0">Store List</h4>
-
+        <x-page-header>
             <div class="d-flex align-items-center gap-2">
-               
+
 
                 <form method="GET" class="d-flex">
                     <div class="input-group">
                         <input type="text" name="search" value="{{ request('search') }}" class="form-control"
                             placeholder="Search store name or code...">
 
-                      
+
 
                         <button class="btn btn-secondary">
                             <i class="mdi mdi-magnify"></i>
@@ -27,7 +25,7 @@
                     </div>
                 </form>
             </div>
-        </div>
+        </x-page-header>
 
         <div class="card">
             <div class="card-body">

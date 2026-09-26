@@ -3,16 +3,7 @@
 
         {{-- Breadcrumb text now matches the sidebar exactly: Support > Raise Ticket
              (was "Support Tickets" — a label that doesn't exist in the sidebar at all). --}}
-        <x-page-header
-            icon="mdi mdi-lifebuoy"
-            title="Raise Ticket"
-            description="Submit a new support request to the warehouse team."
-            :breadcrumbs="[
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Support', 'url' => route('store.support.index')],
-                ['label' => 'Raise Ticket', 'url' => null],
-            ]"
-        />
+        <x-page-header />
 
         <div class="row justify-content-center">
             <div class="col-lg-8">

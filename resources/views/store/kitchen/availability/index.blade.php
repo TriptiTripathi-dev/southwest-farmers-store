@@ -2,23 +2,13 @@
     <div class="content-wrapper">
         <div class="container-fluid px-3 px-md-4 py-4">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <nav class="mb-1">
-                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted">Daily Availability &amp; Calendar</li>
-                        </ol>
-                    </nav>
-                    <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-calendar-clock me-1"></i>Daily Availability &amp; Catering Matrix</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage daily menu scheduling, live stock toggles, advance notice periods, and rush fee percentages</p>
-                </div>
+            <x-page-header>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('menu-items.index') }}" class="btn btn-outline-secondary fw-bold">
                         <i class="mdi mdi-food me-1"></i> Manage Menu Items
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

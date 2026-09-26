@@ -214,20 +214,14 @@
     <div class="container-fluid">
 
         <!-- Enhanced Page Header -->
-        <div class="page-header d-flex justify-content-between align-items-center mb-4 p-4 shadow-lg position-relative">
-            <div class="position-relative z-1">
-                <h3 class="fw-bold mb-2">
-                    <i class="mdi mdi-cash-multiple me-2"></i> Store Valuation
-                </h3>
-                <p class="mb-0 opacity-90">Track and analyze your inventory's monetary value</p>
-            </div>
+        <x-page-header>
             <div class="d-flex gap-2 position-relative z-1">
-                <a href="{{ route('store.stock-control.valuation') }}" class="btn btn-light border-0 shadow-sm">
+                <a href="{{ route('store.stock-control.valuation') }}" class="btn btn-light border shadow-sm">
                     <i class="mdi mdi-refresh me-1"></i> Reset
                 </a>
 
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Enhanced Filter Card -->
         <div class="card border-0 shadow-sm mb-4 filter-card glass-effect" style="animation-delay: 0.1s">

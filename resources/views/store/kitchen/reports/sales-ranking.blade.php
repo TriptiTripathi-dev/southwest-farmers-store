@@ -2,16 +2,7 @@
     <div class="content-wrapper">
         <div class="container-fluid px-3 px-md-4 py-4">
 
-            <div class="mb-4">
-                <nav class="mb-1">
-                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                        <li class="breadcrumb-item text-muted">Sales Ranking Report</li>
-                    </ol>
-                </nav>
-                <h4 class="fw-bold mb-0 text-dark">Sales Ranking Report</h4>
-                <p class="text-muted small mb-0 mt-1">Best-selling menu items based on actual point-of-sale data, to help plan daily kitchen production targets</p>
-            </div>
+            <x-page-header />
 
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-0">

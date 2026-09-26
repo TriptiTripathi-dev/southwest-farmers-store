@@ -1,7 +1,6 @@
 <x-app-layout title="Weekly Sales Summary">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <h4 class="mb-0 fw-bold text-dark">Weekly Sales Overview</h4>
+        <x-page-header>
             <form method="GET" action="{{ route('store.sales.weekly') }}" class="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm">
                 <span class="small fw-bold text-muted ps-2">Range:</span>
                 <input type="date" name="start_date" class="form-control form-control-sm border-0 bg-light" value="{{ $startOfWeek }}">
@@ -9,7 +8,7 @@
                 <input type="date" name="end_date" class="form-control form-control-sm border-0 bg-light" value="{{ $endOfWeek }}">
                 <button type="submit" class="btn btn-primary btn-sm px-3">Filter</button>
             </form>
-        </div>
+        </x-page-header>
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">

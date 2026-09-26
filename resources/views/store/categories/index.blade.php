@@ -3,12 +3,7 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark">Product Categories</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage local and global catalog classifications</p>
-                </div>
-                
+            <x-page-header>
                 {{-- ACTIONS --}}
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-success text-white shadow-sm fw-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -21,7 +16,7 @@
                         <i class="mdi mdi-plus fs-5 me-1"></i> Add New
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

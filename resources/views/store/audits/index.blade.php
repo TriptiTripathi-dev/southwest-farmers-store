@@ -3,12 +3,7 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark">Stock Audits</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage and track physical inventory counts</p>
-                </div>
-                
+            <x-page-header>
                 @if(Auth::user()->hasPermission('create_audit'))
                 <div class="d-flex">
                     <a href="{{ route('store.audits.create') }}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center transition-all hover-lift">
@@ -16,7 +11,7 @@
                     </a>
                 </div>
                 @endif
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

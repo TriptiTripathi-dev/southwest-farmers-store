@@ -1,16 +1,10 @@
 <x-app-layout title="Create Store PO">
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-calendar-check text-primary me-2"></i> Create Store PO (Scheduled)
-            </h4>
-            <small class="text-muted">Place a large scheduled order for the warehouse</small>
-        </div>
+    <x-page-header>
         <a href="{{ route('store.orders.index') }}" class="btn btn-outline-secondary">
             <i class="mdi mdi-arrow-left me-1"></i> Back to List
         </a>
-    </div>
+    </x-page-header>
 
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm border-0">

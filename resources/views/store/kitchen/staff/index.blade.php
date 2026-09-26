@@ -2,17 +2,7 @@
     <div class="content-wrapper">
         <div class="container-fluid px-3 px-md-4 py-4">
 
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3">
-                <div>
-                    <nav class="mb-1">
-                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted">Staff &amp; Timesheets</li>
-                        </ol>
-                    </nav>
-                    <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-account-clock me-1"></i>Kitchen Staff Scheduling &amp; Timesheets</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage shift assignments, kitchen stations, live clock-in/out logs, and daily attendance</p>
-                </div>
+            <x-page-header>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <form method="GET" action="{{ route('store.kitchen.staff.index') }}" class="d-flex align-items-center gap-2">
                         <input type="date" name="date" class="form-control form-control-sm" value="{{ $selectedDate }}" onchange="this.form.submit()">
@@ -24,7 +14,7 @@
                         <i class="mdi mdi-clock-in me-1"></i> Clock In Staff
                     </button>
                 </div>
-            </div>
+            </x-page-header>
 
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

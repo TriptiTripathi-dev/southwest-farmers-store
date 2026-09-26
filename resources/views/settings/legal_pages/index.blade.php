@@ -1,13 +1,7 @@
 <x-app-layout title="Legal Pages">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4">
-                <h4 class="h3 fw-bold m-0 ">Legal Pages</h4>
-                <ol class="breadcrumb mt-2">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Legal Pages</li>
-                </ol>
-            </div>
+            <x-page-header />
 
             <div class="card border-0 shadow-sm rounded-3 mb-4">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">

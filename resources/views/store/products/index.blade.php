@@ -3,18 +3,7 @@
         <div class="container-fluid px-3 px-md-4 py-4">
 
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <nav class="mb-1">
-                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted">Product List</li>
-                        </ol>
-                    </nav>
-                    <h4 class="fw-bold mb-0 text-dark">Product Catalog</h4>
-                    <p class="text-muted small mb-0 mt-1">Manage local store products and global warehouse items</p>
-                </div>
-
+            <x-page-header>
                 {{-- ACTIONS --}}
                 <div class="d-flex flex-wrap gap-2">
                     @if (Auth::user()->hasPermission('import_products') || Auth::user()->hasPermission('create_product'))
@@ -38,7 +27,7 @@
                         </a>
                     @endif
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

@@ -1,13 +1,7 @@
 <x-app-layout title="Enquiries">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4">
-                <h3 class="h3 fw-bold m-0 ">Customer Enquiries</h3>
-                <ol class="breadcrumb mt-2">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Enquiries</li>
-                </ol>
-            </div>
+            <x-page-header />
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white border-bottom py-3">

@@ -1,7 +1,6 @@
 <x-app-layout title="Process Return">
     @push('styles')
     <style>
-        body { font-family: 'Manrope', sans-serif; }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }

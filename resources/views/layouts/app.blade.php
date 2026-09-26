@@ -56,8 +56,15 @@
     <style>
         /* Consistent page-title breadcrumb styling (item 14): blue link,
            bold + underline on hover, matching the sidebar navigation text. */
-        .page-breadcrumb-link { color: #0d6efd; text-decoration: none; }
-        .page-breadcrumb-link:hover { color: #0d6efd; font-weight: 700; text-decoration: underline; }
+        /* Page header component (components/page-header.blade.php, client 9/11 list item 10). The breadcrumb
+           selectors need .breadcrumb-item > a to beat the theme's grey
+           ".breadcrumb-item>a { color: body }" rule. */
+        .breadcrumb-item > a.page-breadcrumb-link { color: #0d6efd; text-decoration: none; }
+        .breadcrumb-item > a.page-breadcrumb-link:hover { color: #0a58ca; font-weight: 700; text-decoration: underline; }
+        /* Same distance under the top bar on every page, whatever padding the
+           page's own container has. */
+        .page-header-card { margin-top: 1rem !important; }
+        :has(> .page-header-card:first-child) { padding-top: 0 !important; }
     </style>
 </head>
 

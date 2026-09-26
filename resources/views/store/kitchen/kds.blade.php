@@ -1,23 +1,13 @@
 <x-app-layout title="Kitchen Display System (KDS)">
 
     <div class="container-fluid px-3 px-lg-4 py-3 h-100 d-flex flex-column" style="min-height: calc(100vh - 70px);">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <nav class="mb-1">
-                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                        <li class="breadcrumb-item text-muted">KDS Screen</li>
-                    </ol>
-                </nav>
-                <h4 class="fw-bold text-dark mb-1">Kitchen Display System (KDS)</h4>
-                <p class="text-muted mb-0 small">Live view of active incoming kitchen orders.</p>
-            </div>
+        <x-page-header>
             <div>
                 <button class="btn btn-primary btn-sm shadow-sm" onclick="location.reload()">
                     <i class="mdi mdi-refresh me-1"></i>Refresh Board
                 </button>
             </div>
-        </div>
+        </x-page-header>
 
         <div class="row flex-grow-1 flex-nowrap overflow-auto pb-3 gx-3 kds-board" style="min-height: 500px;">
 

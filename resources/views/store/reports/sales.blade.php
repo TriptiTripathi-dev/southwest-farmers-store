@@ -1,14 +1,13 @@
 <x-app-layout title="Sales Report">
     <div class="container-fluid">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0 fw-bold text-dark">Sales Report</h4>
+        <x-page-header>
             <div class="d-flex gap-2">
                 <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
                     <i class="mdi mdi-printer me-1"></i> Print
                 </button>
             </div>
-        </div>
+        </x-page-header>
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3">

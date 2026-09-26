@@ -1,7 +1,6 @@
 <x-app-layout title="Sales Returns">
     @push('styles')
     <style>
-        body { font-family: 'Manrope', sans-serif; }
         
         /* Smooth hover effect for cards */
         .hover-lift { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s; }
@@ -19,23 +18,13 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark d-flex align-items-center">
-                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-keyboard-return fs-5"></i>
-                        </div>
-                        Sales Returns
-                    </h4>
-                    <p class="text-muted small mb-0 mt-1 ms-5">Manage and track all customer returns and refunds</p>
-                </div>
-                
+            <x-page-header>
                 <div class="d-flex">
                     <a href="{{ route('store.sales.returns.create') }}" class="btn btn-danger rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center transition-all hover-lift">
                         <i class="mdi mdi-plus-circle-outline fs-5 me-1"></i> Process New Return
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- STATISTICS CARDS --}}
             <div class="row g-3 g-md-4 mb-4">

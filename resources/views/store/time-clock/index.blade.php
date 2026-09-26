@@ -2,10 +2,7 @@
     <div class="content">
         <div class="container-fluid">
 
-            <div class="py-4">
-                <h4 class="h4 fw-bold m-0 text-dark"><i class="mdi mdi-clock-outline me-1"></i> Staff Time Clock</h4>
-                <p class="text-muted small mb-0 mt-1">Clock staff in and out using their store ID (see Staff Management for each employee's ID).</p>
-            </div>
+            <x-page-header />
 
             <div class="row">
                 <div class="col-lg-4">

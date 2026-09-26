@@ -3,7 +3,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
-        body { font-family: 'Manrope', sans-serif; }
         
         .hover-lift { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s; }
         .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important; }
@@ -44,17 +43,7 @@
         <div class="container-fluid px-3 px-md-4 py-4">
             
             {{-- HEADER SECTION --}}
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                <div>
-                    <h4 class="fw-bold mb-0 text-dark d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px;">
-                            <i class="mdi mdi-sitemap fs-5"></i>
-                        </div>
-                        Subcategories
-                    </h4>
-                    <p class="text-muted small mb-0 mt-1 ms-5">Manage and organize product subcategories</p>
-                </div>
-                
+            <x-page-header>
                 {{-- ACTIONS --}}
                 <div class="d-flex flex-wrap gap-2">
                     <button class="btn btn-success text-white shadow-sm fw-bold d-flex align-items-center hover-lift" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -67,7 +56,7 @@
                         <i class="mdi mdi-plus fs-5 me-1"></i> Add New
                     </a>
                 </div>
-            </div>
+            </x-page-header>
 
             {{-- MAIN CARD --}}
             <div class="card border-0 shadow-sm rounded-4">

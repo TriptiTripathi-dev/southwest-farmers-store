@@ -3,16 +3,11 @@
     <div class="container-fluid px-4 py-4">
 
         {{-- 1. HEADER & DATE FILTER --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <div>
-                <h4 class="fw-bold text-dark mb-1">
-                    Welcome back, {{ auth()->user()->name }} 👋
-                </h4>
-                <p class="text-muted mb-0 small">
-                    Store Performance: <span class="fw-semibold text-primary">{{ $start->format('M d') }} - {{ $end->format('M d, Y') }}</span>
-                </p>
-            </div>
-
+        <x-page-header>
+            <x-slot:subtitle>
+                Welcome back, {{ auth()->user()->name }} &middot; Store performance:
+                <span class="fw-semibold text-primary text-nowrap">{{ $start->format('M d') }} - {{ $end->format('M d, Y') }}</span>
+            </x-slot:subtitle>
             @if(isset($data['order_schedule']))
                 <div class="alert alert-info border-0 shadow-sm p-3 mb-0 d-flex align-items-center rounded-3 bg-white" style="border-left: 4px solid #0dcaf0 !important;">
                     <i class="mdi mdi-calendar-clock fs-4 text-info me-3"></i>
@@ -33,7 +28,7 @@
                     <i class="mdi mdi-filter-variant me-1"></i> Filter
                 </button>
             </form>
-        </div>
+        </x-page-header>
 
         {{-- 2. KPI CARDS ROW --}}
         <div class="row g-3 mb-4">

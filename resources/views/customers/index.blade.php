@@ -1,17 +1,13 @@
 <x-app-layout title="Customer List">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4 d-flex align-items-center justify-content-between mb-2">
-                <div>
-                    <h4 class="h4 fw-bold m-0 text-dark">Customer List</h4>
-                    <p class="text-muted mb-0 small mt-1">Manage your store customers and track their information</p>
-                </div>
+            <x-page-header>
                 @if(Auth::user()->hasPermission('create_customer') || Auth::user()->hasPermission('manage_customers'))
                 <a href="{{ route('customers.create') }}" class="btn btn-success shadow-sm rounded-pill px-4">
                     <i class="mdi mdi-plus-circle me-2"></i> Add Customer
                 </a>
                 @endif
-            </div>
+            </x-page-header>
 
             {{-- Stats Cards & Filter Section (Unchanged) --}}
             {{-- ... --}}

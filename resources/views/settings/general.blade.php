@@ -1,13 +1,7 @@
 <x-app-layout title="General Settings">
     <div class="content">
         <div class="container-fluid">
-            <div class="py-4">
-                <h4 class="h3 fw-bold m-0 text-white">General Settings</h4>
-                <ol class="breadcrumb mt-2">
-                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Dashboard</a></li>
-                    <li class="breadcrumb-item active text-white">Settings</li>
-                </ol>
-            </div>
+            <x-page-header />
 
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-header bg-white border-bottom py-3">

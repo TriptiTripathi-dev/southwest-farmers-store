@@ -1,13 +1,12 @@
 <x-app-layout title="Promotions & Marketing">
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 mb-0">Promotions & Marketing</h2>
+    <x-page-header>
         @if(Auth::user()->hasPermission('create_promotion'))
         <a href="{{ route('store.promotions.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Create New Campaign
         </a>
         @endif
-    </div>
+    </x-page-header>
 
     <div class="card shadow-sm">
         <div class="card-body p-0">

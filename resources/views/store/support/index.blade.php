@@ -1,19 +1,11 @@
 <x-app-layout title="My Support Tickets">
     <div class="container-fluid">
 
-        {{-- Breadcrumb --}}
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb mb-0 bg-white p-3 rounded shadow-sm">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}" class="text-decoration-none text-dark">
-                        <i class="mdi mdi-home-outline me-1"></i> Dashboard
-                    </a>
-                </li>
-                <li class="breadcrumb-item active fw-bold" aria-current="page">
-                    Support Tickets
-                </li>
-            </ol>
-        </nav>
+        <x-page-header>
+            <a href="{{ route('store.support.create') }}" class="btn btn-primary shadow-sm fw-bold">
+                <i class="mdi mdi-plus me-1"></i> Raise Ticket
+            </a>
+        </x-page-header>
 
         {{-- Metrics Logic (Inline for immediate functionality) --}}
         @php

@@ -125,19 +125,11 @@
 
     <div class="content">
         <div class="container-fluid px-lg-4">
-            {{-- Header & Stats --}}
-            <div class="row align-items-center py-4 g-3">
-                <div class="col-md-4">
-                    <nav class="mb-1">
-                        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted">Store Inventory</li>
-                        </ol>
-                    </nav>
-                    <h4 class="h3 fw-black m-0 text-dark">Store Inventory</h4>
-                    <p class="text-muted mb-0">Manage and monitor your local inventory</p>
-                </div>
-                <div class="col-md-8">
+            <x-page-header />
+
+            {{-- Stats --}}
+            <div class="row align-items-center mb-4 g-3">
+                <div class="col-12">
                     <div class="row g-3">
                         <div class="col-4">
                             <div class="stats-card p-3 shadow-sm text-center">
