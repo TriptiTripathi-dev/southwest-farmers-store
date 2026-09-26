@@ -10,7 +10,7 @@
                     </ol>
                 </nav>
                 <h3 class="mb-0 fw-black text-dark" style="letter-spacing: -0.5px;">Order #{{ $sale->invoice_number }}</h3>
-                <span class="text-muted small">Placed on {{ $sale->created_at->format('M d, Y, h:i A') }}</span>
+                <span class="text-muted small">Placed on {{ $sale->created_at->storeTime()->format('M d, Y, h:i A') }}</span>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('store.sales.orders') }}" class="btn btn-white border rounded-pill px-3 fw-bold text-muted hover-shadow-sm">

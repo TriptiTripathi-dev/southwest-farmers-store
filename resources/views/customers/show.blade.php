@@ -98,7 +98,7 @@
                                     <label class="small text-muted text-uppercase fw-bold mb-1">Customer Since</label>
                                     <p class="h6 text-dark fw-medium">
                                         <i class="mdi mdi-calendar-check text-success me-1"></i>
-                                        {{ $customer->created_at->format('M d, Y') }}
+                                        {{ $customer->created_at->storeTime()->format('M d, Y') }}
                                     </p>
                                 </div>
                                 <div class="col-md-6">

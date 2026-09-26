@@ -7,7 +7,7 @@
                 </a>
                 <h1 class="fw-black mb-0 text-dark">Order Details</h1>
             </div>
-            <p class="text-muted mb-0">Invoice #{{ $order->invoice_number }} &nbsp;·&nbsp; Placed on {{ $order->created_at->format('M d, Y') }}</p>
+            <p class="text-muted mb-0">Invoice #{{ $order->invoice_number }} &nbsp;·&nbsp; Placed on {{ $order->created_at->storeTime()->format('M d, Y') }}</p>
         </div>
     </div>
 

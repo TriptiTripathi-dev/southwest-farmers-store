@@ -66,7 +66,7 @@
                         @forelse($sales as $sale)
                         <tr>
                             <td class="ps-4 fw-bold text-primary">{{ $sale->invoice_number }}</td>
-                            <td class="text-muted">{{ $sale->created_at->format('h:i A') }}</td>
+                            <td class="text-muted">{{ $sale->created_at->storeTime()->format('h:i A') }}</td>
                             <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>
                             <td><span class="badge bg-light text-dark border">{{ $sale->items->sum('quantity') }}</span></td>
                             <td class="text-uppercase small fw-bold">{{ $sale->payment_method }}</td>

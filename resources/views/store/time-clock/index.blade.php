@@ -71,8 +71,8 @@
                                         @forelse($recentLogs as $log)
                                             <tr>
                                                 <td class="ps-3">{{ $log->staff->name ?? 'Unknown' }}</td>
-                                                <td>{{ optional($log->clock_in_at)->format('m/d/y h:i A') }}</td>
-                                                <td>{{ $log->clock_out_at ? $log->clock_out_at->format('m/d/y h:i A') : '—' }}</td>
+                                                <td>{{ $log->clock_in_at?->storeTime()->format('m/d/y h:i A') }}</td>
+                                                <td>{{ $log->clock_out_at ? $log->clock_out_at->storeTime()->format('m/d/y h:i A') : '—' }}</td>
                                                 <td>{{ $log->total_hours ?? '—' }}</td>
                                                 <td class="pe-3 text-end">
                                                     @if(!$log->clock_out_at)

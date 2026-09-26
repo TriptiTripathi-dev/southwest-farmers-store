@@ -37,7 +37,7 @@
                                     @forelse($orders as $order)
                                     <tr>
                                         <td class="px-4 py-4 fw-bold text-dark">#{{ $order->invoice_number }}</td>
-                                        <td class="py-4 text-muted small">{{ $order->created_at->format('M d, Y h:i A') }}</td>
+                                        <td class="py-4 text-muted small">{{ $order->created_at->storeTime()->format('M d, Y h:i A') }}</td>
                                         <td class="py-4 fw-semibold text-dark">{{ $order->items->count() }} Items</td>
                                         <td class="py-4 fw-black text-primary">${{ number_format($order->total_amount, 2) }}</td>
                                         <td class="py-4 text-center">

@@ -23,7 +23,7 @@
                             <h6 class="mb-0 {{ $notif->read_at ? 'text-muted' : 'text-dark fw-bold' }}">{{ $notif->title }}</h6>
                         </div>
                         <p class="mb-1 text-muted small">{{ $notif->message }}</p>
-                        <small class="text-muted">{{ $notif->created_at->format('M d, Y h:i A') }}</small>
+                        <small class="text-muted">{{ $notif->created_at->storeTime()->format('M d, Y h:i A') }}</small>
                         
                         @if($notif->url)
                             <div class="mt-2">

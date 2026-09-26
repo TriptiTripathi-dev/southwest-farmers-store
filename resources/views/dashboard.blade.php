@@ -214,7 +214,7 @@
                             <td>
                                 <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
                             </td>
-                            <td class="text-muted small">{{ $order->created_at->format('d M, h:i A') }}</td>
+                            <td class="text-muted small">{{ $order->created_at->storeTime()->format('d M, h:i A') }}</td>
                             <td class="text-end pe-3">
                                 <a href="#" class="btn btn-sm btn-icon btn-light rounded-circle"><i class="mdi mdi-eye"></i></a>
                             </td>

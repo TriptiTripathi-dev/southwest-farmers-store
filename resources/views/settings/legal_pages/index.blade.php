@@ -32,7 +32,7 @@
                                 <tr>
                                     <td class="ps-4 fw-medium">{{ $page->title }}</td>
                                     <td><code>{{ $page->slug }}</code></td>
-                                    <td>{{ $page->updated_at->format('M d, Y H:i') }}</td>
+                                    <td>{{ $page->updated_at->storeTime()->format('M d, Y H:i') }}</td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
                                             <a href="{{ route('settings.legal.edit', $page->id) }}" class="btn btn-sm btn-light border shadow-sm text-primary" title="Edit Page">

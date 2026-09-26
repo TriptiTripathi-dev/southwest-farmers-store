@@ -70,10 +70,10 @@ class StoreOrderController extends Controller
                     return '$' . number_format($order->total_amount ?? 0, 2);
                 })
                 ->editColumn('created_at', function ($order) {
-                    return $order->created_at ? $order->created_at->format('d M Y') : '---';
+                    return $order->created_at ? $order->created_at->storeTime()->format('d M Y') : '---';
                 })
                 ->addColumn('received_date', function ($order) {
-                    return $order->received_at ? $order->received_at->format('d M Y') : ($order->updated_at ? $order->updated_at->format('d M Y') : '---');
+                    return $order->received_at ? $order->received_at->storeTime()->format('d M Y') : ($order->updated_at ? $order->updated_at->storeTime()->format('d M Y') : '---');
                 })
                 ->addColumn('action', function ($order) use ($tab) {
                     if ($tab === 'receiving') {

@@ -34,7 +34,7 @@
                                     </td>
                                     <td>{{ $enquiry->email }}</td>
                                     <td>{{ $enquiry->subject }}</td>
-                                    <td>{{ $enquiry->created_at->format('M d, Y h:i A') }}</td>
+                                    <td>{{ $enquiry->created_at->storeTime()->format('M d, Y h:i A') }}</td>
                                     <td>
                                         @if($enquiry->is_read)
                                             <span class="badge bg-soft-success text-success rounded-pill px-3">Read</span>

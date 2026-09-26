@@ -194,7 +194,7 @@
                 <td style="text-align: right;">
                     <span class="meta-label">Invoice Info</span>
                     Invoice Number: <strong>#{{ $order->invoice_number }}</strong><br>
-                    Date: {{ $order->created_at->format('M d, Y') }}<br>
+                    Date: {{ $order->created_at->storeTime()->format('M d, Y') }}<br>
                     Payment Method: {{ strtoupper($order->payment_method) }}<br>
                     Payment Status: 
                     @if($order->status === 'paid')

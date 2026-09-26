@@ -27,6 +27,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // UTC timestamp -> store local time, for display only (client PDF
+        // 9/22, Store item 5: an order placed at 11:23am showed 04:23 PM).
+        $storeTime = function () {
+            return $this->copy()->setTimezone(config('app.display_timezone', 'UTC'));
+        };
+        \Illuminate\Support\Carbon::macro('storeTime', $storeTime);
+        \Carbon\Carbon::macro('storeTime', $storeTime);
+        \Carbon\CarbonImmutable::macro('storeTime', $storeTime);
+
         // Local .env files point at the shared Railway database, so migrate:fresh /
         // db:wipe / rollback must be refused for it even when APP_ENV=local. Keyed
         // off the default connection's host so the sqlite test database is unaffected.

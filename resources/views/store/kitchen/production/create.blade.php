@@ -39,7 +39,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Time of Production <span class="text-danger">*</span></label>
-                                <input type="datetime-local" name="produced_at" class="form-control" required value="{{ old('produced_at', now()->format('Y-m-d\TH:i')) }}">
+                                <input type="datetime-local" name="produced_at" class="form-control" required value="{{ old('produced_at', now()->storeTime()->format('Y-m-d\TH:i')) }}">
                             </div>
 
                             <div class="col-md-4">

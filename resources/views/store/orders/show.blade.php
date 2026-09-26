@@ -9,7 +9,7 @@
                 </h4>
                 <div class="mt-1">
                     <span class="badge bg-soft-secondary text-secondary me-2">Created:
-                        {{ $order->created_at->format('d M Y, h:i A') }}</span>
+                        {{ $order->created_at->storeTime()->format('d M Y, h:i A') }}</span>
                     @php
                         $statusClass = match ($order->status) {
                             'pending' => 'bg-warning text-dark',
@@ -122,26 +122,26 @@
                             <li class="mb-4 ps-4 position-relative">
                                 <div class="timeline-dot bg-success"></div>
                                 <small class="text-muted d-block">Requested At</small>
-                                <span class="fw-bold">{{ $order->created_at->format('d M, h:i A') }}</span>
+                                <span class="fw-bold">{{ $order->created_at->storeTime()->format('d M, h:i A') }}</span>
                             </li>
                             <li class="mb-4 ps-4 position-relative">
                                 <div class="timeline-dot {{ $order->approved_at ? 'bg-success' : 'bg-light' }}"></div>
                                 <small class="text-muted d-block">Approved At</small>
                                 <span
-                                    class="fw-bold">{{ $order->approved_at ? $order->approved_at->format('d M, h:i A') : 'Pending' }}</span>
+                                    class="fw-bold">{{ $order->approved_at ? $order->approved_at->storeTime()->format('d M, h:i A') : 'Pending' }}</span>
                             </li>
                             <li class="mb-4 ps-4 position-relative">
                                 <div class="timeline-dot {{ $order->dispatched_at ? 'bg-success' : 'bg-light' }}">
                                 </div>
                                 <small class="text-muted d-block">Dispatched At</small>
                                 <span
-                                    class="fw-bold">{{ $order->dispatched_at ? $order->dispatched_at->format('d M, h:i A') : 'Pending' }}</span>
+                                    class="fw-bold">{{ $order->dispatched_at ? $order->dispatched_at->storeTime()->format('d M, h:i A') : 'Pending' }}</span>
                             </li>
                             <li class="ps-4 position-relative">
                                 <div class="timeline-dot {{ $order->received_at ? 'bg-success' : 'bg-light' }}"></div>
                                 <small class="text-muted d-block">Completed At</small>
                                 <span
-                                    class="fw-bold">{{ $order->received_at ? $order->received_at->format('d M, h:i A') : 'Pending' }}</span>
+                                    class="fw-bold">{{ $order->received_at ? $order->received_at->storeTime()->format('d M, h:i A') : 'Pending' }}</span>
                             </li>
                         </ul>
                     </div>

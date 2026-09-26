@@ -41,7 +41,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <span class="text-muted small fw-bold d-block text-uppercase">Order Date</span>
-                                <strong class="fs-5 text-dark">{{ $order->created_at->format('M d, Y, h:i A') }}</strong>
+                                <strong class="fs-5 text-dark">{{ $order->created_at->storeTime()->format('M d, Y, h:i A') }}</strong>
                             </div>
                             <div class="col-sm-6">
                                 <span class="text-muted small fw-bold d-block text-uppercase">Payment Method</span>

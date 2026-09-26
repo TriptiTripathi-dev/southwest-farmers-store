@@ -97,8 +97,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark">{{ $order->created_at->format('M d, Y') }}</div>
-                                        <small class="text-muted"><i class="mdi mdi-clock-outline me-1"></i>{{ $order->created_at->format('h:i A') }}</small>
+                                        <div class="fw-semibold text-dark">{{ $order->created_at->storeTime()->format('M d, Y') }}</div>
+                                        <small class="text-muted"><i class="mdi mdi-clock-outline me-1"></i>{{ $order->created_at->storeTime()->format('h:i A') }}</small>
                                     </td>
                                     <td class="text-center">
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3 py-2 fw-bold">

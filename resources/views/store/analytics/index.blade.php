@@ -102,7 +102,7 @@
                                     <td>{{ $ret->return_no }}</td>
                                     <td>{{ Str::limit($ret->reason, 20) }}</td>
                                     <td class="text-danger">-${{ number_format($ret->total_refund, 2) }}</td>
-                                    <td>{{ $ret->created_at->format('d M H:i') }}</td>
+                                    <td>{{ $ret->created_at->storeTime()->format('d M H:i') }}</td>
                                 </tr>
                                 @empty
                                 <tr>

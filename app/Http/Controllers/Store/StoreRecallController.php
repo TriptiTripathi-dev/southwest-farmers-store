@@ -47,7 +47,7 @@ class StoreRecallController extends Controller
                         return '<span class="badge bg-' . $badge . '">' . ucwords(str_replace('_', ' ', $row->status)) . '</span>';
                     })
                     ->addColumn('initiator_name', fn($row) => $row->initiator->name ?? 'System')
-                    ->editColumn('created_at', fn($row) => $row->created_at->format('d M Y H:i'))
+                    ->editColumn('created_at', fn($row) => $row->created_at->storeTime()->format('d M Y H:i'))
                     ->addColumn('action', function ($row) {
                         return '<a href="' . route('store.stock-control.recall.show', $row->id) . '" class="btn btn-sm btn-outline-primary"><i class="mdi mdi-eye me-1"></i> View</a>';
                     })

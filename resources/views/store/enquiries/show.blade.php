@@ -20,7 +20,7 @@
                     <div class="card border-0 shadow-sm rounded-3 mb-4">
                         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold text-dark"><i class="mdi mdi-email-open-outline me-2 text-primary"></i>Message Content</h5>
-                            <span class="text-muted small">{{ $enquiry->created_at->format('M d, Y h:i A') }}</span>
+                            <span class="text-muted small">{{ $enquiry->created_at->storeTime()->format('M d, Y h:i A') }}</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="mb-4">

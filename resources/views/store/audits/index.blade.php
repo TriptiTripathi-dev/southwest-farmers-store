@@ -43,8 +43,8 @@
                                         <span class="fw-bold text-dark">#{{ $audit->audit_number }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark">{{ $audit->created_at->format('d M Y') }}</div>
-                                        <div class="small text-muted">{{ $audit->created_at->format('h:i A') }}</div>
+                                        <div class="fw-semibold text-dark">{{ $audit->created_at->storeTime()->format('d M Y') }}</div>
+                                        <div class="small text-muted">{{ $audit->created_at->storeTime()->format('h:i A') }}</div>
                                     </td>
                                     <td>
                                         @if($audit->status == 'completed')

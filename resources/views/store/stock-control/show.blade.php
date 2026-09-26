@@ -131,7 +131,7 @@
 
                         <div class="mb-3">
                             <label class="small text-muted d-block">Request Date</label>
-                            <span class="fw-bold">{{ $request->created_at->format('d M Y, h:i A') }}</span>
+                            <span class="fw-bold">{{ $request->created_at->storeTime()->format('d M Y, h:i A') }}</span>
                         </div>
 
                         <div class="mb-3">
@@ -148,7 +148,7 @@
                             <div class="mb-3">
                                 <label class="small text-muted d-block">Approved At</label>
                                 <span
-                                    class="fw-bold">{{ $request->approved_at ? $request->approved_at->format('d M Y, h:i A') : 'N/A' }}</span>
+                                    class="fw-bold">{{ $request->approved_at ? $request->approved_at->storeTime()->format('d M Y, h:i A') : 'N/A' }}</span>
                             </div>
                         @endif
 

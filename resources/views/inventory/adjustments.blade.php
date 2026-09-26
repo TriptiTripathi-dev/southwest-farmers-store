@@ -71,7 +71,7 @@
                                         </div>
                                     </td>
                                     <td class="pe-4 text-end text-muted small">
-                                        {{ $adj->created_at->format('M d, Y h:i A') }}
+                                        {{ $adj->created_at->storeTime()->format('M d, Y h:i A') }}
                                     </td>
                                 </tr>
                                 @empty

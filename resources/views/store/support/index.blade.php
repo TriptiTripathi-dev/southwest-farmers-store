@@ -146,7 +146,7 @@
                                 </span>
                             </td>
                             <td class="text-muted small">
-                                <i class="mdi mdi-calendar-blank me-1"></i>{{ $ticket->created_at->format('d M Y') }}
+                                <i class="mdi mdi-calendar-blank me-1"></i>{{ $ticket->created_at->storeTime()->format('d M Y') }}
                             </td>
                             <td class="text-end pe-4">
                                 <a href="{{ route('store.support.show', $ticket->id) }}" class="btn btn-sm btn-white border shadow-sm text-dark hover-primary">

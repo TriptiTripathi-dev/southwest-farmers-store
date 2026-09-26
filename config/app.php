@@ -67,6 +67,11 @@ return [
 
     'timezone' => 'UTC',
 
+    // Timestamps are stored in UTC (the database is shared with the Warehouse
+    // app), but shown to staff in the stores' local time. Use ->storeTime()
+    // on a system timestamp before formatting it for display.
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Chicago'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

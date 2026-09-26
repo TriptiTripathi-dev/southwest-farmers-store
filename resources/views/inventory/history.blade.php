@@ -65,8 +65,8 @@
                                 @forelse($transactions as $txn)
                                     <tr>
                                         <td class="ps-4 text-muted small">
-                                            {{ $txn->created_at->format('d M Y') }}<br>
-                                            {{ $txn->created_at->format('h:i A') }}
+                                            {{ $txn->created_at->storeTime()->format('d M Y') }}<br>
+                                            {{ $txn->created_at->storeTime()->format('h:i A') }}
                                         </td>
                                         <td>
                                             @php

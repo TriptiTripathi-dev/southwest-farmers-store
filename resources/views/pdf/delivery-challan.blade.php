@@ -37,7 +37,7 @@
 
     <div class="info-row">
         <div><span class="info-label">Challan No:</span> #RCL-{{ str_pad($recall->id, 5, '0', STR_PAD_LEFT) }}</div>
-        <div><span class="info-label">Date:</span> {{ now()->format('d M Y, h:i A') }}</div>
+        <div><span class="info-label">Date:</span> {{ now()->storeTime()->format('d M Y, h:i A') }}</div>
         <div><span class="info-label">Status:</span> {{ strtoupper($recall->status) }}</div>
     </div>
 

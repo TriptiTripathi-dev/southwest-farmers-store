@@ -99,8 +99,8 @@
                         @forelse($transactions as $txn)
                             <tr>
                                 <td class="px-4">
-                                    <div class="fw-bold text-dark">{{ $txn->created_at->format('M d, Y') }}</div>
-                                    <small class="text-muted">{{ $txn->created_at->format('h:i A') }}</small>
+                                    <div class="fw-bold text-dark">{{ $txn->created_at->storeTime()->format('M d, Y') }}</div>
+                                    <small class="text-muted">{{ $txn->created_at->storeTime()->format('h:i A') }}</small>
                                 </td>
                                 <td>
                                     @php

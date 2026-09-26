@@ -75,8 +75,8 @@
                                     <span class="font-monospace fw-bold text-primary">{{ $request->request_number ?? 'REQ-' . str_pad($request->id, 3, '0', STR_PAD_LEFT) }}</span>
                                 </td>
                                 <td>
-                                    <small class="text-muted">{{ $request->created_at->format('d M Y') }}</small>
-                                    <br><small class="text-muted">{{ $request->created_at->format('h:i A') }}</small>
+                                    <small class="text-muted">{{ $request->created_at->storeTime()->format('d M Y') }}</small>
+                                    <br><small class="text-muted">{{ $request->created_at->storeTime()->format('h:i A') }}</small>
                                 </td>
                                 <td class="text-center">
                                     @if($request->status == 'pending')

@@ -172,8 +172,8 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark">{{ $return->created_at->format('M d, Y') }}</div>
-                                        <small class="text-muted"><i class="mdi mdi-clock-outline me-1"></i>{{ $return->created_at->format('h:i A') }}</small>
+                                        <div class="fw-semibold text-dark">{{ $return->created_at->storeTime()->format('M d, Y') }}</div>
+                                        <small class="text-muted"><i class="mdi mdi-clock-outline me-1"></i>{{ $return->created_at->storeTime()->format('h:i A') }}</small>
                                     </td>
                                     <td>
                                         <span class="fw-black text-danger fs-6">

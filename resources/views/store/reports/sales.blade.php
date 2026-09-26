@@ -103,7 +103,7 @@
                         @forelse($sales as $sale)
                         <tr>
                             <td class="ps-4 text-muted small">
-                                {{ $sale->created_at->format('m/d/y h:i A') }}
+                                {{ $sale->created_at->storeTime()->format('m/d/y h:i A') }}
                             </td>
                             <td class="fw-bold text-primary">{{ $sale->invoice_number }}</td>
                             <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>

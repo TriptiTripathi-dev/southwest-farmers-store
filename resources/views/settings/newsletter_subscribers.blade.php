@@ -36,7 +36,7 @@
                                             {{ $subscriber->store->store_name ?? 'Headquarters' }}
                                         </span>
                                     </td>
-                                    <td>{{ $subscriber->created_at->format('M d, Y H:i') }}</td>
+                                    <td>{{ $subscriber->created_at->storeTime()->format('M d, Y H:i') }}</td>
                                     <td class="text-end pr-4 pe-4">
                                         <div class="d-flex justify-content-end gap-2">
                                             <button type="button" class="btn btn-sm btn-light border shadow-sm text-primary" title="Send Email" data-bs-toggle="modal" data-bs-target="#emailModal" onclick="prepareIndividualMail({{ $subscriber->id }}, '{{ $subscriber->email }}')">

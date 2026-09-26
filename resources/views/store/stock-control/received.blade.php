@@ -39,7 +39,7 @@
                             <td class="text-end fw-bold text-success">
                                 ${{ number_format($req->total_amount, 2) }}
                             </td>
-                            <td>{{ $req->updated_at->format('d M Y, h:i A') }}</td>
+                            <td>{{ $req->updated_at->storeTime()->format('d M Y, h:i A') }}</td>
                             <td class="text-center">
                                 <a href="{{ route('store.stock-control.requests.receive', $req->id) }}" class="btn btn-sm btn-success">
                                     <i class="mdi mdi-check-circle me-1"></i> Confirm Receipt
