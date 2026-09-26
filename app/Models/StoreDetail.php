@@ -47,6 +47,11 @@ class StoreDetail extends Model
             : 'SWF - ' . $name;
     }
 
+    public function group()
+    {
+        return $this->belongsTo(StoreGroup::class, 'store_group_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(StoreUser::class, 'store_user_id');

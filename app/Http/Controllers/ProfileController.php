@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -19,21 +21,24 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        try {
-            $request->validate([
-                'name'  => ['required', 'string', 'max:255'],
-                'email' => ['required', 'email'],
-                'phone' => ['nullable', 'string', 'max:20'],
+        $user = Auth::user();
+
+        if (! $user) {
+            return back()->withErrors([
+                'general' => 'User not authenticated.',
             ]);
+        }
 
-            $user = Auth::user();
+        // Outside the try below: it used to swallow validation errors into a
+        // generic "Something went wrong". Email must stay unique, same rule
+        // as the Staff screen (client PDF 9/21, Store item 1).
+        $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', Rule::unique('store_users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ]);
 
-            if (! $user) {
-                return back()->withErrors([
-                    'general' => 'User not authenticated.',
-                ]);
-            }
-
+        try {
             $user->update([
                 'name'  => $request->name,
                 'email' => $request->email,
@@ -46,6 +51,38 @@ class ProfileController extends Controller
                 'general' => 'Something went wrong while updating profile.',
             ]);
         }
+    }
+
+    /** Upload or replace the signed-in user's profile photo (client PDF 9/22, Store item 1). */
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+        ]);
+
+        $user = Auth::user();
+        $old = $user->profile_photo;
+
+        $user->update(['profile_photo' => $request->file('photo')->store('staff-photos', 'r2')]);
+
+        if ($old && Storage::disk('r2')->exists($old)) {
+            Storage::disk('r2')->delete($old);
+        }
+
+        return back()->with('success', 'Profile photo updated.');
+    }
+
+    /** Remove the photo; the avatar falls back to the user's initials. */
+    public function removePhoto()
+    {
+        $user = Auth::user();
+
+        if ($user->profile_photo && Storage::disk('r2')->exists($user->profile_photo)) {
+            Storage::disk('r2')->delete($user->profile_photo);
+        }
+        $user->update(['profile_photo' => null]);
+
+        return back()->with('success', 'Profile photo removed.');
     }
 
     public function updatePassword(Request $request)

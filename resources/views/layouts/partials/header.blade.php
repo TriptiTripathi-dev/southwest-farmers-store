@@ -48,11 +48,13 @@
                 </li>
                 @endif
                 <li class="ms-2 d-flex align-items-center">
-                    @if(!$isWebsiteManager && auth()->user()->hasRole('Super Admin'))
-                        @php
-                            $switchableStores = \App\Models\StoreDetail::where('is_active', true)->orderBy('store_name')->get();
-                            $activeStoreId = auth()->user()->store_id;
-                        @endphp
+                    @php
+                        // Super Admins: every store. Staff with a Store Group (e.g. a
+                        // Regional Manager): that group's stores. Everyone else: none.
+                        $switchableStores = $isWebsiteManager ? collect() : auth()->user()->switchableStores();
+                        $activeStoreId = auth()->user()->store_id;
+                    @endphp
+                    @if($switchableStores->count() > 1 || session()->has('active_store_id'))
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light border dropdown-toggle fw-black text-dark text-uppercase tracking-wide d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 14px;">
                                 @if($hasTextLogo)
@@ -232,7 +234,7 @@
                 {{-- USER PROFILE --}}
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
-                        <img src="{{ asset('assets/images/users/profile.jpg') }}" alt="User" height="22">
+                        <x-user-avatar :user="auth()->user()" :size="32" />
                     </a>
 
                     <div class="dropdown-menu dropdown-menu-end profile-dropdown">

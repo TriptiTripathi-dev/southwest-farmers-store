@@ -100,6 +100,10 @@ Route::middleware('auth')->group(function () {
         ->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])
         ->name('profile.password');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])
+        ->name('profile.photo');
+    Route::delete('/profile/photo', [ProfileController::class, 'removePhoto'])
+        ->name('profile.photo.remove');
     Route::get('/my-store', [StoreProfileController::class, 'index'])
         ->name('store.index');
     Route::get('/store/edit/{store}', [StoreProfileController::class, 'edit'])

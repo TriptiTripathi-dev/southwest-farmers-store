@@ -28,6 +28,8 @@ class StoreUser extends Authenticatable
         'is_active',
         'is_website_manager', // New field for Website Manager role
         'staff_code',      // Unique per-employee code used to clock in/out
+        'profile_photo',   // Personal photo (R2 path); 'profile' holds the store logo
+        'store_group_id',  // Multi-location access, e.g. a Regional Manager (client PDF 9/22, item 6)
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -61,6 +63,37 @@ class StoreUser extends Authenticatable
         }
 
         return $value;
+    }
+
+    public function storeGroup()
+    {
+        return $this->belongsTo(StoreGroup::class, 'store_group_id');
+    }
+
+    /**
+     * Locations this user may switch between from the header: every active
+     * store for a Super Admin, the active stores of their group for anyone
+     * assigned a Store Group, otherwise none (single-location staff).
+     */
+    public function switchableStores()
+    {
+        if ($this->hasRole('Super Admin')) {
+            return StoreDetail::where('is_active', true)->orderBy('store_name')->get();
+        }
+
+        if ($this->store_group_id) {
+            return StoreDetail::where('is_active', true)
+                ->where('store_group_id', $this->store_group_id)
+                ->orderBy('store_name')
+                ->get();
+        }
+
+        return collect();
+    }
+
+    public function canSwitchToStore(int $storeId): bool
+    {
+        return $this->switchableStores()->contains('id', $storeId);
     }
 
     public function timeLogs()
@@ -122,5 +155,24 @@ class StoreUser extends Authenticatable
     public function isAdmin()
     {
         return $this->email === 'admin@store.com';
+    }
+
+    /** Public URL of the uploaded profile photo, or null to fall back to initials. */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        return $this->profile_photo ? \Illuminate\Support\Facades\Storage::disk('r2')->url($this->profile_photo) : null;
+    }
+
+    /** "Eric Odom" -> "EO", "Cashier" -> "C". */
+    public function getInitialsAttribute(): string
+    {
+        $words = preg_split('/\s+/', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY);
+        if (! $words) {
+            return '?';
+        }
+        $first = mb_substr($words[0], 0, 1);
+        $last = count($words) > 1 ? mb_substr(end($words), 0, 1) : '';
+
+        return mb_strtoupper($first . $last);
     }
 }

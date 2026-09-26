@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\StoreDetail;
+use App\Models\StoreGroup;
 use App\Models\StoreNotification;
 use App\Models\StoreUser;
 use App\Models\StoreRole;
@@ -99,8 +100,9 @@ class StaffController extends Controller
         // belongs to; everyone else keeps the existing behavior of the new
         // staff member silently inheriting the creating admin's own store.
         $locations = $isSuperAdmin ? StoreDetail::where('is_active', true)->orderBy('store_name')->get() : collect();
+        $storeGroups = $isSuperAdmin ? $this->storeGroupsWithStores() : collect();
 
-        return view('staff.create', compact('roles', 'locations', 'isSuperAdmin'));
+        return view('staff.create', compact('roles', 'locations', 'storeGroups', 'isSuperAdmin'));
     }
 
     public function store(Request $request)
@@ -112,7 +114,7 @@ class StaffController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role_ids' => 'required|array|min:1',
             'role_ids.*' => 'exists:store_roles,id',
-            'store_id' => 'nullable|exists:store_details,id',
+            'store_id' => ['nullable', 'regex:/^(group:)?\d+$/'],
         ]);
 
         $currentUser = Auth::user();
@@ -128,8 +130,9 @@ class StaffController extends Controller
             DB::beginTransaction();
 
             $targetStoreId = $currentUser->store_id;
+            $targetGroupId = null;
             if ($currentUser->hasRole('Super Admin') && $request->filled('store_id')) {
-                $targetStoreId = $request->store_id;
+                [$targetStoreId, $targetGroupId] = $this->resolveLocation($request->store_id, $currentUser->store_id);
             }
 
             $staff = StoreUser::create([
@@ -138,6 +141,7 @@ class StaffController extends Controller
                 // matched index()'s `where('store_id', $currentUser->store_id)`
                 // filter and silently disappeared from the Store Staff list.
                 'store_id' => $targetStoreId,
+                'store_group_id' => $targetGroupId,
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -164,6 +168,9 @@ class StaffController extends Controller
 
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff member created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Error creating staff: ' . $e->getMessage());
@@ -187,8 +194,9 @@ class StaffController extends Controller
         }
 
         $locations = $isSuperAdmin ? StoreDetail::where('is_active', true)->orderBy('store_name')->get() : collect();
+        $storeGroups = $isSuperAdmin ? $this->storeGroupsWithStores() : collect();
 
-        return view('staff.edit', compact('staff', 'roles', 'currentRoleIds', 'locations', 'isSuperAdmin'));
+        return view('staff.edit', compact('staff', 'roles', 'currentRoleIds', 'locations', 'storeGroups', 'isSuperAdmin'));
     }
 
     public function update(Request $request, $id)
@@ -203,7 +211,7 @@ class StaffController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role_ids' => 'required|array|min:1',
             'role_ids.*' => 'exists:store_roles,id',
-            'store_id' => 'nullable|exists:store_details,id',
+            'store_id' => ['nullable', 'regex:/^(group:)?\d+$/'],
             'is_active' => 'sometimes'
         ]);
 
@@ -225,7 +233,7 @@ class StaffController extends Controller
             ];
 
             if ($currentUser->hasRole('Super Admin') && $request->filled('store_id')) {
-                $data['store_id'] = $request->store_id;
+                [$data['store_id'], $data['store_group_id']] = $this->resolveLocation($request->store_id, $staff->getRawOriginal('store_id'));
             }
 
             if ($request->filled('password')) {
@@ -238,6 +246,9 @@ class StaffController extends Controller
 
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Error updating staff: ' . $e->getMessage());
@@ -286,5 +297,48 @@ class StaffController extends Controller
         $staff->roles()->sync(
             collect($roleIds)->mapWithKeys(fn ($roleId) => [$roleId => ['model_type' => get_class($staff)]])->all()
         );
+    }
+
+    /** Active groups that have at least one active store, for the Location dropdown. */
+    private function storeGroupsWithStores()
+    {
+        return StoreGroup::where('is_active', true)
+            ->with(['stores' => fn ($q) => $q->where('is_active', true)->orderBy('store_name')])
+            ->orderBy('name')
+            ->get()
+            ->filter(fn ($g) => $g->stores->isNotEmpty())
+            ->values();
+    }
+
+    /**
+     * The Location dropdown holds either a store id or "group:<id>" (client
+     * PDF 9/22, item 6). A group gives multi-location access; the person
+     * still needs a home store, which stays their current one if it's in the
+     * group, otherwise becomes the group's first store.
+     *
+     * @return array{0:int,1:int|null} [store_id, store_group_id]
+     */
+    private function resolveLocation(string $value, $currentHomeStoreId): array
+    {
+        if (str_starts_with($value, 'group:')) {
+            $group = StoreGroup::where('is_active', true)->find((int) substr($value, 6));
+            $storeIds = $group ? $group->stores()->where('is_active', true)->orderBy('store_name')->pluck('id') : collect();
+
+            if ($storeIds->isEmpty()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'store_id' => 'That store group has no active stores.',
+                ]);
+            }
+
+            $home = $storeIds->contains((int) $currentHomeStoreId) ? (int) $currentHomeStoreId : $storeIds->first();
+
+            return [$home, $group->id];
+        }
+
+        if (! StoreDetail::whereKey((int) $value)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['store_id' => 'The selected location is invalid.']);
+        }
+
+        return [(int) $value, null];
     }
 }

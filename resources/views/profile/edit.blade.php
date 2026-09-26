@@ -10,13 +10,36 @@
     {{-- PROFILE CARD --}}
     <div class="card mb-4">
         <div class="card-body d-flex align-items-center">
-            <img src="{{ asset('assets/images/users/profile.jpg') }}"
-                 class="rounded-circle me-3"
-                 width="80" height="80">
+            <x-user-avatar :user="$user" :size="80" class="me-3 flex-shrink-0" />
 
-            <div>
+            <div class="flex-grow-1">
                 <h4 class="mb-0 text-dark">{{ $user->name }}</h4>
-                <p class="text-muted mb-0">{{ $user->email }}</p>
+                <p class="text-muted mb-2">{{ $user->email }}</p>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <form method="POST" action="{{ route('profile.photo') }}" enctype="multipart/form-data" id="profilePhotoForm">
+                        @csrf
+                        <label class="btn btn-sm btn-outline-primary mb-0">
+                            <i class="mdi mdi-camera me-1"></i> {{ $user->profile_photo ? 'Change Photo' : 'Upload Photo' }}
+                            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" class="d-none"
+                                   onchange="this.form.submit()">
+                        </label>
+                    </form>
+                    @if ($user->profile_photo)
+                        <form method="POST" action="{{ route('profile.photo.remove') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete me-1"></i> Remove</button>
+                        </form>
+                    @endif
+                    <small class="text-muted">JPG, PNG or WEBP, up to 5 MB. Without a photo your initials are shown.</small>
+                </div>
+                @error('photo')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+                @error('email')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
             </div>
         </div>
     </div>

@@ -106,18 +106,30 @@
                                             <span class="input-group-text bg-light border-end-0">
                                                 <i class="mdi mdi-map-marker text-muted"></i>
                                             </span>
+                                            @php $selectedLocation = (string) old('store_id', ''); @endphp
                                             <select name="store_id" class="form-select border-start-0 @error('store_id') is-invalid @enderror">
-                                                @foreach ($locations as $location)
-                                                    <option value="{{ $location->id }}" {{ old('store_id') == $location->id ? 'selected' : '' }}>
-                                                        {{ $location->store_name }}
-                                                    </option>
-                                                @endforeach
+                                                <optgroup label="Single Location">
+                                                    @foreach ($locations as $location)
+                                                        <option value="{{ $location->id }}" {{ $selectedLocation === (string) $location->id ? 'selected' : '' }}>
+                                                            {{ $location->store_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                                @if ($storeGroups->isNotEmpty())
+                                                    <optgroup label="Store Groups (multi-location, e.g. Regional Manager)">
+                                                        @foreach ($storeGroups as $group)
+                                                            <option value="group:{{ $group->id }}" {{ $selectedLocation === 'group:' . $group->id ? 'selected' : '' }}>
+                                                                {{ $group->name }} ({{ $group->stores->pluck('store_name')->join(', ') }})
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             </select>
                                         </div>
                                         @error('store_id')
                                             <div class="text-danger small mt-1">{{ $message }}</div>
                                         @enderror
-                                        <small class="text-muted">Which store location this staff member belongs to</small>
+                                        <small class="text-muted">A single store, or a Store Group to let this person (e.g. a Regional Manager) switch between all of the group's stores. Groups are set up on the Warehouse side under Stores &rarr; Store Groups.</small>
                                     </div>
                                     @endif
 
