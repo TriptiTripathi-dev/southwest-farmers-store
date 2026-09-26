@@ -41,12 +41,15 @@ return [
             'transport' => 'smtp',
             'scheme' => null,
             'url' => null,
-            'host' => 'smtp.sendgrid.net',
-            'port' => 587,
-            'username' => 'apikey',
-            'password' => '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',
-            'encryption' => 'tls',
-            'timeout' => null,
+            'host' => env('MAIL_HOST', 'smtp.sendgrid.net'),
+            'port' => env('MAIL_PORT', 587),
+            'username' => env('MAIL_USERNAME', 'apikey'),
+            // Never commit the key: set MAIL_PASSWORD in the environment (Railway).
+            // The key that used to be hard-coded here was published in this public
+            // repo and has been revoked by SendGrid.
+            'password' => env('MAIL_PASSWORD'),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            'timeout' => env('MAIL_TIMEOUT', 20),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
