@@ -47,7 +47,12 @@
                 {{-- INVENTORY --}}
                 @if ($can('view_inventory') || $can('request_stock') || $can('adjust_stock') || $can('view_transfers') || $can('view_audits'))
                                     @php
-                    $isInventoryActive = request()->is('inventory*') || request()->is('transfers*') || request()->routeIs('store.audits.*') || request()->routeIs('store.inventory.*');
+                    // By route name, not URL: the Warehouse Orders pages live under
+                    // /inventory/po, /inventory/order and /inventory/requests, so
+                    // is('inventory*') opened this section for them (QA: "clicking
+                    // scheduled POs still expands Inventory control") while missing
+                    // this section's own pages at /stocks and /kitchen-inventory.
+                    $isInventoryActive = request()->routeIs('inventory.index', 'inventory.adjustments', 'inventory.history', 'kitchen-inventory.*', 'transfers.*', 'store.audits.*', 'store.inventory.*');
                     @endphp
                     <li class="menuitem-{{ $isInventoryActive ? 'active' : '' }} {{ $isInventoryActive ? 'show' : '' }}">
                     <a href="#sidebarInventory" data-bs-toggle="collapse"
@@ -119,7 +124,7 @@
                 {{-- WAREHOUSE ORDERS (PO) --}}
                 @if ($can('request_stock') || $can('view_inventory'))
                 @php
-                $isWarehouseOrdersActive = request()->is('inventory/requests*') || request()->is('inventory/order*') || request()->is('store/purchase-orders*') || request()->is('store/orders*');
+                $isWarehouseOrdersActive = request()->routeIs('inventory.requests', 'inventory.requests.*', 'inventory.order.*', 'inventory.po.*', 'store.orders.*');
                 @endphp
                 <li class="menuitem-{{ $isWarehouseOrdersActive ? 'active' : '' }} {{ $isWarehouseOrdersActive ? 'show' : '' }}">
                     <a href="#sidebarWarehouseOrders" data-bs-toggle="collapse"
