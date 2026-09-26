@@ -53,6 +53,7 @@ class CheckCashierRole
                 'store.sales.payment-cancel',
                 'store.sales.manual-print',
                 'store.sales.search',
+                'store.sales.search.alias', // /pos/search, same product search
                 'store.notifications.read',
                 'store.notifications.readAll',
                 'store.notifications.index',

@@ -113,7 +113,9 @@ Route::middleware('auth')->group(function () {
         ->name('store.update');
     Route::get('/pos', [StoreSalesController::class, 'index'])->name('store.sales.pos');
     Route::get('/pos/customer-display', [StoreSalesController::class, 'customerDisplay'])->name('store.sales.customer-display');
-    Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
+    // Both URLs stay. Route names must be unique for `php artisan route:cache`; route('store.sales.search')
+    // already resolved to /pos/search-products (the last one registered), so that name stays there.
+    Route::get('/pos/search', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search.alias');
     Route::get('/pos/search-products', [StoreSalesController::class, 'searchProduct'])->name('store.sales.search');
     // Notifications
     Route::get('/notifications', [StoreNotificationController::class, 'index'])->name('store.notifications.index');

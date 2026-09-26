@@ -68,4 +68,46 @@ class RoutesResolveTest extends TestCase
 
         $this->assertSame([], $unrouted, "Controllers with no route pointing at them (dead or forgotten):\n" . implode("\n", $unrouted));
     }
+
+    public function test_route_names_are_unique_so_the_routes_can_be_cached(): void
+    {
+        // The Dockerfile runs `php artisan route:cache` at startup; it refuses
+        // two routes with one name (and the deploy then falls back to no caches).
+        $names = collect(Route::getRoutes())->map(fn ($route) => $route->getName())->filter();
+        $duplicates = $names->countBy()->filter(fn ($count) => $count > 1)->keys()->all();
+
+        $this->assertSame([], $duplicates, 'Route names used more than once: ' . implode(', ', $duplicates));
+        Route::getRoutes()->toSymfonyRouteCollection(); // what route:cache does; throws on a duplicate name
+    }
+
+    public function test_pos_product_search_keeps_both_urls(): void
+    {
+        $this->assertSame(url('/pos/search-products'), route('store.sales.search'));
+        $this->assertSame(url('/pos/search'), route('store.sales.search.alias'));
+
+        foreach (['/pos/search', '/pos/search-products'] as $uri) {
+            $route = Route::getRoutes()->match(\Illuminate\Http\Request::create($uri));
+            $this->assertSame(\App\Http\Controllers\Store\StoreSalesController::class . '@searchProduct', $route->getActionName(), $uri);
+        }
+    }
+
+    public function test_a_cashier_can_use_both_pos_search_urls(): void
+    {
+        $cashier = \Mockery::mock(\App\Models\StoreUser::class)->makePartial();
+        $cashier->shouldReceive('hasRole')->with('Cashier')->andReturn(true);
+        \Illuminate\Support\Facades\Auth::shouldReceive('user')->andReturn($cashier);
+
+        $through = function (string $uri) {
+            $request = \Illuminate\Http\Request::create($uri);
+            $route = Route::getRoutes()->match($request);
+            $request->setRouteResolver(fn () => $route);
+
+            return (new \App\Http\Middleware\CheckCashierRole())->handle($request, fn () => response('passed'));
+        };
+
+        $this->assertSame('passed', $through('/pos/search')->getContent());
+        $this->assertSame('passed', $through('/pos/search-products')->getContent());
+        // Still restricted everywhere else.
+        $this->assertTrue($through('/store/dashboard')->isRedirect(route('store.sales.pos')));
+    }
 }
