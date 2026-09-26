@@ -159,4 +159,31 @@ class StoreSupportTicketController extends Controller
 
         return back()->with('success', 'Reply sent successfully.');
     }
+
+    /**
+     * The store closes its own ticket once the issue is sorted (QA: "Ticket
+     * still not getting closed" -- the store side had no way to close one).
+     * The warehouse can reopen it from its side if needed.
+     */
+    public function close($id)
+    {
+        $ticket = SupportTicket::forStore(Auth::user()->store_id)->findOrFail($id);
+
+        if ($ticket->status !== 'closed') {
+            $old = $ticket->status;
+            $ticket->update(['status' => 'closed', 'closed_at' => now()]);
+
+            \Illuminate\Support\Facades\DB::table('support_status_logs')->insert([
+                'ticket_id' => $ticket->id,
+                'old_status' => $old,
+                'new_status' => 'closed',
+                'changed_by_id' => Auth::id(),
+                'changed_by_type' => get_class(Auth::user()),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return back()->with('success', "Ticket #{$ticket->ticket_number} closed.");
+    }
 }

@@ -144,10 +144,17 @@
                                 </button>
                             </div>
                         </form>
+                        <form action="{{ route('store.support.close', $ticket->id) }}" method="POST" class="mt-3 text-end"
+                              onsubmit="return confirm('Close this ticket? Raise a new ticket if the issue comes back.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="mdi mdi-lock-check me-1"></i> Close Ticket (issue resolved)
+                            </button>
+                        </form>
                     </div>
                     @else
                     <div class="card-footer bg-light text-center py-4">
-                        <span class="text-muted fw-medium"><i class="mdi mdi-lock me-1"></i> This ticket is closed. You cannot reply.</span>
+                        <span class="text-muted fw-medium"><i class="mdi mdi-lock me-1"></i> This ticket is closed.</span>
                     </div>
                     @endif
                 </div>

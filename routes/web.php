@@ -312,6 +312,7 @@ Route::middleware('auth')->group(function () {
                 Route::post('/', 'store')->name('store');
                 Route::get('/{id}', 'show')->name('show');
                 Route::post('/{id}/reply', 'reply')->name('reply');
+                Route::post('/{id}/close', 'close')->name('close');
             });
 
 
