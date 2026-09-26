@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Fitx Admin Panel" name="description" />
-    <link rel="icon" href="{{ asset('logo.png') }}?v={{ time() }}" type="image/png">
+    <link rel="icon" href="{{ $appFavicon['url'] }}?v={{ $appFavicon['v'] }}" type="{{ $appFavicon['type'] }}">
 
     @include('layouts.common.styles-lib')
     @stack('styles-lib')

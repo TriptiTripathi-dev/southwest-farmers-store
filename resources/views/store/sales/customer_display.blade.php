@@ -210,7 +210,7 @@
             transform: translate(-50%, -50%);
             width: 320px;
             height: 320px;
-            background-image: url('{{ asset("logo.png") }}');
+            background-image: url('{{ $brandLogo ?? asset("logo.png") }}');
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
@@ -375,7 +375,7 @@
     <!-- Header Section -->
     <header class="glass-panel m-3 mt-3 mb-0">
         <div class="store-logo">
-            <img src="{{ asset('assets/images/swfm-text-logo.png') }}" alt="{{ $store->store_name ?? 'Southwest Farmers Market' }}" style="height: 52px; max-height: 52px; width: auto; object-fit: contain;">
+            <img src="{{ $brandLogo ?? asset('assets/images/swfm-text-logo.png') }}" alt="{{ $store->store_name ?? 'Southwest Farmers Market' }}" style="height: 52px; max-height: 52px; width: auto; object-fit: contain;">
         </div>
         <div class="welcome-text">
             <span>Welcome! We appreciate your business.</span>

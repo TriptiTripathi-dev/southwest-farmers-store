@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }}</title>
     <meta name="description" content="Southwest Farmers – Fresh Groceries & Organic Products delivered at your doorstep.">
-    <link rel="icon" href="{{ asset('logo.png') }}?v={{ time() }}" type="image/png">
+    <link rel="icon" href="{{ $appFavicon['url'] }}?v={{ $appFavicon['v'] }}" type="{{ $appFavicon['type'] }}">
 
     {{-- Bootstrap 5 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">

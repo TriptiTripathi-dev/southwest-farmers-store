@@ -27,6 +27,30 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Favicon: the one uploaded under Settings > General Settings, falling
+        // back to public/logo.png (QA: "Store side favicon" -- the layouts
+        // ignored the uploaded favicon and always used the hard-coded file).
+        View::composer(['layouts.app', 'layouts.guest', 'components.website-layout'], function ($view) {
+            static $favicon = null;
+            if ($favicon === null) {
+                $favicon = ['url' => asset('logo.png'), 'type' => 'image/jpeg', 'v' => filemtime(public_path('logo.png')) ?: 1];
+                try {
+                    $settings = \App\Models\StoreSetting::first();
+                    if ($settings && $settings->favicon) {
+                        $ext = strtolower(pathinfo($settings->favicon, PATHINFO_EXTENSION));
+                        $favicon = [
+                            'url' => \Illuminate\Support\Facades\Storage::disk('r2')->url($settings->favicon),
+                            'type' => match ($ext) { 'png' => 'image/png', 'ico' => 'image/x-icon', 'svg' => 'image/svg+xml', 'webp' => 'image/webp', default => 'image/jpeg' },
+                            'v' => optional($settings->updated_at)->timestamp ?? 1,
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    // keep the fallback
+                }
+            }
+            $view->with('appFavicon', $favicon);
+        });
+
         // UTC timestamp -> store local time, for display only (client PDF
         // 9/22, Store item 5: an order placed at 11:23am showed 04:23 PM).
         $storeTime = function () {

@@ -1003,6 +1003,13 @@ class StoreSalesController extends Controller
         $storeId = Auth::user()->store_id;
         $store = $storeId ? StoreDetail::find($storeId) : null;
         $posSettings = \App\Models\QuickPosSetting::first();
-        return view('store.sales.customer_display', compact('store', 'posSettings'));
+
+        // The logo uploaded under Settings > General Settings (the one in the
+        // sidebar), so the customer display updates with it (QA: "Customer
+        // display/logo still not updated on store side" -- it used fixed files).
+        $settings = \App\Models\StoreSetting::first();
+        $brandLogo = $settings && $settings->logo ? \Illuminate\Support\Facades\Storage::disk('r2')->url($settings->logo) : null;
+
+        return view('store.sales.customer_display', compact('store', 'posSettings', 'brandLogo'));
     }
 }
