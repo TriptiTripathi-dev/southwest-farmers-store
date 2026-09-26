@@ -206,7 +206,7 @@
 
                             @if(request('status', 'pending') == 'pending')
                                 <td class="text-center fw-bold">{{ $request->total_items ?? $request->items->count() }} Items</td>
-                                <td>{{ $request->created_at->format('d M Y') }}</td>
+                                <td>{{ $request->created_at->storeTime()->format('d M Y') }}</td>
                                 <td class="text-center">
                                     @if($request->reviewed)
                                         <i class="mdi mdi-checkbox-marked-circle text-success fs-4" title="Reviewed by {{ $request->reviewedBy->name ?? 'N/A' }}"></i>
@@ -217,7 +217,9 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    @if($request->status == 'awaiting_approval')
+                                    @if($request->status == 'draft')
+                                        <span class="badge bg-secondary">Draft</span>
+                                    @elseif($request->status == 'awaiting_approval')
                                         <span class="badge bg-danger">Awaiting Approval</span>
                                     @else
                                         <span class="badge bg-warning text-dark">Pending</span>
@@ -237,7 +239,7 @@
                                 <div class="card border border-primary border-opacity-25 shadow-sm mb-0">
                                     <div class="card-header bg-primary bg-opacity-10 py-2">
                                         <h6 class="mb-0 fw-bold text-primary small">
-                                            <i class="mdi mdi-domain me-1"></i> Department Orders Placed on {{ $request->created_at->format('d M Y') }}
+                                            <i class="mdi mdi-domain me-1"></i> Department Orders Placed on {{ $request->created_at->storeTime()->format('d M Y') }}
                                         </h6>
                                     </div>
                                     <div class="card-body p-0">
@@ -265,7 +267,7 @@
                                                     <td class="ps-3 font-monospace fw-bold text-primary">{{ $deptOrder->request_number }}</td>
                                                     <td><span class="badge bg-white text-dark border fw-bold">{{ $deptOrder->department->name ?? 'N/A' }}</span></td>
                                                     <td class="text-center fw-bold">{{ $deptOrder->items->count() }} Items</td>
-                                                    <td>{{ $deptOrder->created_at->format('d M Y') }}</td>
+                                                    <td>{{ $deptOrder->created_at->storeTime()->format('d M Y') }}</td>
                                                     <td class="text-center">
                                                         @if($deptOrder->reviewed)
                                                             <i class="mdi mdi-checkbox-marked-circle text-success fs-5" title="Reviewed by {{ $deptOrder->reviewedBy->name ?? 'N/A' }}"></i>
@@ -274,7 +276,9 @@
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
-                                                        @if($deptOrder->status == 'awaiting_approval')
+                                                        @if($deptOrder->status == 'draft')
+                                        <span class="badge bg-secondary">Draft</span>
+                                    @elseif($deptOrder->status == 'awaiting_approval')
                                                             <span class="badge bg-danger">Awaiting Approval</span>
                                                         @else
                                                             <span class="badge bg-warning text-dark">Pending</span>
@@ -294,7 +298,7 @@
 
                             @elseif(request('status') == 'in_transit')
                                 <td class="text-center fw-bold">{{ $request->received_qty ?? 0 }} / {{ $request->total_items ?? $request->items->count() }}</td>
-                                <td>{{ $request->received_at ? $request->received_at->format('d M Y') : '---' }}</td>
+                                <td>{{ $request->received_at ? $request->received_at->storeTime()->format('d M Y') : '---' }}</td>
                                 <td>{{ $request->received_by_name ?? '---' }}</td>
                                 <td class="text-center">
                                     @if($request->receiving_progress == 'received')
@@ -313,7 +317,7 @@
 
                             @else
                                 <td class="text-center fw-bold">{{ $request->total_items ?? $request->items->count() }} Items</td>
-                                <td>{{ $request->created_at->format('d M Y') }}</td>
+                                <td>{{ $request->created_at->storeTime()->format('d M Y') }}</td>
                                 <td>{{ $request->received_by_name ?? '---' }}</td>
                                 <td class="text-center">
                                     @if($request->status == 'completed')

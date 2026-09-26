@@ -127,7 +127,7 @@
                                                 <i class="mdi mdi-check-decagram text-success me-2 fs-4"></i>
                                                 <div>
                                                     <div class="fw-bold text-dark">{{ $stockRequest->reviewedBy->name ?? 'N/A' }}</div>
-                                                    <small class="text-muted">{{ $stockRequest->reviewed_at->format('d M Y, h:i A') }}</small>
+                                                    <small class="text-muted">{{ $stockRequest->reviewed_at->storeTime()->format('d M Y, h:i A') }}</small>
                                                 </div>
                                             </div>
                                         @else
@@ -141,7 +141,7 @@
                                                 <i class="mdi mdi-shield-check text-primary me-2 fs-4"></i>
                                                 <div>
                                                     <div class="fw-bold text-dark">{{ $stockRequest->approvedBy->name ?? 'N/A' }}</div>
-                                                    <small class="text-muted">{{ $stockRequest->approved_at->format('d M Y, h:i A') }}</small>
+                                                    <small class="text-muted">{{ $stockRequest->approved_at->storeTime()->format('d M Y, h:i A') }}</small>
                                                 </div>
                                             </div>
                                         @else
@@ -201,14 +201,14 @@
                                 <li class="mb-4 position-relative">
                                     <div class="position-absolute bg-primary rounded-circle" style="width: 12px; height: 12px; left: -26px; top: 5px;"></div>
                                     <h6 class="fw-bold mb-1">Order Placed</h6>
-                                    <small class="text-muted">{{ $stockRequest->created_at->format('M d, Y h:i A') }}</small>
+                                    <small class="text-muted">{{ $stockRequest->created_at->storeTime()->format('M d, Y h:i A') }}</small>
                                 </li>
 
                                 @if($stockRequest->reviewed)
                                 <li class="mb-4 position-relative">
                                     <div class="position-absolute bg-success rounded-circle" style="width: 12px; height: 12px; left: -26px; top: 5px;"></div>
                                     <h6 class="fw-bold mb-1">Reviewed</h6>
-                                    <small class="text-muted">{{ $stockRequest->reviewed_at->format('M d, Y h:i A') }}</small>
+                                    <small class="text-muted">{{ $stockRequest->reviewed_at->storeTime()->format('M d, Y h:i A') }}</small>
                                 </li>
                                 @endif
 
@@ -216,7 +216,7 @@
                                 <li class="mb-4 position-relative">
                                     <div class="position-absolute bg-info rounded-circle" style="width: 12px; height: 12px; left: -26px; top: 5px;"></div>
                                     <h6 class="fw-bold mb-1">Approved & Dispatched</h6>
-                                    <small class="text-muted">{{ $stockRequest->approved_at->format('M d, Y h:i A') }}</small>
+                                    <small class="text-muted">{{ $stockRequest->approved_at->storeTime()->format('M d, Y h:i A') }}</small>
                                 </li>
                                 @endif
 
@@ -224,7 +224,7 @@
                                 <li class="position-relative">
                                     <div class="position-absolute bg-success rounded-circle" style="width: 12px; height: 12px; left: -26px; top: 5px;"></div>
                                     <h6 class="fw-bold mb-1">Completed</h6>
-                                    <small class="text-muted">{{ $stockRequest->received_at ? $stockRequest->received_at->format('M d, Y h:i A') : 'Verified' }}</small>
+                                    <small class="text-muted">{{ $stockRequest->received_at ? $stockRequest->received_at->storeTime()->format('M d, Y h:i A') : 'Verified' }}</small>
                                 </li>
                                 @endif
                             </ul>

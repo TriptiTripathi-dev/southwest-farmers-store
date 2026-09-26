@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StoreStock;
 use App\Models\ProductCategory;
 use App\Models\StockRequest;
+use App\Models\StockRequestItem;
 use App\Models\ProductBatch;
 use App\Models\StockTransaction;
 use App\Models\StockAdjustment;
@@ -292,7 +293,7 @@ class StoreInventoryController extends Controller
         }
 
         if ($date) {
-            $query->whereDate('created_at', $date);
+            $query->whereBetween('created_at', $this->storeDayRange($date));
         }
 
         if ($status === 'history') {
@@ -306,13 +307,13 @@ class StoreInventoryController extends Controller
                 $query->where('receiving_progress', $progress);
             }
         } else {
-            // Pending / Inventory Request
-            $query->whereIn('status', [StockRequest::STATUS_PENDING, StockRequest::STATUS_AWAITING_APPROVAL]);
+            // Pending / Inventory Request (drafts live here too, until reviewed)
+            $query->whereIn('status', [StockRequest::STATUS_DRAFT, StockRequest::STATUS_PENDING, StockRequest::STATUS_AWAITING_APPROVAL]);
         }
 
         $requests = $query->latest()->paginate(15)->appends($request->query());
 
-        $pendingCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['pending', 'awaiting_approval'])->count();
+        $pendingCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['draft', 'pending', 'awaiting_approval'])->count();
         $inTransitCount = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->count();
         $completedCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['completed', 'rejected'])->count();
 
@@ -374,7 +375,7 @@ class StoreInventoryController extends Controller
         // Requirement: Only 1 order per department per day
         $exists = StockRequest::where('store_id', $storeId)
             ->where('department_id', $request->department_id)
-            ->whereDate('created_at', now())
+            ->whereBetween('created_at', $this->storeDayRange(now(config('app.display_timezone'))->toDateString()))
             ->exists();
 
         if ($exists) {
@@ -383,34 +384,46 @@ class StoreInventoryController extends Controller
 
         $firstProductId = $request->products[0]['product_id'] ?? null;
         $totalRequestedQty = array_sum(array_column($request->products, 'quantity'));
+        $isDraft = $request->input('status') === StockRequest::STATUS_DRAFT;
 
-        $stockRequest = StockRequest::create([
-            'store_id' => $storeId,
-            'request_number' => StockRequest::generateRequestNumber($storeId),
-            'department_id' => $request->department_id,
-            'product_id' => $firstProductId,
-            'requested_quantity' => $totalRequestedQty,
-            'gm_email' => $request->gm_email,
-            'gm_phone' => $request->gm_phone,
-            'vp_email' => $request->vp_email,
-            'vp_phone' => $request->vp_phone,
-            'store_remarks' => $request->remarks,
-            'requested_by' => $user->id,
-            'status' => StockRequest::STATUS_PENDING,
-        ]);
-
-        foreach ($request->products as $item) {
-            $product = Product::find($item['product_id']);
-            StockRequestItem::create([
-                'stock_request_id' => $stockRequest->id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'unit_cost' => $product->cost_price ?? 0,
-                'total_cost' => ($product->cost_price ?? 0) * $item['quantity'],
+        // Header and lines are saved together: previously a failure on the
+        // lines (see the missing StockRequestItem import) still left the
+        // header behind, which is why requests showed up with 0 items.
+        DB::transaction(function () use ($request, $user, $storeId, $firstProductId, $totalRequestedQty, $isDraft) {
+            $stockRequest = StockRequest::create([
+                'store_id' => $storeId,
+                'request_number' => StockRequest::generateRequestNumber($storeId),
+                'department_id' => $request->department_id,
+                'product_id' => $firstProductId,
+                'requested_quantity' => $totalRequestedQty,
+                'gm_email' => $request->gm_email,
+                'gm_phone' => $request->gm_phone,
+                'vp_email' => $request->vp_email,
+                'vp_phone' => $request->vp_phone,
+                'store_remarks' => $request->remarks,
+                'requested_by' => $user->id,
+                // A draft stays on the store side -- the warehouse queue only
+                // picks up pending / awaiting_approval requests.
+                'status' => $isDraft ? StockRequest::STATUS_DRAFT : StockRequest::STATUS_PENDING,
             ]);
-        }
 
-        $stockRequest->calculateTotals();
+            foreach ($request->products as $item) {
+                $product = Product::find($item['product_id']);
+                StockRequestItem::create([
+                    'stock_request_id' => $stockRequest->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $product->cost_price ?? 0,
+                    'total_cost' => ($product->cost_price ?? 0) * $item['quantity'],
+                ]);
+            }
+
+            $stockRequest->calculateTotals();
+        });
+
+        if ($isDraft) {
+            return redirect()->route('inventory.requests')->with('success', 'Request saved as a draft. Click "Mark Review" when it is ready to send to the warehouse.');
+        }
 
         return redirect()->route('inventory.requests')->with('success', 'Order Inventory request created successfully. Please review and mark as Reviewed.');
     }
@@ -575,7 +588,7 @@ class StoreInventoryController extends Controller
         $stockRequest = StockRequest::where('id', $id)
             ->where('store_id', $user->store_id ?? $user->id)
             ->firstOrFail();
-        if ($stockRequest->status == 'pending') {
+        if (in_array($stockRequest->status, [StockRequest::STATUS_DRAFT, StockRequest::STATUS_PENDING], true)) {
             $stockRequest->delete();
             return back()->with('success', 'Stock request cancelled successfully.');
         }
@@ -873,5 +886,17 @@ class StoreInventoryController extends Controller
         });
 
         return back()->with('success', 'Weight conversion completed successfully.');
+    }
+
+    /**
+     * A calendar day in store local time, as the UTC range timestamps are
+     * stored in -- whereDate() on its own compares against the UTC date,
+     * which rolls over at 7pm Central.
+     */
+    private function storeDayRange(string $date): array
+    {
+        $start = Carbon::parse($date, config('app.display_timezone'))->startOfDay();
+
+        return [$start->copy()->utc(), $start->copy()->endOfDay()->utc()];
     }
 }

@@ -53,6 +53,7 @@ class StockRequest extends Model
     ];
 
     // Constants for Status
+    const STATUS_DRAFT = 'draft'; // saved on the store side, not yet sent to the warehouse
     const STATUS_PENDING = 'pending';
     const STATUS_AWAITING_APPROVAL = 'awaiting_approval'; // New status requested
     const STATUS_DISPATCHED = 'dispatched';
