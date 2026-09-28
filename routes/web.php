@@ -49,6 +49,20 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff', StaffController::class)->except(['show']);
     Route::post('/staff/update-status', [StaffController::class, 'updateStatus'])->name('staff.update-status');
 
+    // TEMPORARY (remove after the SendGrid check): /store/mail-test?to=someone@example.com
+    // sends one of every store email to that address (read-only), Super Admin only.
+    // The address comes from the URL each time; nothing is stored.
+    Route::get('/store/mail-test', function (\Illuminate\Http\Request $request) {
+        abort_unless($request->user()?->hasRole('Super Admin'), 403);
+        $to = (string) $request->query('to', '');
+        if (! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return response('Add ?to=your@email.com to the URL.', 422);
+        }
+        set_time_limit(180);
+        \Illuminate\Support\Facades\Artisan::call('mail:send-samples', ['to' => $to]);
+        return response('<pre>' . e(\Illuminate\Support\Facades\Artisan::output()) . '</pre>');
+    })->middleware('throttle:5,10');
+
     // Item 1: Super Admin location switching
     Route::post('/switch-location', [\App\Http\Controllers\Store\StoreLocationSwitchController::class, 'switch'])->name('store.switch-location');
     Route::post('/switch-location/reset', [\App\Http\Controllers\Store\StoreLocationSwitchController::class, 'reset'])->name('store.switch-location.reset');
