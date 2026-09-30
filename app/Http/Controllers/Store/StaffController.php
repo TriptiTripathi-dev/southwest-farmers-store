@@ -109,7 +109,7 @@ class StaffController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:store_users,email',
+            'email' => ['required', 'email', 'max:255', $this->emailNotInUse()],
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
             'role_ids' => 'required|array|min:1',
@@ -134,6 +134,8 @@ class StaffController extends Controller
             if ($currentUser->hasRole('Super Admin') && $request->filled('store_id')) {
                 [$targetStoreId, $targetGroupId] = $this->resolveLocation($request->store_id, $currentUser->store_id);
             }
+
+            $this->releaseEmailFromDeletedStaff($request->email);
 
             $staff = StoreUser::create([
                 'parent_id' => $currentUser->id,
@@ -206,7 +208,7 @@ class StaffController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:store_users,email,' . $id,
+            'email' => ['required', 'email', 'max:255', $this->emailNotInUse((int) $id)],
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8|confirmed',
             'role_ids' => 'required|array|min:1',
@@ -240,6 +242,7 @@ class StaffController extends Controller
                 $data['password'] = Hash::make($request->password);
             }
 
+            $this->releaseEmailFromDeletedStaff($request->email, $staff->id);
             $staff->update($data);
 
             $this->syncRoles($staff, $roleIds);
@@ -265,6 +268,9 @@ class StaffController extends Controller
         }
         $name = $staff->name;
 
+        // Free the address so it can be given to a new staff member later
+        // (store_users.email is unique across deleted rows too).
+        $staff->forceFill(['email' => $this->releasedEmail($staff)])->saveQuietly();
         $staff->delete();
         StoreNotification::create([
             'user_id' => Auth::id(),
@@ -275,6 +281,50 @@ class StaffController extends Controller
             'url' => route('staff.index'),
         ]);
         return redirect()->route('staff.index')->with('success', 'Staff deleted successfully.');
+    }
+
+    /**
+     * "Email already taken" used to be a dead end: the holder is often not on
+     * this Staff list (another store, the signed-in user, or deleted), so the
+     * message now says who has it. Deleted staff don't block the address.
+     */
+    private function emailNotInUse(?int $ignoreId = null): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) use ($ignoreId) {
+            $holder = StoreUser::with('store')
+                ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim((string) $value))])
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->first();
+
+            if (!$holder) {
+                return;
+            }
+            if ($holder->id === Auth::id()) {
+                $fail('This email is already used by your own login. Use a different email for this staff member.');
+                return;
+            }
+
+            $where = $holder->store_id === Auth::user()->store_id
+                ? 'at this store'
+                : 'at ' . ($holder->store->store_name ?? 'another location');
+            $fail("This email is already used by {$holder->name} ({$where}"
+                . ($holder->is_active ? '' : ', inactive') . '). Use a different email, or change theirs first.');
+        };
+    }
+
+    /** Give a deleted staff member's email back so it can be reused. */
+    private function releaseEmailFromDeletedStaff(string $email, ?int $exceptId = null): void
+    {
+        StoreUser::onlyTrashed()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))])
+            ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->get()
+            ->each(fn (StoreUser $old) => $old->forceFill(['email' => $this->releasedEmail($old)])->saveQuietly());
+    }
+
+    private function releasedEmail(StoreUser $user): string
+    {
+        return mb_substr("deleted-{$user->id}-{$user->email}", 0, 255);
     }
 
     /** @param int[] $roleIds */
