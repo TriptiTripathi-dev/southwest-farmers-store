@@ -65,6 +65,45 @@
             font-size: 28px;
         }
 
+        .brand-banner {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: min(460px, 55vw);
+        }
+
+        .brand-banner img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .brand-ribbon {
+            margin: 5px 6% 0;
+            padding: 3px 14px;
+            background: linear-gradient(180deg, #34a853 0%, #1e7e34 100%);
+            border: 2px solid #14532d;
+            border-radius: 3px;
+            clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+            color: #fff;
+            font-size: clamp(9px, 1.15vw, 13px);
+            font-weight: 800;
+            font-style: italic;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1.35;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5em;
+        }
+
+        .brand-ribbon .dot {
+            font-style: normal;
+            opacity: 0.85;
+        }
+
         .welcome-text {
             font-size: 15px;
             color: var(--text-secondary);
@@ -375,7 +414,14 @@
     <!-- Header Section -->
     <header class="glass-panel m-3 mt-3 mb-0">
         <div class="store-logo">
-            <img src="{{ $brandLogo ?? asset('assets/images/swfm-text-logo.png') }}" alt="{{ $store->store_name ?? 'Southwest Farmers Market' }}" style="height: 52px; max-height: 52px; width: auto; object-fit: contain;">
+            {{-- Wide banner (client request): name on top, department ribbon below.
+                 The uploaded round logo stays as the watermark in the summary card. --}}
+            <div class="brand-banner">
+                <img src="{{ asset('assets/images/swfm-text-logo-tight.png') }}" alt="Southwest Farmers Market">
+                <div class="brand-ribbon">
+                    <span>Fresh Fish</span><span class="dot">&bull;</span><span>Meat</span><span class="dot">&bull;</span><span>Produce</span><span class="dot">&bull;</span><span>Kitchen</span><span class="dot">&bull;</span><span>Bakery</span>
+                </div>
+            </div>
         </div>
         <div class="welcome-text">
             <span>Welcome! We appreciate your business.</span>
