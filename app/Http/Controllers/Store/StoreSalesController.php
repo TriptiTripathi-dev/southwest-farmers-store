@@ -752,7 +752,10 @@ class StoreSalesController extends Controller
                 Log::error('POS Hardware Integration Error @ Checkout', ['error' => $e->getMessage()]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Hardware Cloud Agent Exception: ' . $e->getMessage()
+                    // Agent/connection text helps the cashier; database text must not be shown.
+                    'message' => $e instanceof \Illuminate\Database\QueryException
+                        ? 'The sale could not be saved, so nothing was recorded. Please try again; if it keeps happening, contact support.'
+                        : 'Hardware Cloud Agent Exception: ' . $e->getMessage(),
                 ], 422);
             }
 
@@ -765,9 +768,18 @@ class StoreSalesController extends Controller
                 'invoice' => $invoiceNumber,
                 'message' => 'Sale completed successfully!' . ($posWarning ? " ($posWarning)" : '')
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+            Log::error('POS checkout failed', ['exception' => $e]);
+
+            // Plain \Exception carries a message meant for the cashier (e.g.
+            // "Insufficient stock for ..."); anything else is a system fault
+            // whose text (SQL, DB host) must not reach the screen.
+            $message = get_class($e) === \Exception::class
+                ? $e->getMessage()
+                : 'The sale could not be saved, so nothing was recorded. Please try again; if it keeps happening, contact support.';
+
+            return response()->json(['success' => false, 'message' => $message], 500);
         }
     }
 

@@ -8,6 +8,11 @@ class SaleItem extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        // Which batches the sold quantity came from: [{type, batch_id?, qty}].
+        'fulfillment_details' => 'array',
+    ];
+
     // This method was missing
     public function sale()
     {

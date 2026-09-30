@@ -373,6 +373,10 @@
             color: var(--accent-color);
         }
 
+        .overlay-icon.failed {
+            color: #dc3545;
+        }
+
         .overlay-icon.success {
             color: var(--success-color);
             animation: pulseSuccess 2s infinite;
@@ -489,6 +493,15 @@
         <div class="overlay-desc" id="paymentDesc">Please complete the transaction on the payment terminal.</div>
     </div>
 
+    <!-- Overlay Screen: Payment not completed (sale failed / declined / cancelled) -->
+    <div class="overlay-screen" id="failedOverlay">
+        <div class="overlay-icon failed">
+            <i class="fa-solid fa-circle-xmark"></i>
+        </div>
+        <div class="overlay-title">Payment Not Completed</div>
+        <div class="overlay-desc" id="failedDesc">Please see the cashier. Your items are still in the cart.</div>
+    </div>
+
     <!-- Overlay Screen: Success Display -->
     <div class="overlay-screen" id="successOverlay">
         <div class="overlay-icon success">
@@ -511,6 +524,25 @@
         const paymentOverlay = document.getElementById('paymentOverlay');
         const successOverlay = document.getElementById('successOverlay');
         const successInvoice = document.getElementById('successInvoice');
+        const failedOverlay = document.getElementById('failedOverlay');
+        const failedDesc = document.getElementById('failedDesc');
+
+        // The spinner must never outlive the payment: hide it on any outcome,
+        // and as a fallback if the POS goes quiet (tab closed, network drop).
+        let paymentWatchdog = null;
+        let failedTimer = null;
+        function hidePaymentOverlay() {
+            clearTimeout(paymentWatchdog);
+            paymentOverlay.style.display = 'none';
+        }
+        function showPaymentFailed(message) {
+            hidePaymentOverlay();
+            successOverlay.style.display = 'none';
+            failedDesc.innerText = message || 'Please see the cashier. Your items are still in the cart.';
+            failedOverlay.style.display = 'flex';
+            clearTimeout(failedTimer);
+            failedTimer = setTimeout(() => { failedOverlay.style.display = 'none'; }, 4000);
+        }
 
         const paymentTitle = document.getElementById('paymentTitle');
         const paymentDesc = document.getElementById('paymentDesc');
@@ -524,8 +556,9 @@
 
             if (data.type === 'CART_UPDATE') {
                 // Hide overlays
-                paymentOverlay.style.display = 'none';
+                hidePaymentOverlay();
                 successOverlay.style.display = 'none';
+                failedOverlay.style.display = 'none';
 
                 const cart = data.cart || [];
                 const totals = data.totals || {};
@@ -565,6 +598,7 @@
             } 
             else if (data.type === 'PAYMENT_INITIATE') {
                 successOverlay.style.display = 'none';
+                failedOverlay.style.display = 'none';
                 
                 const method = data.method || 'cash';
                 if (method === 'card') {
@@ -576,14 +610,19 @@
                 }
 
                 paymentOverlay.style.display = 'flex';
+                clearTimeout(paymentWatchdog);
+                paymentWatchdog = setTimeout(hidePaymentOverlay, method === 'card' ? 180000 : 60000);
             } 
             else if (data.type === 'PAYMENT_STATUS_CHANGE') {
-                if (data.status === 'declined' || data.status === 'cancelled') {
-                    paymentOverlay.style.display = 'none';
+                if (data.status === 'failed' || data.status === 'declined') {
+                    showPaymentFailed();
+                } else if (data.status === 'cancelled') {
+                    hidePaymentOverlay();
                 }
             }
             else if (data.type === 'CHECKOUT_SUCCESS') {
-                paymentOverlay.style.display = 'none';
+                hidePaymentOverlay();
+                failedOverlay.style.display = 'none';
                 successInvoice.innerText = `Invoice #: ${data.invoice}`;
                 successOverlay.style.display = 'flex';
 
@@ -595,7 +634,8 @@
                 }, 5000);
             }
             else if (data.type === 'RESET') {
-                paymentOverlay.style.display = 'none';
+                hidePaymentOverlay();
+                failedOverlay.style.display = 'none';
                 successOverlay.style.display = 'none';
                 mainPosGrid.style.display = 'none';
                 emptyDisplay.style.display = 'flex';
