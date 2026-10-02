@@ -443,6 +443,7 @@
             // Payment Logic
             let activePayment = 'cash';
             const paxEnabled = {{ $paxEnabled ? 'true' : 'false' }};
+            const printerEnabled = {{ ($printerEnabled ?? true) ? 'true' : 'false' }};
             window.setPaymentMethod = function(method, el) {
                 $('.pay-method-card').removeClass('active');
                 $(el).addClass('active');
@@ -458,7 +459,7 @@
             
             // --- PAX REAL INTEGRATION ---
             let paxModal = null;
-            let cardState = { status: null, amount: 0, ref_num: null };
+            let cardState = { status: null, amount: 0, ref_num: null, auth_code: null };
 
             window.launchCardAuth = function() {
                 const total = parseFloat($('#summaryGrandTotal').text().replace('$',''));
@@ -501,7 +502,8 @@
                         cardState = {
                             status: 'approved',
                             amount: amount,
-                            ref_num: res.refNum || null
+                            ref_num: res.refNum || res.ref_num || null,
+                            auth_code: res.authCode || res.auth_code || null
                         };
                         updatePaxUI('APPROVED', 'Card authorized successfully.', 'success');
                         setTimeout(() => {
@@ -578,7 +580,9 @@
                         return { id: i.product_id, quantity: i.quantity, price: rp, name: i.product.product_name };
                     })),
                     card_auth_status: cardState.status,
-                    card_approved_amount: cardState.amount
+                    card_approved_amount: cardState.amount,
+                    card_ref_num: cardState.ref_num || '',
+                    card_auth_code: cardState.auth_code || ''
                 };
 
                 Swal.fire({ title: 'Processing Transaction', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -607,11 +611,13 @@
                     icon: 'success',
                     title: 'Payment Successful',
                     text: `Invoice #${lastInvoice} created.`,
-                    confirmButtonText: 'Print Receipt & Finish',
+                    // Printer switched off in Settings > Quick POS: no printer step.
+                    confirmButtonText: printerEnabled ? 'Print Receipt & Finish' : 'Finish',
                     allowEscapeKey: false,
                     allowOutsideClick: false
                 }).then((res) => {
-                    startPrinterFlow();
+                    if (printerEnabled) startPrinterFlow();
+                    else window.location.href = "{{ route('store.sales.pos') }}";
                 });
             }
 

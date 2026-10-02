@@ -85,10 +85,11 @@ class StoreSalesController extends Controller
         // Fetch global settings for PAX toggle
         $settings = \App\Models\QuickPosSetting::first();
         $paxEnabled = $settings ? $settings->pax_enabled : false;
+        $printerEnabled = $settings ? $settings->printer_enabled : true;
 
         $store = $storeId ? StoreDetail::find($storeId) : null;
 
-        return view('store.sales.checkout', compact('currentCart', 'customers', 'paxEnabled', 'store'));
+        return view('store.sales.checkout', compact('currentCart', 'customers', 'paxEnabled', 'printerEnabled', 'store'));
     }
 
     // ... inside StoreSalesController class ...
@@ -617,6 +618,9 @@ class StoreSalesController extends Controller
                 'total_amount' => $request->total_amount,
                 'payment_method' => strtoupper($paymentMethod), // Fixed typo: use $paymentMethod and convert to uppercase
                 'created_by' => Auth::id(),
+                // From the PAX terminal: the reference voids/refunds need, the code printed on the receipt.
+                'card_ref_num' => $paymentMethod === 'card' ? ($request->input('card_ref_num') ?: null) : null,
+                'card_auth_code' => $paymentMethod === 'card' ? ($request->input('card_auth_code') ?: null) : null,
             ]);
 
             $hasOld = false;
@@ -804,18 +808,7 @@ class StoreSalesController extends Controller
         try {
             $raw = $posAgentService->getTerminalStatus($terminalId);
 
-            $isOnline = false;
-            if (is_array($raw)) {
-                if (isset($raw['success']) && $raw['success'] === true && isset($raw['registered']) && $raw['registered'] === true) {
-                    $isOnline = true;
-                }
-                if (isset($raw['status']) && strtolower($raw['status']) === 'approved') {
-                    $isOnline = true;
-                }
-                if (!empty($raw['approved'])) {
-                    $isOnline = true;
-                }
-            }
+            $isOnline = PosAgentService::isTerminalOnline($raw);
 
             $scannerOnline = false;
             $scaleOnline = false;

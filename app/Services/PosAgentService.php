@@ -93,6 +93,21 @@ class PosAgentService
     }
 
     /**
+     * One rule for "terminal online" used by the POS screen and Settings > Quick
+     * POS (they used to disagree): registered, or reported approved.
+     */
+    public static function isTerminalOnline($status): bool
+    {
+        if (!is_array($status)) {
+            return false;
+        }
+
+        return (($status['success'] ?? null) === true && ($status['registered'] ?? null) === true)
+            || strtolower((string) ($status['status'] ?? '')) === 'approved'
+            || !empty($status['approved']);
+    }
+
+    /**
      * Register the terminal with the POS Agent.
      * URI: /api/terminal/register
      */
@@ -146,10 +161,8 @@ class PosAgentService
             $headers = $this->getHeaders($terminalId, true, false);
             $url = $this->baseUrl . '/api/cash-drawer/status';
 
-            Log::info('POS Agent: Checking Cash Drawer Status', [
-                'url' => $url,
-                'headers' => $headers
-            ]);
+            // Never log $headers: they carry the agent secret.
+            Log::info('POS Agent: Checking Cash Drawer Status', ['url' => $url, 'terminalId' => $terminalId]);
 
             $response = Http::withHeaders($headers)
                 ->timeout(10)
@@ -180,11 +193,7 @@ class PosAgentService
             $headers = $this->getHeaders($terminalId, true, true);
             $url = $this->baseUrl . '/api/cash-drawer/open';
             
-            Log::info('POS Agent: Opening Cash Drawer', [
-                'url' => $url,
-                'headers' => $headers,
-                'terminalId' => $terminalId
-            ]);
+            Log::info('POS Agent: Opening Cash Drawer', ['url' => $url, 'terminalId' => $terminalId]);
 
             $response = Http::withHeaders($headers)
                 ->timeout(10)

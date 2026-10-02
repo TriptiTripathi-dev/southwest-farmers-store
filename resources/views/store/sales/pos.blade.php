@@ -1826,6 +1826,9 @@
                 approved: false,
                 terminal_id: '{{ Auth::user()->store->pos_terminal_id ?? '' }}'
             };
+            // Device switches from Settings > Quick POS.
+            const scannerEnabled = {{ ($posSettings->scanner_enabled ?? true) ? 'true' : 'false' }};
+            const scaleEnabled = {{ ($posSettings->scale_enabled ?? true) ? 'true' : 'false' }};
 
             const hardwareStatusMap = {
                 online: {
@@ -1904,14 +1907,21 @@
             let lastBarcode       = null;
             let scannerPollTimer  = null;
 
+            // One scan = barcode + the agent's scan time/id when it sends one, so
+            // scanning the same product twice in a row adds it twice.
+            function scanKey(scan) {
+                return scan.barcode + '|' + (scan.timestamp ?? scan.scanned_at ?? scan.time ?? scan.id ?? '');
+            }
+
             function startScannerPoll() {
+                if (!scannerEnabled) return; // turned off in Settings > Quick POS
                 if (scannerPollTimer) return; // already running
                 // Primer: silently read the scanner's current/cached barcode once
                 // to set a baseline — prevents a stale buffer from triggering addToCart.
                 $.get("{{ route('store.sales.scanner-scan') }}")
                     .done(function(data) {
                         if (data && data.success && data.scan && data.scan.barcode) {
-                            lastBarcode = data.scan.barcode; // baseline, NOT added to cart
+                            lastBarcode = scanKey(data.scan); // baseline, NOT added to cart
                         }
                     })
                     .always(function() {
@@ -1934,10 +1944,10 @@
                 $.get("{{ route('store.sales.scanner-scan') }}")
                     .done(function(data) {
                         if (data && data.success && data.scan && data.scan.barcode) {
-                            const newBarcode = data.scan.barcode;
-                            if (newBarcode !== lastBarcode) {
-                                lastBarcode = newBarcode;
-                                processScannedBarcode(newBarcode);
+                            const key = scanKey(data.scan);
+                            if (key !== lastBarcode) {
+                                lastBarcode = key;
+                                processScannedBarcode(String(data.scan.barcode).trim());
                             }
                         }
                     });
@@ -1947,8 +1957,11 @@
                 // Find product by barcode — pass all required args to addToCart
                 $.get("{{ route('store.sales.search') }}", { search: barcode })
                     .done(function(data) {
-                        if (data && data.length > 0) {
-                            const product     = data[0];
+                        // The search also matches names and partial codes, so only take
+                        // the product whose barcode/UPC is exactly the scanned one.
+                        const product = (data || []).find(p =>
+                            String(p.barcode ?? '').trim() === barcode || String(p.upc ?? '').trim() === barcode);
+                        if (product) {
                             const price       = parseFloat(product.selling_price || 0);
                             const displayPrice = Math.floor(price) + 0.9;
                             const stock       = parseInt(product.quantity || 0);
@@ -1970,8 +1983,10 @@
                 checkTerminalStatus();
             }
 
-            // Initial check on load
+            // Initial check on load, then every minute so a dropped or restored
+            // agent shows on the badge (and scanner polling stops/starts with it).
             checkTerminalStatus();
+            setInterval(checkTerminalStatus, 60000);
 
             /* ─── HELPERS ──────────────────────────────────────── */
             function preserveMaxStock(newCart) {
@@ -2150,6 +2165,10 @@
 
 
             window.readScale = function(index) {
+                if (!scaleEnabled) {
+                    toastr.warning("The scale is turned off in Settings > Quick POS.");
+                    return;
+                }
                 if (!hardwareAgent.online || !hardwareAgent.approved) {
                     toastr.error("Hardware Agent not connected/approved.");
                     return;
@@ -2169,6 +2188,8 @@
                                     _token: csrfToken,
                                     item_id: item.item_id || item.id,
                                     quantity: weight
+                                }).fail(function() {
+                                    toastr.error('The weight could not be saved to the cart. Please read the scale again.');
                                 });
                                 toastr.success(`Weight captured: ${weight}`);
                             } else {
@@ -2279,6 +2300,10 @@
             };
 
             window.readScaleReview = function(index) {
+                if (!scaleEnabled) {
+                    toastr.warning('The scale is turned off in Settings > Quick POS.');
+                    return;
+                }
                 if (!hardwareAgent.online || !hardwareAgent.approved) {
                     toastr.error('Hardware Agent not connected. Connect the POS Agent and click Sync.');
                     return;
@@ -2307,6 +2332,8 @@
                                     _token: csrfToken,
                                     item_id: cart[index].item_id || cart[index].id,
                                     quantity: weight
+                                }).fail(function() {
+                                    toastr.error('The weight could not be saved to the cart. Please read the scale again.');
                                 });
                                 toastr.success(`⚖ Weight captured: ${weight} lbs`);
                             } else {
@@ -2381,11 +2408,8 @@
             }
 
             function openCardAuthModal() {
-                if ($('#paymentMethod').val() !== 'card') return;
-                const currentTotal = parseFloat($('#grandTotal').text().replace('$', '')) || 0;
-                $('#cardAuthResult').val('approved');
-                $('#cardApprovedAmount').val(currentTotal.toFixed(2));
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('cardAuthModal')).show();
+                // No manual "Approved" picker: cards go through the PAX terminal on Checkout.
+                goToCardCheckout();
             }
 
             function submitCardAuthorization() {
@@ -2697,7 +2721,7 @@
             function processCheckout() {
                 if (cart.length === 0) return Swal.fire('Empty Cart', 'Add items before checking out.', 'error');
                 if ($('#paymentMethod').val() === 'card') {
-                    simulateCardPayment();
+                    goToCardCheckout();
                 } else {
                     finalizeCheckout();
                 }
@@ -2742,7 +2766,19 @@
                 });
             }
 
+            // Card payments are only taken on the Checkout screen, which runs the
+            // real PAX terminal. This page used to "approve" cards with a random
+            // simulation and a manual Approved/Declined picker, which could record
+            // a card sale with no payment taken.
+            function goToCardCheckout() {
+                window.location.href = "{{ route('store.sales.checkout-page') }}";
+            }
+
             function finalizeCheckout(overrideMethod = null) {
+                if ((overrideMethod || $('#paymentMethod').val()) === 'card') {
+                    goToCardCheckout();
+                    return;
+                }
                 let btn = $('#payBtn,#mobilePayBtn');
                 btn.prop('disabled', true);
 

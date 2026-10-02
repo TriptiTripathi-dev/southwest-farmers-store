@@ -20,9 +20,7 @@ class QuickPosSettingController extends Controller
         if ($store && $store->pos_terminal_id) {
             $statusResponse = $posAgentService->getTerminalStatus($store->pos_terminal_id);
 
-            // The API returns 'success' and 'registered' boolean flags
-            $isTerminalConnected = isset($statusResponse['success']) && $statusResponse['success'] === true &&
-                isset($statusResponse['registered']) && $statusResponse['registered'] === true;
+            $isTerminalConnected = PosAgentService::isTerminalOnline($statusResponse);
 
             // Sync status to DB
             $currentApiStatus = $isTerminalConnected ? 'online' : 'offline';
@@ -36,7 +34,7 @@ class QuickPosSettingController extends Controller
 
     public function update(Request $request)
     {
-        $settings = QuickPosSetting::first();
+        $settings = QuickPosSetting::first() ?: QuickPosSetting::create([]);
 
         $data = $request->validate([
             'title' => 'nullable|string|max:255',
