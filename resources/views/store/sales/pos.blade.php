@@ -1876,10 +1876,6 @@
             }
 
             function checkTerminalStatus() {
-                if (!hardwareAgent.terminal_id) {
-                    updateHardwareUI('offline');
-                    return;
-                }
                 $.get("{{ route('store.sales.terminal-status') }}")
                     .done(function(data) {
                         const isOnline = data && data.online === true;
@@ -1888,7 +1884,8 @@
                             hardwareAgent.online = true;
                             hardwareAgent.approved = true;
                             updateHardwareUI('online', data.scanner === true, data.scale === true);
-                            startScannerPoll(); // begin auto-polling barcode scanner
+                            // Spec: use scans only while scanner/status says connected.
+                            if (data.scanner === true) startScannerPoll(); else stopScannerPoll();
                         } else {
                             hardwareAgent.online = false;
                             hardwareAgent.approved = false;
@@ -1910,7 +1907,8 @@
             // One scan = barcode + the agent's scan time/id when it sends one, so
             // scanning the same product twice in a row adds it twice.
             function scanKey(scan) {
-                return scan.barcode + '|' + (scan.timestamp ?? scan.scanned_at ?? scan.time ?? scan.id ?? '');
+                // Spec: scan = { value, at }; a new scan is a new "at".
+                return (scan.value ?? scan.barcode) + '|' + (scan.at ?? scan.timestamp ?? scan.id ?? '');
             }
 
             function startScannerPoll() {
@@ -1920,7 +1918,7 @@
                 // to set a baseline — prevents a stale buffer from triggering addToCart.
                 $.get("{{ route('store.sales.scanner-scan') }}")
                     .done(function(data) {
-                        if (data && data.success && data.scan && data.scan.barcode) {
+                        if (data && data.success && data.scan && (data.scan.value || data.scan.barcode)) {
                             lastBarcode = scanKey(data.scan); // baseline, NOT added to cart
                         }
                     })
@@ -1943,11 +1941,11 @@
 
                 $.get("{{ route('store.sales.scanner-scan') }}")
                     .done(function(data) {
-                        if (data && data.success && data.scan && data.scan.barcode) {
+                        if (data && data.success && data.scan && (data.scan.value || data.scan.barcode)) {
                             const key = scanKey(data.scan);
                             if (key !== lastBarcode) {
                                 lastBarcode = key;
-                                processScannedBarcode(String(data.scan.barcode).trim());
+                                processScannedBarcode(String(data.scan.value ?? data.scan.barcode).trim());
                             }
                         }
                     });
@@ -2164,6 +2162,23 @@
             }
 
 
+            // Spec: use the weight only when stable, lb, connected and not demo
+            // (the server sets usable). While the scale is moving / not ready,
+            // ask again every 0.5 s for up to 5 s.
+            function readStableWeight(onWeight, onError, attempt = 0) {
+                $.get("{{ route('store.sales.scale-weight') }}")
+                    .done(function(data) {
+                        if (data && data.usable) {
+                            onWeight(parseFloat(data.weight));
+                        } else if (data && data.retry && attempt < 10) {
+                            setTimeout(() => readStableWeight(onWeight, onError, attempt + 1), 500);
+                        } else {
+                            onError((data && (data.reason || data.message)) || 'Could not read the scale.');
+                        }
+                    })
+                    .fail(function() { onError('Scale error. Check the hardware agent.'); });
+            }
+
             window.readScale = function(index) {
                 if (!scaleEnabled) {
                     toastr.warning("The scale is turned off in Settings > Quick POS.");
@@ -2175,33 +2190,22 @@
                 }
 
                 toastr.info("Reading scale...");
-                $.get("{{ route('store.sales.scale-weight') }}")
-                    .done(function(data) {
-                        if (data && data.success && data.weight !== null) {
-                            const weight = parseFloat(data.weight);
-                            if (weight > 0) {
-                                cart[index].quantity = weight;
-                                renderCart();
-                                // Sync quantity with server
-                                let item = cart[index];
-                                $.post("{{ route('store.sales.cart.update') }}", {
-                                    _token: csrfToken,
-                                    item_id: item.item_id || item.id,
-                                    quantity: weight
-                                }).fail(function() {
-                                    toastr.error('The weight could not be saved to the cart. Please read the scale again.');
-                                });
-                                toastr.success(`Weight captured: ${weight}`);
-                            } else {
-                                toastr.warning("No weight detected on scale.");
-                            }
-                        } else {
-                            toastr.error("Failed to read from scale.");
-                        }
-                    })
-                    .fail(function() {
-                        toastr.error("Scale error.");
+                readStableWeight(function(weight) {
+                    cart[index].quantity = weight;
+                    renderCart();
+                    // Sync quantity with server
+                    let item = cart[index];
+                    $.post("{{ route('store.sales.cart.update') }}", {
+                        _token: csrfToken,
+                        item_id: item.item_id || item.id,
+                        quantity: weight
+                    }).fail(function() {
+                        toastr.error('The weight could not be saved to the cart. Please read the scale again.');
                     });
+                    toastr.success(`Weight captured: ${weight} lb`);
+                }, function(reason) {
+                    toastr.warning(reason);
+                });
             };
 
             /* ─── CART REVIEW MODAL ────────────────────────────── */
@@ -2315,42 +2319,27 @@
                     '<span class="spinner-border spinner-border-sm me-1"></span>Reading...'
                 );
 
-                $.get("{{ route('store.sales.scale-weight') }}")
-                    .done(function(data) {
-                        if (data && data.success && data.weight !== null) {
-                            const weight = parseFloat(data.weight);
-                            if (weight > 0) {
-                                cart[index].quantity = weight;
-                                $(`#review-qty-${index}`).text(weight);
-                                $(`#review-line-${index}`).text(
-                                    '$' + (cart[index].price * weight).toFixed(2)
-                                );
-                                updateReviewTotals();
-                                renderCart();
-                                // Sync to server
-                                $.post("{{ route('store.sales.cart.update') }}", {
-                                    _token: csrfToken,
-                                    item_id: cart[index].item_id || cart[index].id,
-                                    quantity: weight
-                                }).fail(function() {
-                                    toastr.error('The weight could not be saved to the cart. Please read the scale again.');
-                                });
-                                toastr.success(`⚖ Weight captured: ${weight} lbs`);
-                            } else {
-                                toastr.warning('No weight detected. Place item on scale and try again.');
-                            }
-                        } else {
-                            toastr.error('Failed to read from scale. Check scale connection.');
-                        }
-                    })
-                    .fail(function() {
-                        toastr.error('Scale error. Check POS Agent is running.');
-                    })
-                    .always(function() {
-                        btn.prop('disabled', false).html(
-                            '<i class="mdi mdi-scale me-1"></i>Weigh'
-                        );
+                const resetBtn = () => btn.prop('disabled', false).html('<i class="mdi mdi-scale me-1"></i>Weigh');
+                readStableWeight(function(weight) {
+                    cart[index].quantity = weight;
+                    $(`#review-qty-${index}`).text(weight);
+                    $(`#review-line-${index}`).text('$' + (cart[index].price * weight).toFixed(2));
+                    updateReviewTotals();
+                    renderCart();
+                    // Sync to server
+                    $.post("{{ route('store.sales.cart.update') }}", {
+                        _token: csrfToken,
+                        item_id: cart[index].item_id || cart[index].id,
+                        quantity: weight
+                    }).fail(function() {
+                        toastr.error('The weight could not be saved to the cart. Please read the scale again.');
                     });
+                    toastr.success(`⚖ Weight captured: ${weight} lb`);
+                    resetBtn();
+                }, function(reason) {
+                    toastr.warning(reason);
+                    resetBtn();
+                });
             };
 
             function updateReviewTotals() {
@@ -3184,7 +3173,7 @@
                             $.post("{{ route('store.sales.drawer.open') }}", { _token: csrfToken })
                                 .done(function(res) {
                                     if (res && res.success) {
-                                        toastr.success('Cash drawer opened successfully.');
+                                        toastr.success('Open command sent to the cash drawer.');
                                     } else {
                                         toastr.error(res.message || 'Failed to open cash drawer.');
                                     }

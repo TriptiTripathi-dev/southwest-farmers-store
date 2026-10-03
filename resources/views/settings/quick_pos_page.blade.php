@@ -45,47 +45,47 @@
                     <div class="card-body p-4">
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium text-muted">POS Terminal ID (Required for
-                                    Server)</label>
+                                <label class="form-label fw-medium text-muted">POS Terminal ID (optional)</label>
                                 <input type="text" name="pos_terminal_id" class="form-control bg-light border-0"
                                     value="{{ old('pos_terminal_id', $store->pos_terminal_id ?? '') }}"
                                     placeholder="e.g. TERM-2B02D153AF6C">
-                                <small class="text-muted">Save the Terminal ID first before connecting to the
-                                    server.</small>
+                                <small class="text-muted">For reference only; the register is found by the Store ID below.</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium text-muted">POS Agent Secret Key</label>
+                                <label class="form-label fw-medium text-muted">POS Agent Secret Key (required)</label>
                                 <input type="password" name="pos_agent_secret" class="form-control bg-light border-0"
                                     value="{{ old('pos_agent_secret', $store->pos_agent_secret ?? '') }}"
                                     placeholder="Enter your security secret">
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium text-muted">POS Agent Store ID</label>
+                                <label class="form-label fw-medium text-muted">POS Agent Store ID (required)</label>
                                 <input type="text" name="pos_store_id" class="form-control bg-light border-0"
                                     value="{{ old('pos_store_id', $store->pos_store_id ?? '') }}"
                                     placeholder="e.g. 0500039605484205000396054842">
+                                <small class="text-muted">store_id and agent_secret from the register's config.json.</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium text-muted">Local Hardware Device URL</label>
+                                <label class="form-label fw-medium text-muted">Local Hardware Device URL (not used)</label>
                                 <input type="url" name="pos_hardware_url" class="form-control bg-light border-0"
                                     value="{{ old('pos_hardware_url', $store->pos_hardware_url ?? 'http://localhost:3001') }}"
                                     placeholder="http://localhost:3001">
+                                <small class="text-muted">The POS always calls the cloud hardware service (POS_AGENT_URL), never the register directly.</small>
                             </div>
 
                             <div class="col-md-6 mb-3 d-flex align-items-end">
-                                @if (!$isTerminalConnected && !empty($store->pos_terminal_id))
-                                    <!-- Register Terminal Button -->
-                                    <button type="button" class="btn btn-warning px-4 fw-bold"
-                                        onclick="document.getElementById('connect-server-form').submit();">
-                                        <i class="mdi mdi-link"></i> Register Terminal
-                                    </button>
-                                @endif
+                                <button type="button" class="btn {{ $isTerminalConnected ? 'btn-outline-success' : 'btn-warning' }} px-4 fw-bold"
+                                    onclick="document.getElementById('connect-server-form').submit();">
+                                    <i class="mdi mdi-link"></i> Check Connection
+                                </button>
 
                                 @if ($isTerminalConnected)
-                                    <span class="text-success fw-bold ms-5 mt-2"><i class="mdi mdi-check-circle"></i>
-                                        Terminal Registered</span>
+                                    <span class="text-success fw-bold ms-3 mt-2"><i class="mdi mdi-check-circle"></i>
+                                        Register connected
+                                        <small class="d-block text-muted fw-normal">Scanner: {{ ($hardware['scanner'] ?? false) ? 'OK' : 'not connected' }} · Scale: {{ ($hardware['scale'] ?? false) ? 'OK' : 'not connected' }}</small></span>
+                                @elseif (!empty($hardware['message']))
+                                    <span class="text-danger small ms-3 mt-2">{{ $hardware['message'] }}</span>
                                 @endif
                             </div>
                         </div>

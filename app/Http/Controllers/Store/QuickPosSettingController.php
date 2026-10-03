@@ -17,10 +17,10 @@ class QuickPosSettingController extends Controller
         $store = StoreDetail::where('id', Auth::user()->store_id)->first();
 
         $isTerminalConnected = false;
-        if ($store && $store->pos_terminal_id) {
-            $statusResponse = $posAgentService->getTerminalStatus($store->pos_terminal_id);
-
-            $isTerminalConnected = PosAgentService::isTerminalOnline($statusResponse);
+        $hardware = null;
+        if ($store && $posAgentService->isConfigured()) {
+            $hardware = $posAgentService->getHardwareStatus($store->pos_terminal_id);
+            $isTerminalConnected = $hardware['online'];
 
             // Sync status to DB
             $currentApiStatus = $isTerminalConnected ? 'online' : 'offline';
@@ -29,7 +29,7 @@ class QuickPosSettingController extends Controller
             }
         }
 
-        return view('settings.quick_pos_page', compact('settings', 'store', 'isTerminalConnected'));
+        return view('settings.quick_pos_page', compact('settings', 'store', 'isTerminalConnected', 'hardware'));
     }
 
     public function update(Request $request)
@@ -73,33 +73,35 @@ class QuickPosSettingController extends Controller
         return back()->with('success', 'Quick POS settings updated successfully.');
     }
 
+    /**
+     * "Check Connection": the hardware service has no register endpoint
+     * (spec 25 Sep 2026); the register is found by POS Store ID + Agent
+     * Secret, so this checks the scanner and scale through the service.
+     */
     public function connectToServer(Request $request, PosAgentService $posAgentService)
     {
         $store = StoreDetail::where('id', Auth::user()->store_id)->firstOrFail();
 
-        if (!$store->pos_terminal_id) {
-            return back()->with('error', 'Please define a POS Terminal ID first and save settings before connecting.');
+        if (!$posAgentService->isConfigured()) {
+            return back()->with('error', $posAgentService->notConfiguredMessage() . ' Save them first, then check the connection.');
         }
 
-        // Hit the /api/terminal/register endpoint
-        $response = $posAgentService->registerTerminal($store->pos_terminal_id);
+        $hw = $posAgentService->getHardwareStatus($store->pos_terminal_id);
+        $store->update(['pos_terminal_status' => $hw['online'] ? 'online' : 'offline']);
 
-        if ($response['success']) {
-            $store->update(['pos_terminal_status' => 'online']);
-            return back()->with('success', 'Terminal successfully registered and connected to the POS Agent.');
+        if (!$hw['online']) {
+            return back()->with('error', 'Register not reachable: ' . ($hw['message'] ?? 'hardware agent offline.'));
         }
 
-        return back()->with('error', 'Failed to connect: ' . ($response['message'] ?? 'Unknown error'));
+        return back()->with('success', 'Register connected. Scanner: ' . ($hw['scanner'] ? 'OK' : 'not connected')
+            . ', Scale: ' . ($hw['scale'] ? 'OK' : 'not connected') . '.');
     }
 
     public function testDrawer(PosAgentService $posAgentService)
     {
         $store = StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
-        }
 
-        $response = $posAgentService->openCashDrawer($store->pos_terminal_id);
+        $response = $posAgentService->openCashDrawer($store->pos_terminal_id ?? null);
         return response()->json($response);
     }
 }

@@ -710,67 +710,31 @@ class StoreSalesController extends Controller
                 'url' => route('store.sales.orders.show', $sale->id),
             ]);
 
-            // POS Hardware Integration (Strict Response-Driven Flow)
-            // Hardware actions decide whether to commit or rollback the database logic based EXACTLY on responses.
-            $posWarning = null;
-            try {
-                $store = \App\Models\StoreDetail::where('id', $storeId)->first();
-                $terminalId = $store ? $store->pos_terminal_id : null;
-                $posSettings = \App\Models\QuickPosSetting::first();
-
-                if ($terminalId) {
-                    if ($paymentMethod === 'cash' && $posSettings && $posSettings->cash_drawer_enabled) {
-                        // 1. Check Drawer Status
-                        $drawerStatus = $posAgentService->getCashDrawerStatus($terminalId);
-                        Log::info('POS Checkout: Cash Drawer Status Response', ['response' => $drawerStatus]);
-
-                        // Strict check on 'success' key; 'configured' is preferred but we fallback to success
-                        if (!$drawerStatus || empty($drawerStatus['success'])) {
-                            DB::rollBack();
-                            $errMsg = $drawerStatus['message'] ?? 'Cash Drawer is offline or not configured.';
-                            return response()->json([
-                                'success' => false,
-                                'message' => $errMsg
-                            ], 422);
-                        }
-
-                        // 2. Open Cash Drawer
-                        $opened = $posAgentService->openCashDrawer($terminalId);
-                        Log::info('POS Checkout: Open Cash Drawer Response', ['response' => $opened]);
-
-                        if (!$opened || empty($opened['success'])) {
-                            DB::rollBack();
-                            $errMsg = $opened['message'] ?? 'Failed to open Cash Drawer via Agent.';
-                            return response()->json([
-                                'success' => false,
-                                'message' => $errMsg
-                            ], 422);
-                        }
-                    }
-
-                    // Note: Receipt printing is deferred to the frontend modal which hits `/store/pos/manual-print`
-                    // after this checkout responds successfully, matching the requested workflow.
-                }
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('POS Hardware Integration Error @ Checkout', ['error' => $e->getMessage()]);
-                return response()->json([
-                    'success' => false,
-                    // Agent/connection text helps the cashier; database text must not be shown.
-                    'message' => $e instanceof \Illuminate\Database\QueryException
-                        ? 'The sale could not be saved, so nothing was recorded. Please try again; if it keeps happening, contact support.'
-                        : 'Hardware Cloud Agent Exception: ' . $e->getMessage(),
-                ], 422);
-            }
-
-            // Commit only if cash drawer succeeded (or if card payment)
+            // The sale is saved first. Per the hardware spec the drawer is
+            // opened only AFTER the sale is saved, and a drawer failure never
+            // rolls the sale back: the cashier gets a warning instead.
             DB::commit();
+
+            $drawerWarning = null;
+            $posSettings = \App\Models\QuickPosSetting::first();
+            if ($paymentMethod === 'cash' && $posSettings && $posSettings->cash_drawer_enabled && $posAgentService->isConfigured()) {
+                try {
+                    $opened = $posAgentService->openCashDrawer(\App\Models\StoreDetail::where('id', $storeId)->value('pos_terminal_id'));
+                    if (empty($opened['success'])) {
+                        $drawerWarning = 'Sale saved, but the cash drawer did not open: ' . rtrim($opened['message'] ?? 'drawer error', '. ') . '. Use No Sale to open it.';
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('POS checkout: cash drawer open failed', ['error' => $e->getMessage()]);
+                    $drawerWarning = 'Sale saved, but the cash drawer did not open. Use No Sale to open it.';
+                }
+            }
 
             return response()->json([
                 'success' => true,
                 'sale_id' => $sale->id,
                 'invoice' => $invoiceNumber,
-                'message' => 'Sale completed successfully!' . ($posWarning ? " ($posWarning)" : '')
+                'message' => 'Sale completed successfully!',
+                'drawer_warning' => $drawerWarning,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -787,169 +751,74 @@ class StoreSalesController extends Controller
         }
     }
 
-    /**
-     * Get Terminal Status
+    /*
+     * POS hardware (spec: "Register hardware for the POS", 25 Sep 2026).
+     * All calls go server-side through PosAgentService to POS_AGENT_URL with
+     * the store's POS Store ID + Agent Secret; no Terminal ID is needed.
      */
-    public function terminalStatus(\App\Services\PosAgentService $posAgentService)
+
+    /** Hardware badge on the POS: agent online + scanner/scale connected. */
+    public function terminalStatus(PosAgentService $posAgentService)
     {
-        $store = StoreDetail::where('id', Auth::user()->store_id)->first();
-        $terminalId = $store ? $store->pos_terminal_id : null;
+        $status = $posAgentService->getHardwareStatus($this->posTerminalId());
 
-        if (!$terminalId) {
-            return response()->json([
-                'status' => 'offline', 
-                'message' => 'Terminal ID not configured.',
-                'online' => false,
-                'scanner' => false,
-                'scale' => false
-            ]);
-        }
-
-        try {
-            $raw = $posAgentService->getTerminalStatus($terminalId);
-
-            $isOnline = PosAgentService::isTerminalOnline($raw);
-
-            $scannerOnline = false;
-            $scaleOnline = false;
-
-            if ($isOnline) {
-                $scannerStatus = $posAgentService->getScannerStatus($terminalId);
-                if (is_array($scannerStatus) && !empty($scannerStatus['connected'])) {
-                    $scannerOnline = true;
-                }
-                // Some agents might return success true instead of connected
-                if (is_array($scannerStatus) && !empty($scannerStatus['success'])) {
-                    $scannerOnline = true;
-                }
-                
-                $scaleStatus = $posAgentService->getScaleStatus($terminalId);
-                if (is_array($scaleStatus) && !empty($scaleStatus['connected'])) {
-                    $scaleOnline = true;
-                }
-                if (is_array($scaleStatus) && !empty($scaleStatus['success'])) {
-                    $scaleOnline = true;
-                }
-            }
-
-            return response()->json([
-                'status'      => $isOnline ? 'Approved' : 'offline',
-                'online'      => $isOnline,
-                'scanner'     => $scannerOnline,
-                'scale'       => $scaleOnline,
-                'raw'         => $raw,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'offline', 
-                'online' => false,
-                'scanner' => false,
-                'scale' => false
-            ]);
-        }
+        return response()->json($status + ['status' => $status['online'] ? 'Approved' : 'offline']);
     }
 
-    /**
-     * Proxy to get printer list from the agent.
-     */
-    public function getPrinters(\App\Services\PosAgentService $posAgentService)
+    /** Printers the agent sees, plus configured_printer (the proven queue). */
+    public function getPrinters(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        $terminalId = $store ? $store->pos_terminal_id : null;
-
-        if (!$terminalId) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
-        }
-
-        $result = $posAgentService->getPrinterList($terminalId);
-        return response()->json($result);
+        return response()->json($posAgentService->getPrinterList($this->posTerminalId()));
     }
 
-    /**
-     * Get weight from scale
-     */
-    public function getWeight(\App\Services\PosAgentService $posAgentService)
+    /** Scale weight in lb; usable=false (with reason/retry) unless stable, lb, connected, not demo. */
+    public function getWeight(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        $terminalId = $store ? $store->pos_terminal_id : null;
-
-        if (!$terminalId) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
-        }
-
-        $response = $posAgentService->getWeight($terminalId);
-        return response()->json($response ?: ['success' => false, 'weight' => null]);
+        return response()->json($posAgentService->getWeight($this->posTerminalId()));
     }
 
-    /**
-     * Get last scan from scanner
-     */
-    public function getLastScan(\App\Services\PosAgentService $posAgentService)
+    /** Last scan { value, at }; barcode mirrors value for the POS page. */
+    public function getLastScan(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        $terminalId = $store ? $store->pos_terminal_id : null;
-
-        if (!$terminalId) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
-        }
-
-        $response = $posAgentService->getLastScan($terminalId);
+        $response = $posAgentService->getLastScan($this->posTerminalId());
 
         if (isset($response['scan']['value'])) {
-            // Map value to barcode to match existing frontend expectation
             $response['scan']['barcode'] = $response['scan']['value'];
         }
 
-        return response()->json($response ?: ['success' => false]);
+        return response()->json($response);
     }
 
     /**
-     * Manual Print — triggered by "Print Receipt" button click in the success modal.
-     * Sends sale data to the hardware printer API; no browser print dialog.
+     * Print Receipt (and reprint). Without a printer name the agent uses its
+     * configured printer. A failed print never touches the saved sale.
      */
-    public function manualPrint(Request $request, \App\Services\PosAgentService $posAgentService)
+    public function manualPrint(Request $request, PosAgentService $posAgentService)
     {
         $invoiceNumber = $request->input('invoice_number');
         if (!$invoiceNumber) {
             return response()->json(['success' => false, 'message' => 'Invoice number required.']);
         }
 
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        $terminalId = $store ? $store->pos_terminal_id : null;
-
-        if (!$terminalId) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.']);
-        }
-
         $sale = \App\Models\Sale::with('items.product')
             ->where('invoice_number', $invoiceNumber)
-            ->where('store_id', $store->id)
+            ->where('store_id', Auth::user()->store_id)
             ->first();
 
         if (!$sale) {
             return response()->json(['success' => false, 'message' => 'Sale not found.']);
         }
 
-        $result = $posAgentService->printReceipt($terminalId, $sale, $request->input('printer_name'));
-        return response()->json($result);
+        return response()->json($posAgentService->printReceipt($this->posTerminalId(), $sale, $request->input('printer_name')));
     }
-    /**
-     * Check PAX terminal status for current store
-     */
+
+    /** Card reader ready: success + ready + cws_reachable + reader_detected (as "online"). */
     public function checkPaxStatus(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
-        }
-
-        $status = $posAgentService->getPaymentStatus($store->pos_terminal_id);
-        return response()->json($status);
+        return response()->json($posAgentService->getPaymentStatus($this->posTerminalId()));
     }
 
-    /**
-     * Initiate PAX payment
-     */
+    /** Start a card payment; waits up to 120 s while the customer uses the reader. */
     public function initiatePaxPayment(Request $request, PosAgentService $posAgentService)
     {
         $validator = Validator::make($request->all(), [
@@ -961,46 +830,28 @@ class StoreSalesController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
-        }
+        // PHP's default 30 s limit would cut off a customer still at the reader.
+        set_time_limit(150);
 
-        $result = $posAgentService->initiatePayment(
-            $store->pos_terminal_id,
-            $request->amount,
-            $request->order_id
-        );
-
-        return response()->json($result);
+        return response()->json($posAgentService->initiatePayment($this->posTerminalId(), $request->amount, $request->order_id));
     }
 
-    /**
-     * Cancel PAX payment
-     */
+    /** Cancel Payment while initiate is still waiting. */
     public function cancelPaxPayment(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
-        }
-
-        $result = $posAgentService->cancelPayment($store->pos_terminal_id);
-        return response()->json($result);
+        return response()->json($posAgentService->cancelPayment($this->posTerminalId()));
     }
 
-    /**
-     * Open cash drawer manually (NO_SALE action)
-     */
+    /** No Sale: open the drawer without a sale. */
     public function openDrawer(PosAgentService $posAgentService)
     {
-        $store = \App\Models\StoreDetail::where('id', Auth::user()->store_id)->first();
-        if (!$store || !$store->pos_terminal_id) {
-            return response()->json(['success' => false, 'message' => 'Terminal ID not configured.'], 422);
-        }
+        return response()->json($posAgentService->openCashDrawer($this->posTerminalId()));
+    }
 
-        $result = $posAgentService->openCashDrawer($store->pos_terminal_id);
-        return response()->json($result);
+    /** Optional, informational only (sent as x-terminal-id). */
+    private function posTerminalId(): ?string
+    {
+        return StoreDetail::where('id', Auth::user()->store_id)->value('pos_terminal_id');
     }
 
     public function customerDisplay()

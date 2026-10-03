@@ -498,12 +498,13 @@
                     amount: amount,
                     order_id: orderId
                 }).done(res => {
-                    if (res.success) {
+                    // Paid only when the reader approved it (server checks success + approved).
+                    if (res.success && res.approved) {
                         cardState = {
                             status: 'approved',
-                            amount: amount,
-                            ref_num: res.refNum || res.ref_num || null,
-                            auth_code: res.authCode || res.auth_code || null
+                            amount: (typeof res.amount === 'number') ? res.amount : amount, // amount the reader approved
+                            ref_num: res.transactionId || null,
+                            auth_code: res.authCode || null
                         };
                         updatePaxUI('APPROVED', 'Card authorized successfully.', 'success');
                         setTimeout(() => {
@@ -608,9 +609,10 @@
                 posDisplayChannel.postMessage({ type: 'CHECKOUT_SUCCESS', invoice: lastInvoice });
                 
                 Swal.fire({
-                    icon: 'success',
+                    icon: res.drawer_warning ? 'warning' : 'success',
                     title: 'Payment Successful',
-                    text: `Invoice #${lastInvoice} created.`,
+                    // The sale is saved even when the drawer did not open.
+                    text: `Invoice #${lastInvoice} created.` + (res.drawer_warning ? ' ' + res.drawer_warning : ''),
                     // Printer switched off in Settings > Quick POS: no printer step.
                     confirmButtonText: printerEnabled ? 'Print Receipt & Finish' : 'Finish',
                     allowEscapeKey: false,
@@ -631,8 +633,11 @@
                 $.get("{{ route('store.sales.get-printers') }}")
                     .done(data => {
                         $('#printerSpinner').addClass('d-none');
-                        if (data.success && data.printers && data.printers.length > 0) {
-                            data.printers.forEach(p => {
+                        // Spec: print to the agent's configured_printer (other queues
+                        // on the register can be offline). Offer only that one when known.
+                        const printers = data.configured_printer ? [data.configured_printer] : (data.printers || []);
+                        if (data.success && printers.length > 0) {
+                            printers.forEach(p => {
                                 $('#printerList').append(`
                                     <button class="list-group-item list-group-item-action d-flex justify-content-between p-3" onclick="setTargetPrinter('${p}', this)">
                                         <div class="fw-bold"><i class="mdi mdi-printer-pos me-2 text-primary"></i>${p}</div>
@@ -678,8 +683,17 @@
                             window.location.href = "{{ route('store.sales.pos') }}";
                         });
                     } else {
-                        Swal.fire('Print Error', res.message, 'error').then(() => {
-                            window.location.href = "{{ route('store.sales.pos') }}";
+                        // Sale stays saved; let the cashier try again.
+                        Swal.fire({
+                            icon: 'error', title: 'Print Error', text: res.message,
+                            showCancelButton: true, confirmButtonText: 'Reprint', cancelButtonText: 'Finish'
+                        }).then(r => {
+                            if (r.isConfirmed) {
+                                $('#executePrintBtn').prop('disabled', false).html('<i class="mdi mdi-printer-check me-1"></i>Confirm Print');
+                                triggerHardwarePrint();
+                            } else {
+                                window.location.href = "{{ route('store.sales.pos') }}";
+                            }
                         });
                     }
                 }).fail(() => {
@@ -977,7 +991,7 @@
                                             position: 'top-end',
                                             showConfirmButton: false,
                                             timer: 1500
-                                        }).fire({ icon: 'success', title: 'Cash drawer opened' });
+                                        }).fire({ icon: 'success', title: 'Open command sent to the cash drawer' });
                                     } else {
                                         Swal.fire('Error', res.message || 'Failed to open drawer.', 'error');
                                     }
