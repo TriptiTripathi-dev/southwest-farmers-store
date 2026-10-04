@@ -2,23 +2,38 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\KitchenStockException;
 use App\Http\Controllers\Controller;
 use App\Models\KitchenLocation;
 use App\Models\KitchenStock;
-use App\Models\Product;
+use App\Models\KitchenStockTransaction;
 use App\Models\StockTransaction;
 use App\Models\StoreStock;
+use App\Services\KitchenInventoryService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Item 7: Kitchen Inventory screen + store-to-kitchen transfer.
- * Each store gets its own KitchenLocation (auto-created on first visit),
- * separate from the Warehouse app's central kitchen locations.
+ * Store Kitchen inventory (kitchen spec section 6, contract B.4): kept apart
+ * from the store shelf, every movement written to the kitchen ledger with
+ * user and time. Each store has its own KitchenLocation.
+ *
+ * Access: the existing 'adjust_stock' permission (the menu already used it);
+ * who may adjust kitchen stock is a client decision, made through roles.
  */
 class KitchenInventoryController extends Controller
 {
+    public function __construct(private KitchenInventoryService $inventory)
+    {
+    }
+
+    protected function authorizeKitchen(): void
+    {
+        abort_unless(Auth::user()?->hasPermission('adjust_stock'), 403, 'You do not have access to Kitchen Inventory.');
+    }
+
     protected function locationForCurrentStore(): KitchenLocation
     {
         $storeId = Auth::user()->store_id;
@@ -29,15 +44,24 @@ class KitchenInventoryController extends Controller
         );
     }
 
+    /** A kitchen stock row of this store's kitchen, or 404. */
+    protected function ownStock(int $id): KitchenStock
+    {
+        return KitchenStock::where('kitchen_location_id', $this->locationForCurrentStore()->id)->findOrFail($id);
+    }
+
     public function index(Request $request)
     {
+        $this->authorizeKitchen();
         $storeId = Auth::user()->store_id;
         $location = $this->locationForCurrentStore();
 
         $kitchenStocks = KitchenStock::where('kitchen_location_id', $location->id)
             ->where('item_type', 'product')
             ->with('product')
-            ->get();
+            ->get()
+            ->sortBy(fn ($s) => $s->product->product_name ?? '')
+            ->values();
 
         // Only products with stock on hand at this store are eligible to transfer.
         $storeStocks = StoreStock::where('store_id', $storeId)
@@ -45,55 +69,164 @@ class KitchenInventoryController extends Controller
             ->with('product')
             ->get();
 
-        return view('store.kitchen-inventory.index', compact('kitchenStocks', 'storeStocks'));
+        $stats = [
+            'items' => $kitchenStocks->count(),
+            'below_min' => $kitchenStocks->where('stock_status', 'Below Minimum')->count(),
+            'out' => $kitchenStocks->where('stock_status', 'Out of Stock')->count(),
+        ];
+        $wasteReasons = KitchenInventoryService::WASTE_REASONS;
+        $adjustReasons = KitchenInventoryService::ADJUST_REASONS;
+
+        return view('store.kitchen-inventory.index', compact('kitchenStocks', 'storeStocks', 'stats', 'wasteReasons', 'adjustReasons'));
     }
 
+    /** Store shelf -> kitchen (both sides recorded). */
     public function transfer(Request $request)
     {
+        $this->authorizeKitchen();
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $storeId = Auth::user()->store_id;
+        $qty = round((float) $request->quantity, 2);
 
         try {
-            DB::transaction(function () use ($request, $storeId) {
+            DB::transaction(function () use ($request, $storeId, $qty) {
                 $storeStock = StoreStock::where('store_id', $storeId)
                     ->where('product_id', $request->product_id)
                     ->lockForUpdate()
                     ->first();
 
-                if (!$storeStock || $storeStock->quantity < $request->quantity) {
-                    throw new \Exception('Not enough stock at this store to transfer that quantity.');
+                if (!$storeStock || $storeStock->quantity < $qty) {
+                    throw new KitchenStockException('Not enough stock at this store to transfer that quantity.');
                 }
 
-                $storeStock->quantity -= $request->quantity;
+                $storeStock->quantity -= $qty;
                 $storeStock->save();
 
-                $location = $this->locationForCurrentStore();
-
                 $kitchenStock = KitchenStock::firstOrCreate(
-                    ['kitchen_location_id' => $location->id, 'item_type' => 'product', 'item_id' => $request->product_id],
+                    ['kitchen_location_id' => $this->locationForCurrentStore()->id, 'item_type' => 'product', 'item_id' => $request->product_id],
                     ['quantity' => 0, 'unit' => $storeStock->product->unit ?? null]
                 );
-                $kitchenStock->quantity += $request->quantity;
-                $kitchenStock->save();
+                $this->inventory->move($kitchenStock, 'transfer_in', $qty, null, $request->notes);
 
                 StockTransaction::create([
                     'store_id' => $storeId,
                     'product_id' => $request->product_id,
                     'type' => 'kitchen_transfer_out',
-                    'quantity_change' => -$request->quantity,
+                    'quantity_change' => -$qty,
                     'running_balance' => $storeStock->quantity,
                     'ware_user_id' => Auth::id(),
                     'remarks' => 'Transferred from store shelf to kitchen',
                 ]);
             });
-        } catch (\Exception $e) {
+        } catch (KitchenStockException $e) {
             return back()->with('error', $e->getMessage());
         }
 
         return back()->with('success', 'Stock transferred to kitchen successfully.');
+    }
+
+    /**
+     * Receive / Use / Adjust / Waste / Count on one kitchen item.
+     * action: receive | use | adjust | waste | count
+     */
+    public function movement(Request $request, int $stock)
+    {
+        $this->authorizeKitchen();
+        $kitchenStock = $this->ownStock($stock);
+
+        $data = $request->validate([
+            'action' => 'required|in:receive,use,adjust,waste,count',
+            'quantity' => 'required|numeric|min:0' . ($request->input('action') === 'count' ? '' : '|gt:0'),
+            'direction' => 'required_if:action,adjust|nullable|in:in,out',
+            'reason' => 'required_if:action,adjust,waste|nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'reason.required_if' => 'Choose a reason.',
+            'direction.required_if' => 'Choose whether the adjustment adds or removes stock.',
+            'quantity.gt' => 'Enter a quantity greater than 0.',
+        ]);
+
+        $qty = round((float) $data['quantity'], 2);
+        $name = $kitchenStock->product->product_name ?? 'Item';
+        $reason = $data['reason'] ?? null;
+        $notes = $data['notes'] ?? null;
+
+        try {
+            $entry = match ($data['action']) {
+                'receive' => $this->inventory->move($kitchenStock, 'receive', $qty, $reason, $notes),
+                'use' => $this->inventory->move($kitchenStock, 'use', -$qty, $reason, $notes),
+                'waste' => $this->inventory->move($kitchenStock, 'waste', -$qty, $reason, $notes),
+                'adjust' => $data['direction'] === 'in'
+                    ? $this->inventory->move($kitchenStock, 'adjust_in', $qty, $reason, $notes)
+                    : $this->inventory->move($kitchenStock, 'adjust_out', -$qty, $reason, $notes),
+                'count' => $this->inventory->count($kitchenStock, $qty, $notes),
+            };
+        } catch (KitchenStockException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $kitchenStock->refresh();
+        $now = rtrim(rtrim(number_format((float) $kitchenStock->quantity, 2), '0'), '.');
+
+        return back()->with('success', $entry
+            ? "{$name}: {$entry->typeLabel()} recorded. Kitchen now has {$now}."
+            : "{$name}: count matches the system ({$now}). Nothing to change.");
+    }
+
+    /** Minimum level (low-stock status) and reserved quantity. */
+    public function updateLevels(Request $request, int $stock)
+    {
+        $this->authorizeKitchen();
+        $kitchenStock = $this->ownStock($stock);
+
+        $data = $request->validate([
+            'min_quantity' => 'required|numeric|min:0',
+            'reserved_quantity' => 'nullable|numeric|min:0',
+        ]);
+
+        $kitchenStock->update([
+            'min_quantity' => round((float) $data['min_quantity'], 2),
+            'reserved_quantity' => round((float) ($data['reserved_quantity'] ?? $kitchenStock->reserved_quantity), 2),
+        ]);
+
+        return back()->with('success', ($kitchenStock->product->product_name ?? 'Item') . ': levels updated.');
+    }
+
+    /** Kitchen ledger: every movement, newest first, with filters. */
+    public function history(Request $request)
+    {
+        $this->authorizeKitchen();
+        $location = $this->locationForCurrentStore();
+        $tz = config('app.display_timezone', 'America/Chicago');
+
+        $query = KitchenStockTransaction::where('kitchen_location_id', $location->id)
+            ->with('stock.product')
+            ->latest('created_at')->latest('id');
+
+        if ($request->filled('stock')) {
+            $query->where('kitchen_stock_id', $request->integer('stock'));
+        }
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        // Dates are the store's local (Central) days.
+        if ($request->filled('from')) {
+            $query->where('created_at', '>=', Carbon::parse($request->from, $tz)->startOfDay()->utc());
+        }
+        if ($request->filled('to')) {
+            $query->where('created_at', '<=', Carbon::parse($request->to, $tz)->endOfDay()->utc());
+        }
+
+        $transactions = $query->paginate(25)->withQueryString();
+        $items = KitchenStock::where('kitchen_location_id', $location->id)->with('product')->get()
+            ->sortBy(fn ($s) => $s->product->product_name ?? '')->values();
+        $types = KitchenStockTransaction::TYPES;
+
+        return view('store.kitchen-inventory.history', compact('transactions', 'items', 'types', 'tz'));
     }
 }

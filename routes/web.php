@@ -210,6 +210,10 @@ Route::middleware('auth')->group(function () {
     // Item 7: Kitchen Inventory + store-to-kitchen transfer
     Route::get('/kitchen-inventory', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'index'])->name('kitchen-inventory.index');
     Route::post('/kitchen-inventory/transfer', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'transfer'])->name('kitchen-inventory.transfer');
+    // Kitchen spec section 6: ledger of every kitchen movement + receive/use/adjust/waste/count + min level
+    Route::get('/kitchen-inventory/history', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'history'])->name('kitchen-inventory.history');
+    Route::post('/kitchen-inventory/{stock}/movement', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'movement'])->whereNumber('stock')->name('kitchen-inventory.movement');
+    Route::put('/kitchen-inventory/{stock}/levels', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'updateLevels'])->whereNumber('stock')->name('kitchen-inventory.levels');
 
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         Route::get('/overview', [StoreStockControlController::class, 'overview'])->name('overview');
