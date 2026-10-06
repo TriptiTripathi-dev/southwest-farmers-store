@@ -4,6 +4,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model {
     protected $guarded = [];
+
+    protected $casts = [
+        'due_at' => 'datetime',
+        'kitchen_status_changed_at' => 'datetime',
+    ];
     
     public function items() {
         return $this->hasMany(SaleItem::class);

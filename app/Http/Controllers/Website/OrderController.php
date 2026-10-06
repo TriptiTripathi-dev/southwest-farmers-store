@@ -65,6 +65,17 @@ class OrderController extends Controller
 
         $storeId = $user->store_id ?? 1;
 
+        // An item may have sold out since it was added to the cart.
+        $unavailable = $cart->items->filter(fn ($ci) => $ci->menu_item_id)
+            ->map(fn ($ci) => \App\Models\MenuItem::find($ci->menu_item_id))
+            ->filter(fn ($mi) => !$mi || !$mi->isOrderableNow(\App\Models\StoreSetting::availabilityOptions($mi->store_id)['sold_out_resets_daily']));
+        if ($unavailable->isNotEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No longer available today: ' . $unavailable->map(fn ($mi) => $mi->name ?? 'an item')->implode(', ') . '. Please remove it from your cart.',
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             // Generate Invoice Number

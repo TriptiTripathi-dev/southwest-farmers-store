@@ -56,10 +56,10 @@ class WebsiteMenuController extends Controller
                 ->where('is_active', true)
                 ->get();
                 
-            $menuItems = MenuItem::with('category')
+            $menuItems = $this->forMenu(MenuItem::with('category')
                 ->where('store_id', $storeId)
                 ->where('is_active', true)
-                ->get()
+                ->get(), $storeId)
                 ->groupBy('menu_category_id');
         }
 
@@ -69,6 +69,22 @@ class WebsiteMenuController extends Controller
     /**
      * Display prepared menu items inside a specific category.
      */
+    /**
+     * Daily availability on the website (kitchen spec 4.3): Unavailable and
+     * off-schedule items are left out; Sold Out items are left out or shown
+     * with a Sold Out label, per the store's setting. Each kept item gets
+     * menu_status for the view.
+     */
+    protected function forMenu($items, $storeId)
+    {
+        $options = \App\Models\StoreSetting::availabilityOptions($storeId);
+
+        return $items->each(fn ($i) => $i->menu_status = $i->currentStatus($options['sold_out_resets_daily']))
+            ->filter(fn ($i) => $i->menu_status === MenuItem::AVAILABLE
+                || ($i->menu_status === MenuItem::SOLD_OUT && $options['sold_out_display'] === 'show'))
+            ->values();
+    }
+
     public function category($id)
     {
         $storeId = $this->getActiveStoreId();
@@ -83,6 +99,7 @@ class WebsiteMenuController extends Controller
         $items = MenuItem::where('menu_category_id', $category->id)
             ->where('is_active', true)
             ->paginate(12);
+        $items->setCollection($this->forMenu($items->getCollection(), $storeId));
 
         return view('website.menus.category', compact('category', 'items', 'currentStore'));
     }

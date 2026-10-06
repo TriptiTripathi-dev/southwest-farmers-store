@@ -43,12 +43,39 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4 border-start border-info border-3">
+                    <div class="card border-0 shadow-sm rounded-4 border-start border-danger border-3">
                         <div class="card-body">
-                            <p class="text-uppercase fw-medium text-muted mb-1 small">Pre-Cooked Items</p>
-                            <h4 class="mb-0 text-info">{{ $stats['pre_cooked'] }}</h4>
+                            <p class="text-uppercase fw-medium text-muted mb-1 small">Sold Out Today</p>
+                            <h4 class="mb-0 text-danger">{{ $stats['sold_out'] }}</h4>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {{-- Store options for Sold Out (client decisions; defaults: show, reset daily) --}}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body py-3">
+                    <form method="POST" action="{{ route('store.kitchen.availability.options') }}" class="row g-3 align-items-center">
+                        @csrf
+                        @method('PUT')
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold mb-1">On the website, Sold Out items are</label>
+                            <select name="sold_out_display" class="form-select form-select-sm">
+                                <option value="show" @selected($options['sold_out_display'] === 'show')>Shown with a "Sold Out" label (can't be ordered)</option>
+                                <option value="hide" @selected($options['sold_out_display'] === 'hide')>Hidden from the menu</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-check form-switch mt-md-4">
+                                <input class="form-check-input" type="checkbox" role="switch" name="sold_out_resets_daily" value="1" id="soldOutReset" @checked($options['sold_out_resets_daily'])>
+                                <label class="form-check-label small fw-semibold" for="soldOutReset">Sold Out turns back to Available the next morning</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-md-end">
+                            <button class="btn btn-sm btn-primary mt-md-4">Save options</button>
+                        </div>
+                    </form>
+                    <small class="text-muted d-block mt-2">Availability is per store: Sold Out here does not affect other stores. "Unavailable" stays until changed.</small>
                 </div>
             </div>
 
@@ -118,19 +145,23 @@
                                     <td>
                                         <span class="badge bg-secondary-subtle text-secondary">{{ $item->category->name ?? 'General' }}</span>
                                     </td>
-                                    <td class="text-center">
-                                        <form action="{{ route('store.kitchen.availability.toggle-today', $item) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @if($item->is_available_today)
-                                                <button type="submit" class="btn btn-sm btn-success w-100 py-1" title="Click to mark unavailable today">
-                                                    <i class="mdi mdi-check-circle me-1"></i> Available
-                                                </button>
-                                            @else
-                                                <button type="submit" class="btn btn-sm btn-danger w-100 py-1" title="Click to mark available today">
-                                                    <i class="mdi mdi-close-circle me-1"></i> Sold Out
-                                                </button>
-                                            @endif
-                                        </form>
+                                    @php $now = $item->currentStatus($options['sold_out_resets_daily']); @endphp
+                                    <td class="text-center" style="min-width: 230px;">
+                                        <div class="btn-group btn-group-sm w-100" role="group">
+                                            @foreach (['available' => ['Available', 'success'], 'sold_out' => ['Sold Out', 'danger'], 'unavailable' => ['Unavailable', 'secondary']] as $st => [$lbl, $color])
+                                                <form action="{{ route('store.kitchen.availability.status', $item) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <input type="hidden" name="status" value="{{ $st }}">
+                                                    <button type="submit" class="btn btn-sm {{ $now === $st ? 'btn-' . $color : 'btn-outline-' . $color }} py-1 px-2 text-nowrap">{{ $lbl }}</button>
+                                                </form>
+                                            @endforeach
+                                        </div>
+                                        @if ($now === 'not_scheduled')
+                                            <small class="d-block text-warning mt-1">Not on today's weekly schedule</small>
+                                        @endif
+                                        @if ($item->availability_changed_at)
+                                            <small class="d-block text-muted mt-1">by {{ $item->availability_changed_by ?? '—' }}, {{ $item->availability_changed_at->copy()->timezone(config('app.display_timezone', 'America/Chicago'))->format('m/d h:i A') }}</small>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1 flex-wrap">
@@ -181,12 +212,14 @@
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            <div class="form-check form-switch mb-3 p-3 bg-light rounded">
-                                                                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="todayCheck{{ $item->id }}" name="is_available_today" value="1" {{ $item->is_available_today ? 'checked' : '' }}>
-                                                                <label class="form-check-label fw-semibold" for="todayCheck{{ $item->id }}">
-                                                                    Available for Order Today
-                                                                </label>
-                                                                <div class="form-text mt-0">Toggle off to immediately mark as out-of-stock on POS and Online.</div>
+                                                            <div class="mb-3 p-3 bg-light rounded">
+                                                                <label class="form-label fw-semibold" for="todayStatus{{ $item->id }}">Today's status</label>
+                                                                <select class="form-select form-select-sm" id="todayStatus{{ $item->id }}" name="availability_status">
+                                                                    @foreach (['available' => 'Available', 'sold_out' => 'Sold Out (today)', 'unavailable' => 'Unavailable (until changed)'] as $st => $lbl)
+                                                                        <option value="{{ $st }}" @selected(($now === 'not_scheduled' ? 'available' : $now) === $st)>{{ $lbl }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="form-text mt-1">Sold Out or Unavailable items can't be ordered on the website.</div>
                                                             </div>
 
                                                             <div class="mb-3">
@@ -259,6 +292,28 @@
                     </div>
                 </div>
                 @endif
+            </div>
+
+            {{-- Audit: who changed what, when (kitchen spec 4.3) --}}
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-header bg-white fw-bold"><i class="mdi mdi-history me-1"></i> Recent availability changes</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0 align-middle">
+                        <thead class="bg-light"><tr><th class="ps-4 small text-muted">WHEN</th><th class="small text-muted">ITEM</th><th class="small text-muted">CHANGE</th><th class="pe-4 small text-muted">BY</th></tr></thead>
+                        <tbody>
+                            @forelse ($recentChanges as $log)
+                                <tr>
+                                    <td class="ps-4 small">{{ $log->created_at->copy()->timezone(config('app.display_timezone', 'America/Chicago'))->format('m/d/Y h:i A') }}</td>
+                                    <td class="small fw-semibold">{{ $log->menuItem->name ?? '—' }}</td>
+                                    <td class="small">{{ \App\Models\MenuItem::STATUS_LABELS[$log->from_status] ?? $log->from_status }} &rarr; <strong>{{ \App\Models\MenuItem::STATUS_LABELS[$log->to_status] ?? $log->to_status }}</strong></td>
+                                    <td class="pe-4 small">{{ $log->user_name ?? '—' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted small py-3">No changes recorded yet.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>

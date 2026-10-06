@@ -101,6 +101,8 @@ Route::middleware('auth')->group(function () {
         Route::get('availability', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'index'])->name('availability.index');
         Route::put('availability/{menuItem}', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'update'])->name('availability.update');
         Route::post('availability/{menuItem}/toggle-today', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'toggleToday'])->name('availability.toggle-today');
+        Route::post('availability/{menuItem}/status', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'setStatus'])->name('availability.status');
+        Route::put('availability-options', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'updateOptions'])->name('availability.options');
 
         Route::get('staff-timesheets', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'index'])->name('staff.index');
         Route::post('staff-timesheets/shift', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');

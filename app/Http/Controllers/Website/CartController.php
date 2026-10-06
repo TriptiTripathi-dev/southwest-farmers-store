@@ -91,6 +91,17 @@ class CartController extends Controller
             }
         } else {
             $menuItem = MenuItem::findOrFail($request->menu_item_id);
+
+            // Daily availability (kitchen spec 4.3): Sold Out / Unavailable /
+            // off-schedule items can't be ordered, whatever the page showed.
+            $options = \App\Models\StoreSetting::availabilityOptions($menuItem->store_id);
+            if (!$menuItem->isOrderableNow($options['sold_out_resets_daily'])) {
+                $msg = "Sorry, {$menuItem->name} is " . strtolower(\App\Models\MenuItem::STATUS_LABELS[$menuItem->currentStatus($options['sold_out_resets_daily'])] ?? 'not available') . ' right now.';
+                return $request->ajax() || $request->expectsJson()
+                    ? response()->json(['success' => false, 'message' => $msg], 422)
+                    : back()->with('error', $msg);
+            }
+
             $cartItem = $cart->items()->where('menu_item_id', $menuItem->id)->first();
 
             if ($cartItem) {

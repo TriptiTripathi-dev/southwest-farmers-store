@@ -113,9 +113,13 @@
                                             
                                             <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                                                 <span class="fs-4 fw-black text-danger">${{ number_format($item->price, 2) }}</span>
+                                                @if (($item->menu_status ?? 'available') === 'sold_out')
+                                                    <span class="badge bg-secondary rounded-pill px-3 py-2">Sold Out</span>
+                                                @else
                                                 <button class="btn btn-danger rounded-pill px-3 fw-bold d-flex align-items-center gap-1 add-to-cart-btn" data-id="{{ $item->id }}">
                                                     <i class="mdi mdi-cart-plus"></i> Add
                                                 </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
