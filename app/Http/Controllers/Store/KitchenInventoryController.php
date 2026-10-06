@@ -7,13 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Models\KitchenLocation;
 use App\Models\KitchenStock;
 use App\Models\KitchenStockTransaction;
-use App\Models\StockTransaction;
 use App\Models\StoreStock;
 use App\Services\KitchenInventoryService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Store Kitchen inventory (kitchen spec section 6, contract B.4): kept apart
@@ -80,54 +78,27 @@ class KitchenInventoryController extends Controller
         return view('store.kitchen-inventory.index', compact('kitchenStocks', 'storeStocks', 'stats', 'wasteReasons', 'adjustReasons'));
     }
 
-    /** Store shelf -> kitchen (both sides recorded). */
-    public function transfer(Request $request)
+    /**
+     * Old one-step "Transfer to Kitchen" form. Kitchen spec 7.1: shelf ->
+     * kitchen stock may only move after Area Manager approval, so this now
+     * files a pending request instead of moving stock.
+     */
+    public function transfer(Request $request, \App\Services\KitchenTransferService $transfers)
     {
-        $this->authorizeKitchen();
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $storeId = Auth::user()->store_id;
-        $qty = round((float) $request->quantity, 2);
-
         try {
-            DB::transaction(function () use ($request, $storeId, $qty) {
-                $storeStock = StoreStock::where('store_id', $storeId)
-                    ->where('product_id', $request->product_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$storeStock || $storeStock->quantity < $qty) {
-                    throw new KitchenStockException('Not enough stock at this store to transfer that quantity.');
-                }
-
-                $storeStock->quantity -= $qty;
-                $storeStock->save();
-
-                $kitchenStock = KitchenStock::firstOrCreate(
-                    ['kitchen_location_id' => $this->locationForCurrentStore()->id, 'item_type' => 'product', 'item_id' => $request->product_id],
-                    ['quantity' => 0, 'unit' => $storeStock->product->unit ?? null]
-                );
-                $this->inventory->move($kitchenStock, 'transfer_in', $qty, null, $request->notes);
-
-                StockTransaction::create([
-                    'store_id' => $storeId,
-                    'product_id' => $request->product_id,
-                    'type' => 'kitchen_transfer_out',
-                    'quantity_change' => -$qty,
-                    'running_balance' => $storeStock->quantity,
-                    'ware_user_id' => Auth::id(),
-                    'remarks' => 'Transferred from store shelf to kitchen',
-                ]);
-            });
+            $req = $transfers->create(Auth::user(), [['product_id' => $request->product_id, 'quantity' => $request->quantity]], $request->notes);
         } catch (KitchenStockException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Stock transferred to kitchen successfully.');
+        return redirect()->route('kitchen-transfers.show', $req->id)
+            ->with('success', "Request {$req->number()} sent for Area Manager approval. Kitchen stock changes only after approval.");
     }
 
     /**

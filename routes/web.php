@@ -216,6 +216,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/kitchen-inventory/history', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'history'])->name('kitchen-inventory.history');
     Route::post('/kitchen-inventory/{stock}/movement', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'movement'])->whereNumber('stock')->name('kitchen-inventory.movement');
     Route::put('/kitchen-inventory/{stock}/levels', [\App\Http\Controllers\Store\KitchenInventoryController::class, 'updateLevels'])->whereNumber('stock')->name('kitchen-inventory.levels');
+    // Kitchen spec 7.1 / 7.3: GM request -> Area Manager approval, and the transfer report
+    Route::get('/kitchen-transfers', [\App\Http\Controllers\Store\KitchenTransferController::class, 'index'])->name('kitchen-transfers.index');
+    Route::get('/kitchen-transfers/create', [\App\Http\Controllers\Store\KitchenTransferController::class, 'create'])->name('kitchen-transfers.create');
+    Route::post('/kitchen-transfers', [\App\Http\Controllers\Store\KitchenTransferController::class, 'store'])->name('kitchen-transfers.store');
+    Route::get('/kitchen-transfers/{id}', [\App\Http\Controllers\Store\KitchenTransferController::class, 'show'])->whereNumber('id')->name('kitchen-transfers.show');
+    Route::post('/kitchen-transfers/{id}/approve', [\App\Http\Controllers\Store\KitchenTransferController::class, 'approve'])->whereNumber('id')->name('kitchen-transfers.approve');
+    Route::post('/kitchen-transfers/{id}/deny', [\App\Http\Controllers\Store\KitchenTransferController::class, 'deny'])->whereNumber('id')->name('kitchen-transfers.deny');
+    Route::post('/kitchen-transfers/{id}/cancel', [\App\Http\Controllers\Store\KitchenTransferController::class, 'cancel'])->whereNumber('id')->name('kitchen-transfers.cancel');
 
     Route::prefix('store/stock-control')->name('store.stock-control.')->group(function () {
         Route::get('/overview', [StoreStockControlController::class, 'overview'])->name('overview');

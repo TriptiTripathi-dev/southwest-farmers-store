@@ -7,9 +7,14 @@
                 <a href="{{ route('kitchen-inventory.history') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm me-2">
                     <i class="mdi mdi-history me-1"></i> History
                 </a>
-                <button class="btn btn-dark rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#transferModal">
-                    <i class="mdi mdi-swap-horizontal me-2"></i> Transfer to Kitchen
-                </button>
+                <a href="{{ route('kitchen-transfers.index') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm me-2">
+                    <i class="mdi mdi-clipboard-list-outline me-1"></i> Transfers
+                </a>
+                @if (auth()->user()->hasPermission('kitchen_transfer_request'))
+                    <a href="{{ route('kitchen-transfers.create') }}" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                        <i class="mdi mdi-swap-horizontal me-2"></i> Request Transfer
+                    </a>
+                @endif
             </x-page-header>
 
             {{-- Summary --}}
@@ -93,49 +98,8 @@
                     </div>
                 </div>
             </div>
-            <p class="text-muted small mt-2 mb-0">Available = On Hand − Reserved. Every change is recorded in History with who did it and when.</p>
+            <p class="text-muted small mt-2 mb-0">Available = On Hand − Reserved. Every change is recorded in History with who did it and when. Stock comes from the store shelf through a transfer request approved by an Area Manager.</p>
 
-        </div>
-    </div>
-
-    {{-- Transfer Modal --}}
-    <div class="modal fade" id="transferModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="{{ route('kitchen-inventory.transfer') }}" method="POST">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Transfer Stock to Kitchen</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Product</label>
-                            <select name="product_id" class="form-select" required>
-                                <option value="">-- Select product from store stock --</option>
-                                @foreach($storeStocks as $stock)
-                                    <option value="{{ $stock->product_id }}">
-                                        {{ $stock->product->product_name ?? 'Unknown' }} (on shelf: {{ $fmt($stock->quantity) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Quantity</label>
-                            <input type="number" step="0.01" min="0.01" name="quantity" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
-                            <input type="text" name="notes" class="form-control" maxlength="500">
-                        </div>
-                        <p class="text-muted small mb-0">This moves stock out of the store shelf count and into the kitchen's own inventory.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-dark">Transfer</button>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
 

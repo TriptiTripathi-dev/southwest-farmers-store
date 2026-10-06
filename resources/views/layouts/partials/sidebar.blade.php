@@ -52,7 +52,7 @@
                     // is('inventory*') opened this section for them (QA: "clicking
                     // scheduled POs still expands Inventory control") while missing
                     // this section's own pages at /stocks and /kitchen-inventory.
-                    $isInventoryActive = request()->routeIs('inventory.index', 'inventory.adjustments', 'inventory.history', 'kitchen-inventory.*', 'transfers.*', 'store.audits.*', 'store.inventory.*');
+                    $isInventoryActive = request()->routeIs('inventory.index', 'inventory.adjustments', 'inventory.history', 'kitchen-inventory.*', 'kitchen-transfers.*', 'transfers.*', 'store.audits.*', 'store.inventory.*');
                     @endphp
                     <li class="menuitem-{{ $isInventoryActive ? 'active' : '' }} {{ $isInventoryActive ? 'show' : '' }}">
                     <a href="#sidebarInventory" data-bs-toggle="collapse"
@@ -104,6 +104,15 @@
                                 <a href="{{ route('kitchen-inventory.index') }}"
                                     class="tp-link {{ request()->routeIs('kitchen-inventory.*') ? 'active' : '' }}">
                                     Kitchen Inventory
+                                </a>
+                            </li>
+                            @endif
+
+                            @if ($can('kitchen_transfer_request') || $can('kitchen_transfer_approve') || $can('adjust_stock'))
+                            <li>
+                                <a href="{{ route('kitchen-transfers.index') }}"
+                                    class="tp-link {{ request()->routeIs('kitchen-transfers.*') ? 'active' : '' }}">
+                                    Kitchen Transfers
                                 </a>
                             </li>
                             @endif
