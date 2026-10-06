@@ -23,6 +23,10 @@ return [
     'inventory.adjustments' => ['section' => 'Inventory control', 'title' => 'Inventory adjustment', 'icon' => 'mdi mdi-scale-balance', 'description' => 'Manually correct stock levels (damage, theft, returns).'],
     'transfers.index' => ['section' => 'Inventory control', 'title' => 'Store to store transfer', 'icon' => 'mdi mdi-swap-horizontal-bold', 'description' => 'Manage inventory transfers between locations.'],
     'kitchen-inventory.index' => ['section' => 'Inventory control', 'title' => 'Kitchen Inventory', 'icon' => 'mdi mdi-chef-hat', 'description' => 'Stock currently held in the kitchen, separate from the store shelf.'],
+    'kitchen-inventory.history' => ['section' => 'Inventory control', 'title' => 'Kitchen Inventory', 'icon' => 'mdi mdi-history', 'description' => 'Every kitchen stock movement: who, when and why.'],
+    'kitchen-transfers.index' => ['section' => 'Inventory control', 'title' => 'Kitchen Transfers', 'icon' => 'mdi mdi-swap-horizontal', 'description' => 'Store shelf to kitchen requests, approvals and the transfer report.'],
+    'kitchen-transfers.create' => ['section' => 'Inventory control', 'title' => 'Kitchen Transfers', 'icon' => 'mdi mdi-plus', 'description' => 'Request stock from the store shelf for the kitchen. An Area Manager approves it.'],
+    'kitchen-transfers.show' => ['section' => 'Inventory control', 'title' => 'Kitchen Transfers', 'icon' => 'mdi mdi-swap-horizontal', 'description' => 'Kitchen transfer request details and decision.'],
     'store.audits.index' => ['section' => 'Inventory control', 'title' => 'Inventory Audits', 'icon' => 'mdi mdi-clipboard-check-outline', 'description' => 'Manage and track physical inventory counts.'],
 
     // Warehouse Orders (PO)
