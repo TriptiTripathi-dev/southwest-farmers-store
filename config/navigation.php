@@ -82,6 +82,10 @@ return [
 
     // Staff Management
     'staff.index' => ['section' => 'Staff Management', 'title' => 'Store Staff', 'icon' => 'mdi mdi-account-multiple', 'description' => 'Manage your team members and their roles.'],
+    'store.schedules.index' => ['section' => 'Staff Management', 'title' => 'Schedules', 'icon' => 'mdi mdi-calendar-month', 'description' => 'Weekly shifts per employee; staff clock in only during their scheduled shift.'],
+    'store.time-records.index' => ['section' => 'Staff Management', 'title' => 'Time Records', 'icon' => 'mdi mdi-clipboard-clock-outline', 'description' => 'Review, correct and approve clock-ins; GM approvals for unscheduled staff.'],
+    'store.time-records.cross-location' => ['section' => 'Staff Management', 'title' => 'Time Records', 'icon' => 'mdi mdi-map-marker-multiple', 'description' => 'Who may clock in at another store.'],
+    'store.time-records.reports' => ['section' => 'Staff Management', 'title' => 'Time Reports', 'icon' => 'mdi mdi-file-chart', 'description' => 'Attendance and payroll hours by employee and location.'],
     'store.time-clock.index' => ['section' => 'Staff Management', 'title' => 'Staff Time Clock', 'icon' => 'mdi mdi-clock-outline', 'description' => "Clock staff in and out using their store ID (see Store Staff for each employee's ID)."],
 
     // Access Control

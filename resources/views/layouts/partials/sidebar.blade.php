@@ -571,7 +571,7 @@
                 {{-- STAFF MANAGEMENT --}}
                 @if ($can('manage_staff') || $can('view_staff'))
                 @php
-                $isStaffActive = request()->routeIs('staff.*') || request()->routeIs('store.time-clock.*');
+                $isStaffActive = request()->routeIs('staff.*') || request()->routeIs('store.time-clock.*') || request()->routeIs('store.schedules.*') || request()->routeIs('store.time-records.*');
                 @endphp
                 <li class="menuitem-{{ $isStaffActive ? 'active' : '' }} {{ $isStaffActive ? 'show' : '' }}">
 
@@ -598,6 +598,28 @@
                                     Staff Time Clock
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('store.schedules.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.schedules.*') ? 'active' : '' }}">
+                                    Schedules
+                                </a>
+                            </li>
+                            @if ($can('approve_timesheets') || $can('approve_time_exceptions'))
+                            <li>
+                                <a href="{{ route('store.time-records.index') }}"
+                                    class="tp-link {{ request()->routeIs('store.time-records.index', 'store.time-records.cross-location') ? 'active' : '' }}">
+                                    Time Records
+                                </a>
+                            </li>
+                            @endif
+                            @if ($can('approve_timesheets'))
+                            <li>
+                                <a href="{{ route('store.time-records.reports') }}"
+                                    class="tp-link {{ request()->routeIs('store.time-records.reports') ? 'active' : '' }}">
+                                    Time Reports
+                                </a>
+                            </li>
+                            @endif
                         </ul>
                     </div>
                 </li>

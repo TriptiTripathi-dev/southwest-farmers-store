@@ -71,6 +71,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/time-clock', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'index'])->name('store.time-clock.index');
     Route::post('/time-clock/clock-in', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockIn'])->name('store.time-clock.clock-in');
     Route::post('/time-clock/{timeLog}/clock-out', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockOut'])->name('store.time-clock.clock-out');
+    Route::post('/time-clock/clock-out-by-code', [\App\Http\Controllers\Store\StoreTimeClockController::class, 'clockOutByCode'])->name('store.time-clock.clock-out-code');
+
+    // Kitchen spec 9-10 (contract B.8/B.9): schedules, time records, approvals, reports
+    Route::get('/schedules', [\App\Http\Controllers\Store\StoreScheduleController::class, 'index'])->name('store.schedules.index');
+    Route::post('/schedules', [\App\Http\Controllers\Store\StoreScheduleController::class, 'store'])->name('store.schedules.store');
+    Route::put('/schedules/{schedule}', [\App\Http\Controllers\Store\StoreScheduleController::class, 'update'])->whereNumber('schedule')->name('store.schedules.update');
+    Route::post('/schedules/{schedule}/cancel', [\App\Http\Controllers\Store\StoreScheduleController::class, 'cancel'])->whereNumber('schedule')->name('store.schedules.cancel');
+    Route::get('/time-records', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'index'])->name('store.time-records.index');
+    Route::post('/time-records/{log}/correct', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'correct'])->whereNumber('log')->name('store.time-records.correct');
+    Route::post('/time-records/approve', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'approve'])->name('store.time-records.approve');
+    Route::post('/time-records/override', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'override'])->name('store.time-records.override');
+    Route::post('/time-records/gm-enter', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'gmEnter'])->name('store.time-records.gm-enter');
+    Route::get('/time-records/cross-location', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'crossLocation'])->name('store.time-records.cross-location');
+    Route::post('/time-records/cross-location', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'grantCrossLocation'])->name('store.time-records.cross-location.grant');
+    Route::delete('/time-records/cross-location/{permission}', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'revokeCrossLocation'])->whereNumber('permission')->name('store.time-records.cross-location.revoke');
+    Route::put('/time-records/settings', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'updateSettings'])->name('store.time-records.settings');
+    Route::get('/time-records/reports', [\App\Http\Controllers\Store\StoreTimeRecordsController::class, 'reports'])->name('store.time-records.reports');
 
     // Item 6: Cookbook Builder — recipes with step-by-step instructions, tied to menu items
     Route::resource('cookbook', \App\Http\Controllers\Store\StoreCookbookController::class)->names([

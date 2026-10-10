@@ -28,7 +28,22 @@ class StoreSetting extends Model
         'catering_enabled',
         'catering_notice_days',  // standard notice, default 7 calendar days
         'catering_cutoff_time',  // HH:MM local; orders after it count from the next day
+        'clock_early_minutes',        // may clock in this long before shift start
+        'late_grace_minutes',         // later than this after start = Late
+        'early_leave_grace_minutes',  // earlier than this before end = Early departure
     ];
+
+    /** Time clock window/grace for a store (kitchen spec 9.2; values are the client's to set). */
+    public static function timeClockOptions(?int $storeId): array
+    {
+        $row = $storeId ? static::where('store_id', $storeId)->first() : null;
+
+        return [
+            'early_minutes' => (int) ($row?->clock_early_minutes ?? 15),
+            'late_grace' => (int) ($row?->late_grace_minutes ?? 5),
+            'early_leave_grace' => (int) ($row?->early_leave_grace_minutes ?? 5),
+        ];
+    }
 
     protected $casts = [
         'sold_out_resets_daily' => 'boolean',

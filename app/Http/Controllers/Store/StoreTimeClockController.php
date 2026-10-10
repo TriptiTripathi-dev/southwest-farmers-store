@@ -2,101 +2,115 @@
 
 namespace App\Http\Controllers\Store;
 
+use App\Exceptions\TimeClockException;
 use App\Http\Controllers\Controller;
+use App\Models\EmployeeSchedule;
 use App\Models\StoreTimeLog;
 use App\Models\StoreUser;
+use App\Services\TimeClockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 /**
- * Item 4: staff clock in/out, using each employee's store ID (staff_code).
- * Mirrors the Warehouse app's KitchenStaffScheduleController pattern.
+ * Staff Time Clock terminal (kitchen spec 9.2-9.4). Staff clock in/out with
+ * their store ID at this store's terminal; the rules (schedule, location,
+ * cross-location permission, GM override) are in TimeClockService.
  */
 class StoreTimeClockController extends Controller
 {
+    public function __construct(private TimeClockService $clock)
+    {
+    }
+
     public function index(Request $request)
     {
         $storeId = Auth::user()->store_id;
+        $tz = TimeClockService::tz();
 
-        $staff = StoreUser::where('store_id', $storeId)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $activeLogs = StoreTimeLog::where('store_id', $storeId)->whereNull('clock_out_at')->with('staff')->orderBy('clock_in_at')->get();
+        $todayShifts = EmployeeSchedule::where('store_id', $storeId)->where('status', 'scheduled')
+            ->whereDate('shift_date', now($tz)->toDateString())->with('employee')->orderBy('start_time')->get();
+        $recentLogs = StoreTimeLog::where('store_id', $storeId)->with('staff')->latest('clock_in_at')->paginate(20);
 
-        $activeLogs = StoreTimeLog::where('store_id', $storeId)
-            ->whereNull('clock_out_at')
-            ->pluck('store_user_id')
-            ->flip();
+        return view('store.time-clock.index', compact('activeLogs', 'todayShifts', 'recentLogs', 'tz'));
+    }
 
-        $recentLogs = StoreTimeLog::where('store_id', $storeId)
-            ->with('staff')
-            ->latest('clock_in_at')
-            ->paginate(20);
+    /** Store IDs are global, so staff with cross-location permission can use another store's terminal. */
+    protected function employeeByCode(string $code): StoreUser
+    {
+        $employee = StoreUser::where('staff_code', trim($code))->first();
+        if (!$employee) {
+            throw new TimeClockException('No employee has that store ID.');
+        }
 
-        return view('store.time-clock.index', compact('staff', 'activeLogs', 'recentLogs'));
+        return $employee;
     }
 
     public function clockIn(Request $request)
     {
-        $validated = $request->validate([
-            'staff_code' => 'required|string|exists:store_users,staff_code',
-            'notes' => 'nullable|string',
-        ]);
+        $data = $request->validate(['staff_code' => 'required|string', 'notes' => 'nullable|string|max:500']);
 
-        $storeId = Auth::user()->store_id;
-
-        $employee = StoreUser::where('staff_code', $validated['staff_code'])
-            ->where('store_id', $storeId)
-            ->first();
-
-        if (!$employee) {
-            return back()->with('error', 'That store ID does not belong to an employee at this store.');
+        try {
+            $employee = $this->employeeByCode($data['staff_code']);
+            $log = $this->clock->clockIn($employee, Auth::user()->store_id, Auth::user(), $data['notes'] ?? null);
+        } catch (TimeClockException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
         }
 
-        $existing = StoreTimeLog::where('store_user_id', $employee->id)
-            ->whereNull('clock_out_at')
-            ->first();
-
-        if ($existing) {
-            return back()->with('error', "{$employee->name} is already clocked in.");
+        $msg = "{$employee->name} clocked in";
+        $msg .= match ($log->clock_basis) {
+            'cross_location' => ' (cross-location, permitted).',
+            'gm_override' => " (unscheduled, approved by {$log->override_by_name}).",
+            default => '.',
+        };
+        if ($log->late_minutes > 0) {
+            $msg .= " Late by {$log->late_minutes} min.";
         }
 
-        StoreTimeLog::create([
-            'store_user_id' => $employee->id,
-            'store_id' => $storeId,
-            'clock_in_at' => Carbon::now(),
-            'status' => 'clocked_in',
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        return back()->with('success', "{$employee->name} clocked in successfully.");
+        return back()->with('success', $msg);
     }
 
+    /** Clock out by store ID (the employee at the terminal). */
+    public function clockOutByCode(Request $request)
+    {
+        $data = $request->validate(['staff_code' => 'required|string', 'break_minutes' => 'nullable|integer|min:0|max:600']);
+
+        try {
+            $employee = $this->employeeByCode($data['staff_code']);
+            $log = StoreTimeLog::where('store_user_id', $employee->id)->whereNull('clock_out_at')->first();
+            if (!$log) {
+                throw new TimeClockException("{$employee->name} is not clocked in.");
+            }
+
+            return $this->finish($log, (int) ($data['break_minutes'] ?? 0));
+        } catch (TimeClockException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /** Clock out from the list (a supervisor at this store's terminal). */
     public function clockOut(Request $request, StoreTimeLog $timeLog)
     {
         if (Auth::user()->store_id != $timeLog->store_id) {
             abort(403);
         }
+        $request->validate(['break_minutes' => 'nullable|integer|min:0|max:600']);
 
-        if ($timeLog->clock_out_at) {
-            return back()->with('error', 'This time log is already clocked out.');
+        try {
+            return $this->finish($timeLog, (int) $request->input('break_minutes', 0), $request->input('notes'));
+        } catch (TimeClockException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    protected function finish(StoreTimeLog $log, int $break, ?string $notes = null)
+    {
+        $log = $this->clock->clockOut($log, Auth::user(), $break, $notes);
+        $msg = ($log->staff->name ?? 'Staff') . " clocked out. Hours: {$log->total_hours}.";
+        if ($log->early_leave_minutes > 0) {
+            $msg .= " Left {$log->early_leave_minutes} min early.";
         }
 
-        $now = Carbon::now();
-        $clockIn = Carbon::parse($timeLog->clock_in_at);
-        $breakMinutes = (int) $request->input('break_minutes', 0);
-        $diffMinutes = max(0, $clockIn->diffInMinutes($now) - $breakMinutes);
-        $totalHours = round($diffMinutes / 60, 2);
-
-        $timeLog->update([
-            'clock_out_at' => $now,
-            'break_minutes' => $breakMinutes,
-            'total_hours' => $totalHours,
-            'status' => 'clocked_out',
-            'notes' => $request->input('notes', $timeLog->notes),
-        ]);
-
-        return back()->with('success', "Clocked out. Total recorded hours: {$totalHours}h.");
+        return back()->with('success', $msg);
     }
 }
