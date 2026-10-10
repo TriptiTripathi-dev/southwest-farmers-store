@@ -29,7 +29,14 @@ class KitchenInventoryController extends Controller
 
     protected function authorizeKitchen(): void
     {
-        abort_unless(Auth::user()?->hasPermission('adjust_stock'), 403, 'You do not have access to Kitchen Inventory.');
+        $u = Auth::user();
+        abort_unless($u?->hasPermission('adjust_stock') || $u?->hasPermission('kitchen_adjust_stock'), 403, 'You do not have access to Kitchen Inventory.');
+    }
+
+    /** Changing kitchen stock: its own permission (kitchen spec 12.1; the client decides who). */
+    protected function authorizeKitchenChange(): void
+    {
+        abort_unless(Auth::user()?->hasPermission('kitchen_adjust_stock'), 403, 'You do not have permission to change kitchen stock.');
     }
 
     protected function locationForCurrentStore(): KitchenLocation
@@ -75,7 +82,9 @@ class KitchenInventoryController extends Controller
         $wasteReasons = KitchenInventoryService::WASTE_REASONS;
         $adjustReasons = KitchenInventoryService::ADJUST_REASONS;
 
-        return view('store.kitchen-inventory.index', compact('kitchenStocks', 'storeStocks', 'stats', 'wasteReasons', 'adjustReasons'));
+        $canChange = Auth::user()->hasPermission('kitchen_adjust_stock');
+
+        return view('store.kitchen-inventory.index', compact('kitchenStocks', 'storeStocks', 'stats', 'wasteReasons', 'adjustReasons', 'canChange'));
     }
 
     /**
@@ -108,6 +117,7 @@ class KitchenInventoryController extends Controller
     public function movement(Request $request, int $stock)
     {
         $this->authorizeKitchen();
+        $this->authorizeKitchenChange();
         $kitchenStock = $this->ownStock($stock);
 
         $data = $request->validate([
@@ -153,6 +163,7 @@ class KitchenInventoryController extends Controller
     public function updateLevels(Request $request, int $stock)
     {
         $this->authorizeKitchen();
+        $this->authorizeKitchenChange();
         $kitchenStock = $this->ownStock($stock);
 
         $data = $request->validate([

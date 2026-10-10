@@ -42,7 +42,10 @@ class KitchenInventoryService
             $locked->save();
             $stock->setRawAttributes($locked->getAttributes(), true);
 
-            return $this->ledger($locked, $type, $change, $reason, $notes);
+            $entry = $this->ledger($locked, $type, $change, $reason, $notes);
+            $this->notifyIfBelowMinimum($locked, $before);
+
+            return $entry;
         });
     }
 
@@ -92,6 +95,25 @@ class KitchenInventoryService
             'notes' => $notes,
             'user_id' => $user?->id,
             'user_name' => $user?->name,
+        ]);
+    }
+
+    /** Store notice the moment an item drops below its minimum (not again while it stays low). */
+    protected function notifyIfBelowMinimum(KitchenStock $stock, float $before): void
+    {
+        $min = (float) $stock->min_quantity;
+        $reserved = (float) $stock->reserved_quantity;
+        if ($min <= 0 || ($before - $reserved) < $min || $stock->available_quantity >= $min) {
+            return;
+        }
+        $storeId = \App\Models\KitchenLocation::whereKey($stock->kitchen_location_id)->value('store_id');
+        \App\Models\StoreNotification::create([
+            'store_id' => $storeId,
+            'title' => 'Kitchen stock low',
+            'message' => ($stock->product->product_name ?? 'A kitchen item') . ' is down to ' . $this->qty($stock->available_quantity)
+                . ' (minimum ' . $this->qty($min) . '). Request a transfer from the store shelf.',
+            'type' => 'warning',
+            'url' => route('kitchen-inventory.index'),
         ]);
     }
 

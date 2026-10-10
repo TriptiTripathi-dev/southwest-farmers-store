@@ -70,6 +70,7 @@
                                         <td><span class="badge {{ $badge }}">{{ $stock->stock_status }}</span></td>
                                         <td class="text-muted">{{ $stock->unit ?? '—' }}</td>
                                         <td class="pe-4 text-end">
+                                            @if ($canChange)
                                             <div class="btn-group btn-group-sm">
                                                 @foreach (['receive' => ['Receive', 'mdi-tray-arrow-down'], 'use' => ['Use', 'mdi-silverware-fork-knife'], 'adjust' => ['Adjust', 'mdi-plus-minus-variant'], 'waste' => ['Waste', 'mdi-delete-outline'], 'count' => ['Count', 'mdi-counter']] as $action => [$label, $icon])
                                                     <button type="button" class="btn btn-outline-secondary js-movement"
@@ -84,6 +85,9 @@
                                                     title="Minimum / reserved"><i class="mdi mdi-tune"></i> Levels</button>
                                                 <a class="btn btn-outline-secondary" href="{{ route('kitchen-inventory.history', ['stock' => $stock->id]) }}" title="History"><i class="mdi mdi-history"></i></a>
                                             </div>
+                                            @else
+                                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('kitchen-inventory.history', ['stock' => $stock->id]) }}"><i class="mdi mdi-history"></i> History</a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
