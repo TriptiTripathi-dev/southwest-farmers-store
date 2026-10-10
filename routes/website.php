@@ -39,6 +39,8 @@ Route::name('website.')->group(function () {
 
         // Orders & Checkout
         Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
+        // Catering (kitchen spec 8): place the order (login required)
+        Route::post('/catering', [\App\Http\Controllers\Website\CateringController::class, 'store'])->name('catering.store');
         Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/my-orders/{id}', [OrderController::class, 'show'])->name('orders.show');
         Route::get('/my-orders/{id}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
@@ -54,6 +56,8 @@ Route::name('website.')->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/menus', [\App\Http\Controllers\Website\WebsiteMenuController::class, 'index'])->name('menus.index');
     Route::get('/menus/category/{id}', [\App\Http\Controllers\Website\WebsiteMenuController::class, 'category'])->name('menus.category');
+    Route::get('/catering', [\App\Http\Controllers\Website\CateringController::class, 'index'])->name('catering.index');
+    Route::post('/catering/quote', [\App\Http\Controllers\Website\CateringController::class, 'quote'])->middleware('throttle:60,1')->name('catering.quote');
     Route::get('/product/{slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/quick-shop', [ProductController::class, 'pos'])->name('products.pos');
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');

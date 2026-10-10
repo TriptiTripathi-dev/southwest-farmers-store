@@ -25,6 +25,9 @@
                     <a class="nav-link {{ request()->routeIs('website.menus.*') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.menus.index') }}">Menus</a>
                 </li>
                 <li class="nav-item px-2">
+                    <a class="nav-link {{ request()->routeIs('website.catering.*') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.catering.index') }}">Catering</a>
+                </li>
+                <li class="nav-item px-2">
                     <a class="nav-link {{ request()->routeIs('website.about') ? 'text-theme' : 'text-dark' }}" href="{{ route('website.about') }}">About Us</a>
                 </li>
                 <li class="nav-item px-2">

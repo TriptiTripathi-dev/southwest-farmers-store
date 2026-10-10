@@ -25,11 +25,28 @@ class StoreSetting extends Model
         'twitter_url',
         'sold_out_display',      // show | hide: Sold Out items on the website
         'sold_out_resets_daily', // Sold Out clears by itself the next day
+        'catering_enabled',
+        'catering_notice_days',  // standard notice, default 7 calendar days
+        'catering_cutoff_time',  // HH:MM local; orders after it count from the next day
     ];
 
     protected $casts = [
         'sold_out_resets_daily' => 'boolean',
+        'catering_enabled' => 'boolean',
     ];
+
+    /** Catering options for a store, with the contract defaults when unset. */
+    public static function cateringOptions(?int $storeId): array
+    {
+        $row = $storeId ? static::where('store_id', $storeId)->first() : null;
+        $cutoff = (string) ($row?->catering_cutoff_time ?: '17:00');
+
+        return [
+            'enabled' => $row?->catering_enabled ?? true,
+            'notice_days' => max(0, (int) ($row?->catering_notice_days ?? 7)),
+            'cutoff_time' => preg_match('/^\d{2}:\d{2}$/', $cutoff) ? $cutoff : '17:00',
+        ];
+    }
 
     /** Kitchen availability options for a store, with the defaults when unset. */
     public static function availabilityOptions(?int $storeId): array

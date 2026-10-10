@@ -104,6 +104,14 @@ Route::middleware('auth')->group(function () {
         Route::post('availability/{menuItem}/status', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'setStatus'])->name('availability.status');
         Route::put('availability-options', [App\Http\Controllers\Store\StoreKitchenAvailabilityController::class, 'updateOptions'])->name('availability.options');
 
+        // Catering (kitchen spec 8): orders list + the store's rules / urgency tiers
+        Route::get('catering', [App\Http\Controllers\Store\StoreCateringController::class, 'index'])->name('catering.index');
+        Route::get('catering/rules', [App\Http\Controllers\Store\StoreCateringController::class, 'rules'])->name('catering.rules');
+        Route::put('catering/rules', [App\Http\Controllers\Store\StoreCateringController::class, 'updateRules'])->name('catering.rules.update');
+        Route::post('catering/tiers', [App\Http\Controllers\Store\StoreCateringController::class, 'storeTier'])->name('catering.tiers.store');
+        Route::delete('catering/tiers/{tier}', [App\Http\Controllers\Store\StoreCateringController::class, 'destroyTier'])->whereNumber('tier')->name('catering.tiers.destroy');
+        Route::post('catering/tiers/examples', [App\Http\Controllers\Store\StoreCateringController::class, 'loadExamples'])->name('catering.tiers.examples');
+
         Route::get('staff-timesheets', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'index'])->name('staff.index');
         Route::post('staff-timesheets/shift', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');
         Route::put('staff-timesheets/shift/{shift}', [App\Http\Controllers\Store\StoreKitchenStaffScheduleController::class, 'updateShift'])->name('staff.shift.update');

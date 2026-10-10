@@ -79,8 +79,6 @@ class StoreKitchenAvailabilityController extends Controller
 
         $menuItem->update([
             'is_catering_only' => $request->has('is_catering_only') ? (bool) $request->is_catering_only : false,
-            'advance_notice_days' => $request->input('advance_notice_days', 7),
-            'rush_fee_percentage' => $request->input('rush_fee_percentage', 0),
             'available_days' => $request->input('available_days', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']),
         ]);
 

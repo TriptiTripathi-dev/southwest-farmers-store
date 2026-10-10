@@ -124,8 +124,6 @@
                                     <th class="py-3 text-muted small fw-bold text-center" style="width: 140px;">LIVE STATUS TODAY</th>
                                     <th class="py-3 text-muted small fw-bold text-center" style="min-width: 240px;">WEEKLY SCHEDULE</th>
                                     <th class="py-3 text-muted small fw-bold text-center">CATERING ONLY</th>
-                                    <th class="py-3 text-muted small fw-bold text-center">NOTICE REQUIRED</th>
-                                    <th class="py-3 text-muted small fw-bold text-center">RUSH FEE</th>
                                     <th class="pe-4 py-3 text-muted small fw-bold text-center">ACTIONS</th>
                                 </tr>
                             </thead>
@@ -180,20 +178,6 @@
                                             <span class="badge bg-light text-muted border">Standard &amp; Catering</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-primary-subtle text-primary small px-2 py-1">
-                                            <i class="mdi mdi-clock-outline me-1"></i>{{ $item->advance_notice_days ?? 7 }} Days
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        @if($item->rush_fee_percentage > 0)
-                                            <span class="badge bg-danger-subtle text-danger small px-2 py-1">
-                                                +{{ number_format($item->rush_fee_percentage, 0) }}%
-                                            </span>
-                                        @else
-                                            <span class="text-muted small">0%</span>
-                                        @endif
-                                    </td>
                                     <td class="pe-4 text-center">
                                         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ $item->id }}">
                                             <i class="mdi mdi-pencil"></i> Configure
@@ -245,24 +229,7 @@
                                                                 <div class="form-text">If checked, item is hidden from daily retail POS and only available for large pre-orders.</div>
                                                             </div>
 
-                                                            <div class="row">
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label class="form-label fw-semibold">Advance Notice (Days)</label>
-                                                                    <div class="input-group input-group-sm">
-                                                                        <input type="number" name="advance_notice_days" class="form-control" min="0" max="90" value="{{ $item->advance_notice_days ?? 7 }}">
-                                                                        <span class="input-group-text">Days</span>
-                                                                    </div>
-                                                                    <div class="form-text">Minimum lead time for catering booking.</div>
-                                                                </div>
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label class="form-label fw-semibold">Rush Fee Percentage</label>
-                                                                    <div class="input-group input-group-sm">
-                                                                        <input type="number" name="rush_fee_percentage" class="form-control" min="0" max="100" step="0.5" value="{{ $item->rush_fee_percentage ?? 0 }}">
-                                                                        <span class="input-group-text">%</span>
-                                                                    </div>
-                                                                    <div class="form-text">Fee applied if ordered inside notice window.</div>
-                                                                </div>
-                                                            </div>
+                                                            <div class="form-text">Notice and urgency surcharges for catering are set per store in <a href="{{ route('store.kitchen.catering.rules') }}">Catering Rules</a>.</div>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -276,7 +243,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
+                                    <td colspan="6" class="text-center py-5 text-muted">
                                         No menu items match your filter criteria.
                                     </td>
                                 </tr>

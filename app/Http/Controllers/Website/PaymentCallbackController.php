@@ -63,8 +63,9 @@ class PaymentCallbackController extends Controller
                     'url' => route('store.sales.orders.show', $sale->id),
                 ]);
 
-                // Clear the Cart for this user
-                $cart = Cart::where('user_id', $sale->customer_id)->where('status', 'active')->first();
+                // Clear the Cart for this user (not for catering: it never used the cart)
+                $cart = $sale->order_type === 'Catering' ? null
+                    : Cart::where('user_id', $sale->customer_id)->where('status', 'active')->first();
                 if ($cart) {
                     $cart->items()->delete();
                     $cart->delete();

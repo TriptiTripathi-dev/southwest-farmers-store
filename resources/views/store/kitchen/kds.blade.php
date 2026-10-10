@@ -57,7 +57,10 @@
                                 <div class="text-end">
                                     <span class="badge bg-primary-subtle text-primary border d-block mb-1">{{ ucfirst($order->source ?? 'pos') === 'Pos' ? 'POS' : ucfirst($order->source ?? 'POS') }}</span>
                                     @if ($order->order_type)
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border">{{ $order->order_type }}</span>
+                                        <span class="badge {{ $order->order_type === 'Catering' ? 'bg-warning text-dark' : 'bg-dark bg-opacity-10 text-dark border' }}">{{ $order->order_type }}</span>
+                                    @endif
+                                    @if ($order->guest_count)
+                                        <small class="d-block text-muted mt-1">{{ $order->guest_count }} guests</small>
                                     @endif
                                 </div>
                             </div>

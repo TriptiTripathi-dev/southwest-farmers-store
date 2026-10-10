@@ -231,8 +231,11 @@
                 $isSalesRankingActive = request()->routeIs('store.kitchen.reports.*');
                 $isAvailabilityActive = request()->routeIs('store.kitchen.availability.*');
                 $isKitchenStaffActive = request()->routeIs('store.kitchen.staff.*');
+                $isCateringActive = request()->routeIs('store.kitchen.catering.index');
+                $isCateringRulesActive = request()->routeIs('store.kitchen.catering.rules');
                 $isMenuCollapseActive = $isKdsActive || $isMenuCategoryActive || $isMenuItemActive || $isCookbookActive
-                    || $isProductionActive || $isLeftoverActive || $isSalesRankingActive || $isAvailabilityActive || $isKitchenStaffActive;
+                    || $isProductionActive || $isLeftoverActive || $isSalesRankingActive || $isAvailabilityActive || $isKitchenStaffActive
+                    || $isCateringActive || $isCateringRulesActive;
                 @endphp
                 <li class="menuitem-{{ $isMenuCollapseActive ? 'active' : '' }} {{ $isMenuCollapseActive ? 'show' : '' }}">
                     <a class="tp-link {{ $isMenuCollapseActive ? 'active' : '' }}" href="#sidebarMenus"
@@ -276,6 +279,14 @@
                             <li>
                                 <a class="tp-link {{ $isAvailabilityActive ? 'active' : '' }}"
                                     href="{{ route('store.kitchen.availability.index') }}">Daily Availability &amp; Calendar</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isCateringActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.catering.index') }}">Catering Orders</a>
+                            </li>
+                            <li>
+                                <a class="tp-link {{ $isCateringRulesActive ? 'active' : '' }}"
+                                    href="{{ route('store.kitchen.catering.rules') }}">Catering Rules</a>
                             </li>
                             <li>
                                 <a class="tp-link {{ $isKitchenStaffActive ? 'active' : '' }}"

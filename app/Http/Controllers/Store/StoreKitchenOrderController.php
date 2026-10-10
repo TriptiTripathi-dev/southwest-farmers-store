@@ -34,8 +34,12 @@ class StoreKitchenOrderController extends Controller
             ->where('store_id', $storeId)
             ->whereHas('items', fn ($q) => $q->whereNotNull('menu_item_id'))
             ->whereNotIn('kitchen_status', ['Completed', 'Cancelled'])
-            ->orderByRaw('due_at IS NULL, due_at')   // orders with a due time first, earliest first
-            ->orderBy('created_at', 'asc')
+            // A website card order isn't real until it is paid.
+            ->where(fn ($q) => $q->whereRaw("LOWER(COALESCE(payment_method, '')) <> 'card'")
+                ->orWhere('source', '!=', 'website')->orWhereNull('source')
+                ->orWhere('payment_status', 'completed')->orWhere('status', 'paid'))
+            // Needed-by time: the event time for catering, otherwise when it was placed.
+            ->orderByRaw('COALESCE(due_at, created_at) ASC')
             ->get();
 
         $kanbanData = collect(array_keys(self::NEXT))

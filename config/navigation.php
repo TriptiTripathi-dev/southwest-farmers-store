@@ -49,6 +49,8 @@ return [
     'store.kitchen.production.leftovers' => ['section' => 'Prepared Menus', 'title' => 'Leftover Report', 'icon' => 'mdi mdi-food-off', 'description' => 'Daily produced vs. sold vs. leftover quantities per menu item.'],
     'store.kitchen.reports.sales-ranking' => ['section' => 'Prepared Menus', 'title' => 'Sales Ranking', 'icon' => 'mdi mdi-trophy-outline', 'description' => 'Best-selling menu items from point-of-sale data, to help plan daily kitchen production.'],
     'store.kitchen.availability.index' => ['section' => 'Prepared Menus', 'title' => 'Daily Availability & Calendar', 'icon' => 'mdi mdi-calendar-clock', 'description' => 'Daily menu scheduling, live stock toggles, advance notice periods and rush orders.'],
+    'store.kitchen.catering.index' => ['section' => 'Prepared Menus', 'title' => 'Catering Orders', 'icon' => 'mdi mdi-party-popper', 'description' => 'Catering orders by event date, with notice and urgency surcharge.'],
+    'store.kitchen.catering.rules' => ['section' => 'Prepared Menus', 'title' => 'Catering Rules', 'icon' => 'mdi mdi-calendar-alert', 'description' => 'Standard notice, daily cutoff and urgency surcharge tiers for catering orders.'],
     'store.kitchen.staff.index' => ['section' => 'Prepared Menus', 'title' => 'Staff & Timesheets', 'icon' => 'mdi mdi-account-clock', 'description' => 'Shift assignments, kitchen stations, live clock-in/out logs and daily attendance.'],
 
     // Stock Control
