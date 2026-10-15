@@ -190,9 +190,10 @@
                                         'rejected' => 'bg-secondary text-white',
                                         'completed' => 'bg-success text-white'
                                     ];
-                                    $label = $stockRequest->status == 'dispatched' ? 'In Transit' : ($stockRequest->status == 'awaiting_approval' ? 'Awaiting Approval' : ucfirst($stockRequest->status));
+                                    $approved = $stockRequest->status == 'pending' && $stockRequest->approved_at;
+                                    $label = $approved ? 'Approved' : ($stockRequest->status == 'dispatched' ? 'In Transit' : ($stockRequest->status == 'awaiting_approval' ? 'Awaiting Approval' : ucfirst($stockRequest->status)));
                                 @endphp
-                                <h4 class="badge {{ $badges[$stockRequest->status] ?? 'bg-secondary' }} px-4 py-2 rounded-pill shadow-sm">
+                                <h4 class="badge {{ $approved ? 'bg-success text-white' : ($badges[$stockRequest->status] ?? 'bg-secondary') }} px-4 py-2 rounded-pill shadow-sm">
                                     {{ $label }}
                                 </h4>
                             </div>

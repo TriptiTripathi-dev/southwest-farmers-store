@@ -440,7 +440,33 @@ class StoreInventoryController extends Controller
             'status' => StockRequest::STATUS_AWAITING_APPROVAL
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Order marked as Reviewed and is now Awaiting Approval.']);
+        $sent = $this->sendApprovalEmails($request);
+
+        return response()->json(['success' => true, 'message' => 'Order marked as Reviewed and is now Awaiting Approval.' . $sent]);
+    }
+
+    /**
+     * Ticket 32: Area Manager (VP field) gets the approval email, the GM a notification.
+     * With no Area Manager email the GM gets the approval email instead.
+     * A mail failure never blocks the review.
+     */
+    private function sendApprovalEmails(StockRequest $request): string
+    {
+        $approver = $request->vp_email ?: $request->gm_email;
+        if (!$approver) {
+            return ' No approver email was entered, so no approval email was sent.';
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($approver)->send(new \App\Mail\StoreRequestApprovalMail($request, true));
+            if ($request->gm_email && strcasecmp($request->gm_email, $approver) !== 0) {
+                \Illuminate\Support\Facades\Mail::to($request->gm_email)->send(new \App\Mail\StoreRequestApprovalMail($request, false));
+            }
+            return ' Approval email sent to ' . $approver . '.';
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Store request approval email failed', ['id' => $request->id, 'error' => $e->getMessage()]);
+            return ' The approval email could not be sent; please contact support.';
+        }
     }
 
     public function approveRequest($id)

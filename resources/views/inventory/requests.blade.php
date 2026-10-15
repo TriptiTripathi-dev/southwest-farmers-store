@@ -215,6 +215,8 @@
                                         <span class="badge bg-secondary">Draft</span>
                                     @elseif($request->status == 'awaiting_approval')
                                         <span class="badge bg-danger">Awaiting Approval</span>
+                                    @elseif($request->status == 'pending' && $request->approved_at)
+                                        <span class="badge bg-success">Approved</span>
                                     @else
                                         <span class="badge bg-warning text-dark">Pending</span>
                                     @endif
@@ -274,7 +276,9 @@
                                         <span class="badge bg-secondary">Draft</span>
                                     @elseif($deptOrder->status == 'awaiting_approval')
                                                             <span class="badge bg-danger">Awaiting Approval</span>
-                                                        @else
+                                                        @elseif($deptOrder->status == 'pending' && $deptOrder->approved_at)
+                                        <span class="badge bg-success">Approved</span>
+                                    @else
                                                             <span class="badge bg-warning text-dark">Pending</span>
                                                         @endif
                                                     </td>

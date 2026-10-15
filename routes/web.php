@@ -39,6 +39,12 @@ Route::get('/pos-test', function () {
     return view('pos-test');
 });
 
+// Ticket 32: Area Manager approves / rejects a store request from the email (signed link, no login).
+Route::get('/store-requests/{id}/decision/{decision}', [\App\Http\Controllers\Public\StoreRequestApprovalController::class, 'decide'])
+    ->whereIn('decision', ['approve', 'reject'])
+    ->middleware('signed:relative')
+    ->name('store-requests.external-decision');
+
 Route::middleware('auth')->group(function () {
     Route::resource('departments', \App\Http\Controllers\Store\DepartmentController::class)->except(['show']);
     Route::post('/departments/status', [\App\Http\Controllers\Store\DepartmentController::class, 'changeStatus'])->name('departments.status');
