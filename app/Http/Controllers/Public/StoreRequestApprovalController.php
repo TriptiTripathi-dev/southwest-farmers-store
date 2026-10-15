@@ -32,7 +32,7 @@ class StoreRequestApprovalController extends Controller
             return $this->result(true, 'Approved', "Store request {$number} is approved and has been sent to the warehouse.");
         }
 
-        $r->update(['status' => StockRequest::STATUS_REJECTED]);
+        $r->update(['status' => StockRequest::STATUS_REJECTED, 'admin_note' => 'Rejected by the Area Manager from the approval email.']);
         Log::info('Store request rejected from email', ['id' => $r->id]);
         return $this->result(false, 'Rejected', "Store request {$number} was rejected.");
     }
