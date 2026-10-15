@@ -158,6 +158,7 @@ class StaffController extends Controller
             ]);
 
             $this->syncRoles($staff, $roleIds);
+            $this->syncStoreManager($staff, $roleIds);
 
             StoreNotification::create([
                 'user_id' => Auth::id(),
@@ -246,6 +247,7 @@ class StaffController extends Controller
             $staff->update($data);
 
             $this->syncRoles($staff, $roleIds);
+            $this->syncStoreManager($staff->refresh(), $roleIds);
 
             DB::commit();
             return redirect()->route('staff.index')->with('success', 'Staff updated successfully.');
@@ -347,6 +349,35 @@ class StaffController extends Controller
         $staff->roles()->sync(
             collect($roleIds)->mapWithKeys(fn ($roleId) => [$roleId => ['model_type' => get_class($staff)]])->all()
         );
+    }
+
+    /**
+     * Ticket 20: the store's General Manager is the manager the warehouse shows
+     * (store_details.store_user_id). Giving someone the GM role makes them that
+     * manager and takes the GM role off whoever had it at the same store.
+     *
+     * @param int[] $roleIds
+     */
+    private function syncStoreManager(StoreUser $staff, array $roleIds): void
+    {
+        $gmRoleId = StoreRole::where('name', 'General Manager')->value('id');
+        if (!$gmRoleId || !in_array($gmRoleId, $roleIds, true) || !$staff->is_active || !$staff->getRawOriginal('store_id')) {
+            return;
+        }
+        $storeId = (int) $staff->getRawOriginal('store_id');
+
+        StoreDetail::whereKey($storeId)->update(['store_user_id' => $staff->id]);
+
+        $others = StoreUser::where('store_id', $storeId)->where('id', '!=', $staff->id)->pluck('id');
+        DB::table('store_model_has_roles')
+            ->where('model_type', StoreUser::class)
+            ->where('role_id', $gmRoleId)
+            ->whereIn('model_id', $others)
+            ->delete();
+        foreach (StoreUser::whereIn('id', $others)->where('store_role_id', $gmRoleId)->get() as $previous) {
+            $previous->update(['store_role_id' => DB::table('store_model_has_roles')
+                ->where('model_type', StoreUser::class)->where('model_id', $previous->id)->value('role_id')]);
+        }
     }
 
     /** Active groups that have at least one active store, for the Location dropdown. */
