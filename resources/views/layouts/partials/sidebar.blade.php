@@ -150,22 +150,11 @@
                             <li>
                                 <a href="{{ route('inventory.requests') }}"
                                     class="tp-link {{ request()->routeIs('inventory.requests') || request()->routeIs('inventory.order.create') ? 'active' : '' }}">
-                                    Store Requests (Unscheduled)
+                                    Store Requests
                                 </a>
                             </li>
-                            <li>
-                                <a href="{{ route('inventory.po.create') }}"
-                                    class="tp-link {{ request()->routeIs('inventory.po.*') ? 'active' : '' }}">
-                                    Store POs (Scheduled)
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('store.orders.index') }}"
-                                    class="tp-link {{ request()->routeIs('store.orders.index') ? 'active' : '' }}">
-                                    Receiving & History
-                                </a>
-                            </li>
-
+                            {{-- Ticket 38: "Store POs (Scheduled)" and "Receiving & History" were taken off
+                                 the menu; receiving and history are tabs on Store Requests. The pages still work. --}}
                         </ul>
                     </div>
                 </li>

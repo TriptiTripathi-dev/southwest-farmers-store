@@ -1,10 +1,10 @@
-<x-app-layout title="New Store Request (Unscheduled)">
+<x-app-layout title="New Store Request">
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-file-plus text-primary me-2"></i> New Store Request (Unscheduled)
+                <i class="mdi mdi-file-plus text-primary me-2"></i> New Store Request
             </h4>
             <small class="text-muted">Create a new unscheduled store request for the warehouse</small>
         </div>

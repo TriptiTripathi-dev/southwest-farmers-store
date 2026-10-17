@@ -1,4 +1,4 @@
-<x-app-layout title="Store Requests (Unscheduled)">
+<x-app-layout title="Store Requests">
 
 <div class="container-fluid">
     <x-page-header>
