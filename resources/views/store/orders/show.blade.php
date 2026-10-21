@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('store.orders.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('inventory.requests') }}" class="btn btn-outline-secondary">
                     <i class="mdi mdi-arrow-left me-1"></i> Back to List
                 </a>
                 @if ($order->status === 'dispatched')

@@ -313,14 +313,40 @@ class StoreInventoryController extends Controller
 
         $requests = $query->latest()->paginate(15)->appends($request->query());
 
-        $pendingCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['draft', 'pending', 'awaiting_approval'])->count();
-        $inTransitCount = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->count();
-        $completedCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['completed', 'rejected'])->count();
+        // Ticket 38: scheduled Store POs are listed on the same tabs, labelled
+        // "Scheduled" (the requests above are the unscheduled ones).
+        $scheduledStatuses = [
+            'in_transit' => ['approved', 'dispatched', 'in_transit', 'receiving'],
+            'history' => ['completed', 'partially_received', 'cancelled', 'rejected'],
+        ];
+        $scheduledFor = function (string $tab) use ($storeId, $scheduledStatuses) {
+            $q = \App\Models\StorePurchaseOrder::where('store_id', $storeId);
+            return isset($scheduledStatuses[$tab])
+                ? $q->whereIn(DB::raw('LOWER(status)'), $scheduledStatuses[$tab])
+                : $q->whereNotIn(DB::raw('LOWER(status)'), array_merge(...array_values($scheduledStatuses)));
+        };
+        $tab = in_array($status, ['in_transit', 'history'], true) ? $status : 'pending';
+        $scheduledOrders = collect();
+        // Scheduled POs have no department, so a department filter shows requests only.
+        if (!$departmentId && !($tab === 'history' && $request->input('received_by')) && !($tab === 'in_transit' && $progress)) {
+            $scheduledOrders = $scheduledFor($tab)
+                ->with('items')
+                ->when($search, fn ($q) => $q->where('po_number', 'like', "%{$search}%"))
+                ->when($date, fn ($q) => $q->whereBetween('created_at', $this->storeDayRange($date)))
+                ->latest()
+                ->limit(50)
+                ->get();
+        }
+
+        $pendingCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['draft', 'pending', 'awaiting_approval'])->count() + $scheduledFor('pending')->count();
+        $inTransitCount = StockRequest::where('store_id', $storeId)->where('status', 'dispatched')->count() + $scheduledFor('in_transit')->count();
+        $completedCount = StockRequest::where('store_id', $storeId)->whereIn('status', ['completed', 'rejected'])->count() + $scheduledFor('history')->count();
 
         $departments = \App\Models\Department::where('is_active', true)->orderBy('name')->get();
 
         return view('inventory.requests', compact(
             'requests',
+            'scheduledOrders',
             'pendingCount',
             'inTransitCount',
             'completedCount',

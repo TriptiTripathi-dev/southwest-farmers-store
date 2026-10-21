@@ -238,7 +238,7 @@ class StoreOrderController extends Controller
             ]);
         });
 
-        return redirect()->route('store.orders.index')->with('success', 'Order items received and inventory updated.');
+        return redirect()->route('inventory.requests', ['status' => 'history'])->with('success', 'Order items received and inventory updated.');
     }
 
     public function stockLevels()
@@ -363,7 +363,7 @@ class StoreOrderController extends Controller
             ]);
         }
 
-        return redirect()->route('store.orders.index')->with('success', 'Store Purchase Order created successfully!');
+        return redirect()->route('inventory.requests')->with('success', 'Store Purchase Order created successfully!');
     }
 
 }

@@ -1,7 +1,7 @@
 <x-app-layout title="Create Store PO">
 <div class="container-fluid">
     <x-page-header>
-        <a href="{{ route('store.orders.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('inventory.requests') }}" class="btn btn-outline-secondary">
             <i class="mdi mdi-arrow-left me-1"></i> Back to List
         </a>
     </x-page-header>

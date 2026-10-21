@@ -27,7 +27,7 @@
                         <i class="mdi mdi-clock-outline fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="mb-1 opacity-75">Inventory Request</h6>
+                        <h6 class="mb-1 opacity-75">Store Requests</h6>
                         <h3 class="mb-0 fw-bold">{{ $pendingCount }}</h3>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                         <i class="mdi mdi-truck-delivery fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="mb-1 opacity-75">Receive Inventory</h6>
+                        <h6 class="mb-1 opacity-75">Receiving Orders</h6>
                         <h3 class="mb-0 fw-bold">{{ $inTransitCount }}</h3>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
                         <i class="mdi mdi-history fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="mb-1 opacity-75">Inventory History</h6>
+                        <h6 class="mb-1 opacity-75">Completed Orders</h6>
                         <h3 class="mb-0 fw-bold">{{ $completedCount }}</h3>
                     </div>
                 </div>
@@ -66,19 +66,19 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link px-4 py-2 rounded-pill fw-bold {{ request('status', 'pending') == 'pending' ? 'active' : '' }}" 
                href="{{ route('inventory.requests', ['status' => 'pending']) }}">
-                INVENTORY REQUEST
+                STORE REQUESTS
             </a>
         </li>
         <li class="nav-item mx-2" role="presentation">
             <a class="nav-link px-4 py-2 rounded-pill fw-bold {{ request('status') == 'in_transit' ? 'active' : '' }}" 
                href="{{ route('inventory.requests', ['status' => 'in_transit']) }}">
-                RECEIVE INVENTORY
+                RECEIVING ORDERS
             </a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link px-4 py-2 rounded-pill fw-bold {{ request('status') == 'history' ? 'active' : '' }}" 
                href="{{ route('inventory.requests', ['status' => 'history']) }}">
-                INVENTORY HISTORY
+                COMPLETED ORDERS
             </a>
         </li>
     </ul>
@@ -184,6 +184,8 @@
                         @endif
                     </thead>
                     <tbody>
+                        @php $tab = in_array(request('status'), ['in_transit', 'history'], true) ? request('status') : 'pending'; @endphp
+                        @include('inventory.partials.scheduled-rows')
                         @forelse($requests as $request)
                         <tr>
                             <td class="ps-4">
@@ -192,6 +194,7 @@
                                         <i class="mdi mdi-chevron-down fs-5"></i>
                                     </button>
                                     <span class="fw-bold text-primary">{{ $request->request_number ?? 'REQ-'.str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                    <span class="badge bg-warning-subtle text-dark border ms-1">Unscheduled</span>
                                 </div>
                             </td>
                             <td>
@@ -334,12 +337,14 @@
                             @endif
                         </tr>
                         @empty
+                        @if($scheduledOrders->isEmpty())
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="mdi mdi-file-search-outline fs-1"></i>
                                 <p class="mt-2 mb-0">No records found for the selected filter.</p>
                             </td>
                         </tr>
+                        @endif
                         @endforelse
                     </tbody>
                 </table>

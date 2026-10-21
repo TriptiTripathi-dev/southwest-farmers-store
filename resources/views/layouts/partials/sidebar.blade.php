@@ -147,14 +147,27 @@
                     </a>
                     <div class="collapse {{ $isWarehouseOrdersActive ? 'show' : '' }}" id="sidebarWarehouseOrders">
                         <ul class="nav-second-level">
+                            {{-- Ticket 38: same layout as the Warehouse side. Store Requests holds both
+                                 scheduled and unscheduled requests; the other two are its tabs. --}}
+                            @php $reqTab = request()->routeIs('inventory.requests') ? request('status', 'pending') : null; @endphp
                             <li>
                                 <a href="{{ route('inventory.requests') }}"
-                                    class="tp-link {{ request()->routeIs('inventory.requests') || request()->routeIs('inventory.order.create') ? 'active' : '' }}">
+                                    class="tp-link {{ $reqTab === 'pending' || request()->routeIs('inventory.order.create', 'inventory.po.*', 'inventory.requests.show', 'store.orders.show', 'store.orders.edit') ? 'active' : '' }}">
                                     Store Requests
                                 </a>
                             </li>
-                            {{-- Ticket 38: "Store POs (Scheduled)" and "Receiving & History" were taken off
-                                 the menu; receiving and history are tabs on Store Requests. The pages still work. --}}
+                            <li>
+                                <a href="{{ route('inventory.requests', ['status' => 'in_transit']) }}"
+                                    class="tp-link {{ $reqTab === 'in_transit' || request()->routeIs('store.orders.receive') ? 'active' : '' }}">
+                                    Receiving Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('inventory.requests', ['status' => 'history']) }}"
+                                    class="tp-link {{ $reqTab === 'history' || request()->routeIs('store.orders.index') ? 'active' : '' }}">
+                                    Completed Orders
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
