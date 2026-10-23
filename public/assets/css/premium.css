@@ -115,11 +115,20 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { color: var(--pm-ink); let
     transition: background-color .15s ease, color .15s ease;
 }
 #sidebar-menu .nav-second-level li a:hover { background-color: var(--pm-green-soft); color: var(--pm-green) !important; }
-#sidebar-menu .nav-second-level li a.active,
-#sidebar-menu .nav-second-level li.menuitem-active > a {
-    background-color: var(--pm-green-soft);
-    color: var(--pm-green) !important;
+/* Active sub-menu item: light green pill with dark green text (the theme
+   paints it solid green, which hid green text). */
+#sidebar-menu .nav-second-level li > a.active,
+#sidebar-menu .nav-second-level li.menuitem-active > a,
+#sidebar-menu .nav-second-level .tp-link.active {
+    background: rgba(1, 153, 52, 0.12) !important;
+    color: var(--pm-green-dark) !important;
+    box-shadow: none !important;
     font-weight: 600;
+}
+#sidebar-menu .nav-second-level li > a.active *,
+#sidebar-menu .nav-second-level li.menuitem-active > a *,
+#sidebar-menu .nav-second-level .tp-link.active * {
+    color: var(--pm-green-dark) !important;
 }
 .logo-box { border-bottom: 1px solid var(--pm-line-soft); }
 
