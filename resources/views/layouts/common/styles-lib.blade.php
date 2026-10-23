@@ -25,4 +25,7 @@
 
 <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet" type="text/css" />
 
+<!-- Premium theme layer (same brand colors; loaded after the theme) -->
+<link href="{{ asset('assets/css/premium.css') }}?v={{ @filemtime(public_path('assets/css/premium.css')) }}" rel="stylesheet" type="text/css" />
+
 <script src="{{ asset('assets/js/head.js') }}"></script>

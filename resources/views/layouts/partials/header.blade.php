@@ -172,7 +172,7 @@
                         <div class="p-3 border-bottom bg-white rounded-top-3">
                             <div class="row align-items-center">
                                 <div class="col">
-                                    <h6 class="m-0 fw-bold fs-15">Notifications <span class="badge bg-soft-primary text-primary ms-1">{{ $headerUnreadCount ?? 0 }}</span></h6>
+                                    <h6 class="m-0 fw-bold fs-15">Notifications <span class="badge bg-soft-primary text-primary ms-1">{{ ($headerUnreadCount ?? 0) > 99 ? '99+' : ($headerUnreadCount ?? 0) }}</span></h6>
                                 </div>
                                 <div class="col-auto">
                                     <form action="{{ route('store.notifications.readAll') }}" method="POST">
